@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "254740265534",
+    "project_id": "fushionwave",
+    "storage_bucket": "fushionwave.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:254740265534:android:9d73e6f7754bfde8a52f6f",
+        "android_client_info": {
+          "package_name": "com.example.fushionwave"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCp4iN_P9gI6fivChwcia1JJ3hQfdW1zqU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
