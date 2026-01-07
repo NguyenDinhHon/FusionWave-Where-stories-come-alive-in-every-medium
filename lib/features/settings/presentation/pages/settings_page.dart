@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../providers/settings_provider.dart';
@@ -102,6 +104,49 @@ class SettingsPage extends ConsumerWidget {
               subtitle: 'Version 0.1.0',
               onTap: () => _showAboutDialog(context),
             ),
+            
+            // Advanced Section (Debug Only)
+            if (kDebugMode) ...[
+              const Divider(height: 32),
+              _buildSectionHeader('Advanced (Dev)'),
+              Card(
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.science, color: Colors.blue, size: 20),
+                      ),
+                      title: const Text('Reading Phase 1'),
+                      subtitle: const Text('Test models & providers'),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () => context.push('/test-reading-phase1'),
+                    ),
+                    const Divider(height: 1, indent: 72),
+                    ListTile(
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.widgets, color: Colors.green, size: 20),
+                      ),
+                      title: const Text('Reading Phase 2'),
+                      subtitle: const Text('UI: Chapters, Settings, Themes'),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () => context.push('/test-reading-phase2'),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
           ],
         ),
         loading: () => const Center(child: CircularProgressIndicator()),

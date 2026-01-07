@@ -6,8 +6,6 @@ import '../../domain/models/chapter.dart';
 import '../providers/reading_mode_provider.dart';
 import '../providers/reading_preferences_provider.dart';
 import '../providers/current_chapter_provider.dart';
-
-/// Test page to verify Phase 1 - Models & Providers
 class ReadingPhase1TestPage extends ConsumerWidget {
   const ReadingPhase1TestPage({super.key});
 
@@ -185,7 +183,10 @@ class ReadingPhase1TestPage extends ConsumerWidget {
               context,
               'Preview',
               Container(
-                padding: EdgeInsets.all(preferences.margins),
+                padding: EdgeInsets.symmetric(
+                  horizontal: preferences.margins.horizontal,
+                  vertical: preferences.margins.vertical,
+                ),
                 decoration: BoxDecoration(
                   color: preferences.backgroundColor,
                   border: Border.all(color: preferences.accentColor),

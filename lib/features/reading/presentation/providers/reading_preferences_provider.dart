@@ -26,7 +26,15 @@ class ReadingPreferencesNotifier extends _$ReadingPreferencesNotifier {
     state = state.copyWith(fontSize: size.clamp(12.0, 32.0));
   }
   
+  void updateFontSize(double size) {
+    state = state.copyWith(fontSize: size.clamp(12.0, 32.0));
+  }
+  
   void setFontFamily(String family) {
+    state = state.copyWith(fontFamily: family);
+  }
+  
+  void updateFontFamily(String family) {
     state = state.copyWith(fontFamily: family);
   }
   
@@ -37,8 +45,20 @@ class ReadingPreferencesNotifier extends _$ReadingPreferencesNotifier {
     );
   }
   
+  void updateLineHeight(double height) {
+    state = state.copyWith(
+      lineHeight: height.clamp(1.0, 2.5),
+    );
+  }
+  
   // Letter spacing
   void setLetterSpacing(double spacing) {
+    state = state.copyWith(
+      letterSpacing: spacing.clamp(0.0, 2.0),
+    );
+  }
+  
+  void updateLetterSpacing(double spacing) {
     state = state.copyWith(
       letterSpacing: spacing.clamp(0.0, 2.0),
     );
@@ -66,8 +86,34 @@ class ReadingPreferencesNotifier extends _$ReadingPreferencesNotifier {
     state = state.copyWith(textAlign: alignment);
   }
   
-  void setMargins(double margins) {
-    state = state.copyWith(margins: margins);
+  void updateTextAlign(TextAlign alignment) {
+    state = state.copyWith(textAlign: alignment);
+  }
+  
+  void setMargins(double horizontal, double vertical) {
+    state = state.copyWith(
+      margins: state.margins.copyWith(
+        horizontal: horizontal,
+        vertical: vertical,
+      ),
+    );
+  }
+  
+  void updateMarginHorizontal(double value) {
+    state = state.copyWith(
+      margins: state.margins.copyWith(horizontal: value),
+    );
+  }
+  
+  void updateMarginVertical(double value) {
+    state = state.copyWith(
+      margins: state.margins.copyWith(vertical: value),
+    );
+  }
+  
+  // Reset to defaults
+  void resetToDefaults() {
+    state = ReadingPreferences.lightPreset;
   }
   
   // Preset themes

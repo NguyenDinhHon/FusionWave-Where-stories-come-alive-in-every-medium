@@ -1,5 +1,26 @@
 import 'package:flutter/material.dart';
 
+/// Reading margins for layout
+class ReadingMargins {
+  final double horizontal;
+  final double vertical;
+
+  const ReadingMargins({
+    this.horizontal = 24.0,
+    this.vertical = 24.0,
+  });
+
+  ReadingMargins copyWith({
+    double? horizontal,
+    double? vertical,
+  }) {
+    return ReadingMargins(
+      horizontal: horizontal ?? this.horizontal,
+      vertical: vertical ?? this.vertical,
+    );
+  }
+}
+
 /// User reading preferences for customization
 class ReadingPreferences {
   // Typography
@@ -15,7 +36,7 @@ class ReadingPreferences {
   final Color accentColor;
   
   // Layout
-  final double margins;
+  final ReadingMargins margins;
   final double paragraphSpacing;
   final TextAlign textAlign;
   
@@ -32,7 +53,7 @@ class ReadingPreferences {
     this.backgroundColor = Colors.white,
     this.textColor = const Color(0xFF2C2C2C),
     this.accentColor = const Color(0xFF4A90E2),
-    this.margins = 24.0,
+    this.margins = const ReadingMargins(),
     this.paragraphSpacing = 16.0,
     this.textAlign = TextAlign.left,
     this.autoHideControls = true,
@@ -48,7 +69,7 @@ class ReadingPreferences {
     Color? backgroundColor,
     Color? textColor,
     Color? accentColor,
-    double? margins,
+    ReadingMargins? margins,
     double? paragraphSpacing,
     TextAlign? textAlign,
     bool? autoHideControls,

@@ -37,6 +37,8 @@ import '../../features/notifications/presentation/pages/notifications_page.dart'
 import '../../features/social/presentation/pages/social_feed_page.dart';
 import '../../features/recommendations/presentation/pages/enhanced_recommendations_page.dart';
 import '../../features/offline/presentation/pages/offline_books_page.dart';
+import '../../features/reading/presentation/pages/reading_phase1_test_page.dart';
+import '../../features/reading/presentation/pages/reading_phase2_test_page.dart';
 import 'page_transitions.dart';
 
 /// Application routing configuration
@@ -487,6 +489,24 @@ class AppRouter {
             name: state.name,
           );
         },
+      ),
+      
+      // 🧪 Development/Test Routes - Reading Features
+      GoRoute(
+        path: '/test-reading-phase1',
+        name: 'test-reading-phase1',
+        pageBuilder: (context, state) => PageTransitions.fadeTransition(
+          child: const ReadingPhase1TestPage(),
+          name: state.name,
+        ),
+      ),
+      GoRoute(
+        path: '/test-reading-phase2',
+        name: 'test-reading-phase2',
+        pageBuilder: (context, state) => PageTransitions.fadeTransition(
+          child: const ReadingPhase2TestPage(),
+          name: state.name,
+        ),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
