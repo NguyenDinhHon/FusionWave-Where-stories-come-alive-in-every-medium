@@ -147,7 +147,7 @@ final class ChapterNavigationProvider
   }
 }
 
-String _$chapterNavigationHash() => r'8237d47d6814baeeae834c0ca96896b63e5e46e3';
+String _$chapterNavigationHash() => r'5753b417408e63200051a5cae4f63cb5ba73f35a';
 
 abstract class _$ChapterNavigation extends $Notifier<int> {
   int build();
