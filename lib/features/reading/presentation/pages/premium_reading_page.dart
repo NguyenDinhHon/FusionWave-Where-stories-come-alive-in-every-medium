@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../home/presentation/providers/book_provider.dart';
 import '../../../../data/models/book_model.dart';
 
 // Phase 1: Providers & Models
 import '../../domain/models/chapter.dart';
+import '../../domain/models/reading_preferences.dart';
 import '../providers/reading_mode_provider.dart';
 import '../providers/reading_preferences_provider.dart';
 import '../providers/current_chapter_provider.dart';
@@ -37,7 +39,7 @@ class PremiumReadingPage extends ConsumerStatefulWidget {
 class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   late AnimationController _controlsAnimationController;
-  bool _isScrolling = false;
+  double _lastScrollOffset = 0;
 
   @override
   void initState() {
@@ -46,8 +48,8 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
     // Controls animation
     _controlsAnimationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 200),
-    );
+      duration: const Duration(milliseconds: 300),
+    )..forward(); // Start visible
     
     // Auto-hide controls on scroll
     _scrollController.addListener(_onScroll);
@@ -61,16 +63,19 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
   }
   
   void _onScroll() {
-    if (_scrollController.position.isScrollingNotifier.value) {
-      if (!_isScrolling) {
-        setState(() => _isScrolling = true);
-        _hideControls();
-      }
-    } else {
-      if (_isScrolling) {
-        setState(() => _isScrolling = false);
-      }
+    final currentOffset = _scrollController.offset;
+    final delta = currentOffset - _lastScrollOffset;
+    
+    // Hide controls when scrolling down >50px
+    if (delta > 50 && _controlsAnimationController.value > 0) {
+      _hideControls();
     }
+    // Show controls when scrolling up
+    else if (delta < -20 && _controlsAnimationController.value == 0) {
+      _showControls();
+    }
+    
+    _lastScrollOffset = currentOffset;
   }
   
   void _showControls() {
@@ -102,12 +107,227 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
   }
   
   void _showSettings() {
+    final prefs = ref.read(readingPreferencesProvider);
+    
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const ReadingSettingsPanel(),
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Handle bar
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              
+              // Title
+              Text(
+                'Cài đặt nhanh',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 24),
+              
+              // Font Size Slider
+              _buildSlider(
+                label: 'Cỡ chữ',
+                value: prefs.fontSize,
+                min: 12,
+                max: 32,
+                divisions: 20,
+                onChanged: (value) {
+                  ref.read(readingPreferencesProvider.notifier).updateFontSize(value);
+                },
+              ),
+              
+              // Line Height Slider
+              _buildSlider(
+                label: 'Khoảng cách dòng',
+                value: prefs.lineHeight,
+                min: 1.0,
+                max: 2.5,
+                divisions: 15,
+                onChanged: (value) {
+                  ref.read(readingPreferencesProvider.notifier).updateLineHeight(value);
+                },
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Theme Presets
+              Text(
+                'Chủ đề',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildThemeCard(
+                      label: 'Sáng',
+                      preset: ReadingPreferences.lightPreset,
+                      isSelected: prefs.backgroundColor == ReadingPreferences.lightPreset.backgroundColor,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildThemeCard(
+                      label: 'Tối',
+                      preset: ReadingPreferences.darkPreset,
+                      isSelected: prefs.backgroundColor == ReadingPreferences.darkPreset.backgroundColor,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildThemeCard(
+                      label: 'Sepia',
+                      preset: ReadingPreferences.sepiaPreset,
+                      isSelected: prefs.backgroundColor == ReadingPreferences.sepiaPreset.backgroundColor,
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // More Settings Button
+              OutlinedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => const ReadingSettingsPanel(),
+                  );
+                },
+                child: const Text('Cài đặt nâng cao'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
+  }
+  
+  Widget _buildSlider({
+    required String label,
+    required double value,
+    required double min,
+    required double max,
+    required int divisions,
+    required ValueChanged<double> onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: Theme.of(context).textTheme.bodyMedium),
+            Text(
+              value.toStringAsFixed(1),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        Slider(
+          value: value,
+          min: min,
+          max: max,
+          divisions: divisions,
+          onChanged: onChanged,
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildThemeCard({
+    required String label,
+    required ReadingPreferences preset,
+    required bool isSelected,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        ref.read(readingPreferencesProvider.notifier).applyPreset(preset);
+      },
+      child: Container(
+        height: 60,
+        decoration: BoxDecoration(
+          color: preset.backgroundColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected 
+                ? Theme.of(context).colorScheme.primary 
+                : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: preset.textColor,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  
+  void _addBookmark() async {
+    final currentChapter = ref.read(currentChapterProvider);
+    if (currentChapter == null) return;
+    
+    final prefs = await SharedPreferences.getInstance();
+    final bookmarkKey = 'bookmarks_${widget.bookId}';
+    
+    // Get existing bookmarks
+    final bookmarksJson = prefs.getStringList(bookmarkKey) ?? [];
+    
+    // Add new bookmark
+    final newBookmark = {
+      'chapterId': currentChapter.id,
+      'chapterTitle': currentChapter.title,
+      'chapterNumber': currentChapter.chapterNumber,
+      'position': _scrollController.offset.toInt(),
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+    
+    bookmarksJson.add(newBookmark.toString());
+    await prefs.setStringList(bookmarkKey, bookmarksJson);
+    
+    // Show success message
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đã lưu bookmark: ${currentChapter.title}'),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   @override
@@ -200,9 +420,39 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
         backgroundColor: bgColor,
         body: Stack(
           children: [
-            // Main Content - Tappable to toggle controls
+            // Main Content - Tappable to toggle controls + Swipe for navigation
             GestureDetector(
               onTap: _toggleControls,
+              onHorizontalDragEnd: (details) {
+                // Swipe threshold: 350 pixels per second
+                final velocity = details.velocity.pixelsPerSecond.dx;
+                if (velocity.abs() > 350) {
+                  if (velocity > 0) {
+                    // Swipe right → Previous chapter
+                    final currentIndex = ref.read(chapterNavigationProvider);
+                    if (currentIndex > 0) {
+                      ref.read(chapterNavigationProvider.notifier).previousChapter();
+                      _scrollController.animateTo(
+                        0,
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeOut,
+                      );
+                    }
+                  } else {
+                    // Swipe left → Next chapter
+                    final chapters = ref.read(chaptersListProvider);
+                    final currentIndex = ref.read(chapterNavigationProvider);
+                    if (currentIndex < chapters.length - 1) {
+                      ref.read(chapterNavigationProvider.notifier).nextChapter();
+                      _scrollController.animateTo(
+                        0,
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeOut,
+                      );
+                    }
+                  }
+                }
+              },
               behavior: HitTestBehavior.opaque,
               child: SafeArea(
                 child: SingleChildScrollView(
@@ -337,38 +587,58 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
   }
   
   Widget _buildFloatingButtons(bool controlsVisible) {
-    return Positioned(
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
       right: 16,
-      bottom: 80,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Chapter List Button
-          FloatingActionButton.small(
-            heroTag: 'chapters',
-            onPressed: _showChapterList,
-            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-            child: Icon(
-              Icons.list_rounded,
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
+      bottom: controlsVisible ? 80 : 20,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 300),
+        opacity: controlsVisible ? 1.0 : 0.7,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Bookmark Button
+            FloatingActionButton.small(
+              heroTag: 'bookmark',
+              onPressed: _addBookmark,
+              backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
+              child: Icon(
+                Icons.bookmark_add_outlined,
+                color: Theme.of(context).colorScheme.onTertiaryContainer,
+              ),
+              tooltip: 'Bookmark',
             ),
-            tooltip: 'Chapters',
-          ),
-          
-          const SizedBox(height: 12),
-          
-          // Settings Button
-          FloatingActionButton.small(
-            heroTag: 'settings',
-            onPressed: _showSettings,
-            backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-            child: Icon(
-              Icons.tune_rounded,
-              color: Theme.of(context).colorScheme.onSecondaryContainer,
+            
+            const SizedBox(height: 12),
+            
+            // Chapter List Button
+            FloatingActionButton.small(
+              heroTag: 'chapters',
+              onPressed: _showChapterList,
+              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              child: Icon(
+                Icons.list_rounded,
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
+              tooltip: 'Chapters',
             ),
-            tooltip: 'Settings',
-          ),
-        ],
+            
+            const SizedBox(height: 12),
+            
+            // Settings Button
+            FloatingActionButton.small(
+              heroTag: 'settings',
+              onPressed: _showSettings,
+              backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+              child: Icon(
+                Icons.tune_rounded,
+                color: Theme.of(context).colorScheme.onSecondaryContainer,
+              ),
+              tooltip: 'Settings',
+            ),
+          ],
+        ),
       ),
     );
   }

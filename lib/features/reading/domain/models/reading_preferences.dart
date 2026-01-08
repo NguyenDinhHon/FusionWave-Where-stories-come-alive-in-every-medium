@@ -120,7 +120,7 @@ class ReadingPreferences {
     backgroundColor: Color(0xFF1A1A1A),
     textColor: Color(0xFFE8E8E8),
     accentColor: Color(0xFF64B5F6),
-    fontFamily: 'Roboto',
+    fontFamily: 'System',
   );
   
   /// Sepia Vintage theme
@@ -129,7 +129,7 @@ class ReadingPreferences {
     backgroundColor: Color(0xFFF4ECD8),
     textColor: Color(0xFF5C4B37),
     accentColor: Color(0xFF8B7355),
-    fontFamily: 'Georgia',
+    fontFamily: 'System',
   );
   
   /// Ocean Blue theme
