@@ -80,39 +80,56 @@ class TopNavigationBar extends ConsumerWidget implements PreferredSizeWidget {
                 ),
               ),
               
-              const SizedBox(width: 32),
+              const SizedBox(width: 16),
               
-              // Navigation Menu Items
+              // Navigation Menu Items - Only show on larger screens
               Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    _buildNavItem(
-                      context,
-                      label: 'Home',
-                      icon: Icons.home,
-                      route: '/home',
-                      isActive: currentRoute == '/home' || currentRoute == '/',
-                    ),
-                    const SizedBox(width: 8),
-                    _buildNavItem(
-                      context,
-                      label: 'Library',
-                      icon: Icons.library_books,
-                      route: '/library',
-                      isActive: currentRoute == '/library',
-                    ),
-                    const SizedBox(width: 8),
-                    _buildCategoryDropdown(context, currentRoute),
-                    const SizedBox(width: 8),
-                    _buildNavItem(
-                      context,
-                      label: 'Trending',
-                      icon: Icons.trending_up,
-                      route: '/recommendations',
-                      isActive: currentRoute == '/recommendations' || currentRoute.startsWith('/recommendations'),
-                    ),
-                  ],
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Hide navigation items on small screens (< 600px)
+                    if (constraints.maxWidth < 400) {
+                      return const SizedBox();
+                    }
+                    
+                    // Show condensed on medium screens
+                    final showLabels = constraints.maxWidth > 500;
+                    
+                    return SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildNavItem(
+                            context,
+                            label: showLabels ? 'Home' : '',
+                            icon: Icons.home,
+                            route: '/home',
+                            isActive: currentRoute == '/home' || currentRoute == '/',
+                          ),
+                          const SizedBox(width: 4),
+                          _buildNavItem(
+                            context,
+                            label: showLabels ? 'Library' : '',
+                            icon: Icons.library_books,
+                            route: '/library',
+                            isActive: currentRoute == '/library',
+                          ),
+                          const SizedBox(width: 4),
+                          if (constraints.maxWidth > 450)
+                            _buildCategoryDropdown(context, currentRoute),
+                          const SizedBox(width: 4),
+                          _buildNavItem(
+                            context,
+                            label: showLabels ? 'Trending' : '',
+                            icon: Icons.trending_up,
+                            route: '/recommendations',
+                            isActive: currentRoute == '/recommendations' || currentRoute.startsWith('/recommendations'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ),
               

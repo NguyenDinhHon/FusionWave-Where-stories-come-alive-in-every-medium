@@ -154,6 +154,10 @@ class _BookCarouselState extends State<BookCarousel> {
                           // Giới hạn width trong khoảng 140-160 để đảm bảo không quá nhỏ hoặc quá lớn
                           final effectiveCardWidth = calculatedCardWidth.clamp(140.0, widget.cardWidth);
                           
+                          // Tính lại số card có thể hiển thị trong không gian thực tế
+                          final actualMaxCards = ((availableWidth + spacing) / (effectiveCardWidth + spacing)).floor().clamp(1, pageBooks.length);
+                          final displayBooks = pageBooks.take(actualMaxCards).toList();
+                          
                           return Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,
@@ -162,11 +166,11 @@ class _BookCarouselState extends State<BookCarousel> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.start,
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min, // Không mở rộng quá mức cần thiết
-                              children: List.generate(pageBooks.length, (index) {
+                              mainAxisSize: MainAxisSize.min,
+                              children: List.generate(displayBooks.length, (index) {
                                 return Padding(
                                   padding: EdgeInsets.only(
-                                    right: index < pageBooks.length - 1 ? spacing : 0,
+                                    right: index < displayBooks.length - 1 ? spacing : 0,
                                   ),
                                   child: AnimationConfiguration.staggeredList(
                                     position: index,
@@ -175,12 +179,12 @@ class _BookCarouselState extends State<BookCarousel> {
                                       horizontalOffset: 50.0,
                                       child: FadeInAnimation(
                                         child: SizedBox(
-                                          width: effectiveCardWidth, // Width động nhưng không nhỏ hơn 140
+                                          width: effectiveCardWidth,
                                           child: AnimatedBookCard(
-                                            book: pageBooks[index],
+                                            book: displayBooks[index],
                                             width: effectiveCardWidth,
-                                            height: 240, // Height cố định
-                                            onTap: () => context.push('/book/${pageBooks[index].id}'),
+                                            height: 240,
+                                            onTap: () => context.push('/book/${displayBooks[index].id}'),
                                           ),
                                         ),
                                       ),
