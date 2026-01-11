@@ -18,7 +18,6 @@ import '../../../../data/models/book_model.dart';
 import '../../../../data/models/library_item_model.dart';
 import '../../../offline/presentation/widgets/offline_indicator.dart';
 import '../widgets/dark_book_card.dart';
-import '../../../../core/widgets/dark_bottom_nav_bar.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -62,9 +61,6 @@ class _HomePageState extends ConsumerState<HomePage> {
               slivers: [
                 // Hero Banner Section (giống Waka)
                 _buildHeroBanner(context, ref, featuredBooksAsync),
-
-                // Search Bar
-                _buildSearchBar(),
 
                 // Continue Reading Section
                 _buildContinueReadingSection(
@@ -125,7 +121,6 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
         ],
       ),
-      bottomNavigationBar: const DarkBottomNavBar(currentIndex: 0),
     );
   }
 
@@ -766,41 +761,6 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
             ),
         ],
-      ),
-    );
-  }
-
-  // Search Bar cho dark theme
-  Widget _buildSearchBar() {
-    return SliverToBoxAdapter(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.darkCard,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.search, color: AppColors.darkTextSecondary),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextField(
-                style: const TextStyle(color: AppColors.darkTextPrimary),
-                decoration: InputDecoration(
-                  hintText: 'Search books or authors...',
-                  hintStyle: const TextStyle(color: AppColors.darkTextTertiary),
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
-                onSubmitted: (value) {
-                  // TODO: Implement search
-                },
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

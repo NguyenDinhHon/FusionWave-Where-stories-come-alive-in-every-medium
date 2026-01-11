@@ -38,6 +38,7 @@ import '../../features/social/presentation/pages/social_feed_page.dart';
 import '../../features/recommendations/presentation/pages/enhanced_recommendations_page.dart';
 import '../../features/offline/presentation/pages/offline_books_page.dart';
 import 'page_transitions.dart';
+import 'shell_scaffold.dart';
 
 /// Application routing configuration
 class AppRouter {
@@ -156,23 +157,77 @@ class AppRouter {
         },
       ),
 
-      // Main Routes
-      GoRoute(
-        path: '/home',
-        name: 'home',
-        pageBuilder: (context, state) => PageTransitions.fadeTransition(
-          child: const HomePage(),
-          name: state.name,
-        ),
+      // Main Shell Route - preserves navigation stack for main tabs
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return ShellScaffold(navigationShell: navigationShell);
+        },
+        branches: [
+          // Branch 0: Home (Masterpiece)
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                name: 'home',
+                pageBuilder: (context, state) => PageTransitions.fadeTransition(
+                  child: const HomePage(),
+                  name: state.name,
+                ),
+              ),
+            ],
+          ),
+
+          // Branch 1: Library
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/library',
+                name: 'library',
+                pageBuilder: (context, state) =>
+                    PageTransitions.slideFadeTransition(
+                      child: const PremiumLibraryPage(),
+                      name: state.name,
+                    ),
+              ),
+            ],
+          ),
+
+          // Branch 2: Discover (Categories)
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/categories',
+                name: 'categories',
+                pageBuilder: (context, state) {
+                  final category = state.uri.queryParameters['category'];
+                  return PageTransitions.slideTransition(
+                    child: CategoriesPage(initialCategory: category),
+                    name: state.name,
+                    begin: const Offset(0.0, -1.0),
+                  );
+                },
+              ),
+            ],
+          ),
+
+          // Branch 3: User (Profile)
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                name: 'profile',
+                pageBuilder: (context, state) =>
+                    PageTransitions.slideFadeTransition(
+                      child: const PremiumProfilePage(),
+                      name: state.name,
+                    ),
+              ),
+            ],
+          ),
+        ],
       ),
-      GoRoute(
-        path: '/library',
-        name: 'library',
-        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
-          child: const PremiumLibraryPage(),
-          name: state.name,
-        ),
-      ),
+
+      // Other Routes (outside shell - full screen)
       GoRoute(
         path: '/search',
         name: 'search',
@@ -180,14 +235,6 @@ class AppRouter {
           child: const PremiumSearchPage(),
           name: state.name,
           begin: const Offset(0.0, -1.0),
-        ),
-      ),
-      GoRoute(
-        path: '/profile',
-        name: 'profile',
-        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
-          child: const PremiumProfilePage(),
-          name: state.name,
         ),
       ),
       GoRoute(
@@ -350,20 +397,6 @@ class AppRouter {
           return PageTransitions.slideFadeTransition(
             child: NotesPage(bookId: bookId, chapterId: chapterId),
             name: state.name,
-          );
-        },
-      ),
-
-      // Categories Routes
-      GoRoute(
-        path: '/categories',
-        name: 'categories',
-        pageBuilder: (context, state) {
-          final category = state.uri.queryParameters['category'];
-          return PageTransitions.slideTransition(
-            child: CategoriesPage(initialCategory: category),
-            name: state.name,
-            begin: const Offset(0.0, -1.0),
           );
         },
       ),
