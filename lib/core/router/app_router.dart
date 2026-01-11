@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_guard_provider.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
-import '../../features/home/presentation/pages/premium_home_page.dart';
+import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/library/presentation/pages/premium_library_page.dart';
 import '../../features/search/presentation/pages/premium_search_page.dart';
 import '../../features/profile/presentation/pages/premium_profile_page.dart';
@@ -52,24 +52,21 @@ class AppRouter {
     '/reading',
     '/book',
   ];
-  
+
   // Auth routes that should redirect to home if already logged in
-  static const List<String> _authRoutes = [
-    '/login',
-    '/register',
-  ];
-  
+  static const List<String> _authRoutes = ['/login', '/register'];
+
   // Admin guard function
   static String? _adminGuard(BuildContext context, GoRouterState state) {
     try {
       final container = ProviderScope.containerOf(context);
       final isAdmin = container.read(isAdminProvider);
       final isAuthenticated = container.read(isAuthenticatedProvider);
-      
+
       if (!isAuthenticated) {
         return '/login?redirect=${Uri.encodeComponent(state.uri.toString())}';
       }
-      
+
       if (!isAdmin) {
         // Show error message and redirect to home
         ScaffoldMessenger.of(context).showSnackBar(
@@ -80,7 +77,7 @@ class AppRouter {
         );
         return '/home';
       }
-      
+
       return null; // Allow access
     } catch (e) {
       // If provider is not available, check Firebase Auth directly
@@ -92,18 +89,18 @@ class AppRouter {
       return null;
     }
   }
-  
+
   static String? _redirect(BuildContext context, GoRouterState state) {
     final isAuthenticated = FirebaseAuth.instance.currentUser != null;
     final isAuthRoute = _authRoutes.contains(state.uri.path);
     final isProtectedRoute = _protectedRoutes.any(
       (route) => state.uri.path.startsWith(route),
     );
-    
+
     // Admin routes are handled by _adminGuard (called in route redirect)
     // Exception: seed-data routes don't require admin (for development)
     if (state.uri.path.startsWith('/admin')) {
-      if (state.uri.path == '/admin/seed-data' || 
+      if (state.uri.path == '/admin/seed-data' ||
           state.uri.path == '/admin/comprehensive-seed-data') {
         // Allow seed routes if authenticated (no admin check)
         final isAuthenticated = FirebaseAuth.instance.currentUser != null;
@@ -114,26 +111,26 @@ class AppRouter {
       }
       return _adminGuard(context, state);
     }
-    
+
     // Allow email link verification route
     if (state.uri.path == '/verify-email-link') {
       return null;
     }
-    
+
     // If user is authenticated and trying to access auth routes, redirect to home
     if (isAuthenticated && isAuthRoute) {
       return '/home';
     }
-    
+
     // If user is not authenticated and trying to access protected routes, redirect to login
     if (!isAuthenticated && isProtectedRoute) {
       return '/login';
     }
-    
+
     // Allow access
     return null;
   }
-  
+
   static final GoRouter router = GoRouter(
     initialLocation: '/home',
     redirect: _redirect,
@@ -155,19 +152,16 @@ class AppRouter {
         builder: (context, state) {
           final email = state.uri.queryParameters['email'];
           final link = state.uri.toString();
-          return EmailLinkVerifyPage(
-            email: email,
-            link: link,
-          );
+          return EmailLinkVerifyPage(email: email, link: link);
         },
       ),
-      
+
       // Main Routes
       GoRoute(
         path: '/home',
         name: 'home',
         pageBuilder: (context, state) => PageTransitions.fadeTransition(
-          child: const PremiumHomePage(),
+          child: const HomePage(),
           name: state.name,
         ),
       ),
@@ -229,7 +223,7 @@ class AppRouter {
           name: state.name,
         ),
       ),
-      
+
       // Social Feed Routes
       GoRoute(
         path: '/social-feed',
@@ -239,7 +233,7 @@ class AppRouter {
           name: state.name,
         ),
       ),
-      
+
       // Admin Routes (Protected)
       GoRoute(
         path: '/admin',
@@ -318,10 +312,7 @@ class AppRouter {
           final bookId = state.uri.queryParameters['bookId']!;
           final chapterId = state.uri.queryParameters['chapterId'];
           return PageTransitions.slideFadeTransition(
-            child: EditChapterPage(
-              bookId: bookId,
-              chapterId: chapterId,
-            ),
+            child: EditChapterPage(bookId: bookId, chapterId: chapterId),
             name: state.name,
           );
         },
@@ -335,7 +326,7 @@ class AppRouter {
           name: state.name,
         ),
       ),
-      
+
       // Bookmark Routes
       GoRoute(
         path: '/bookmarks',
@@ -348,7 +339,7 @@ class AppRouter {
           );
         },
       ),
-      
+
       // Notes Routes
       GoRoute(
         path: '/notes',
@@ -362,7 +353,7 @@ class AppRouter {
           );
         },
       ),
-      
+
       // Categories Routes
       GoRoute(
         path: '/categories',
@@ -376,7 +367,7 @@ class AppRouter {
           );
         },
       ),
-      
+
       // Goals Routes
       GoRoute(
         path: '/goals',
@@ -386,7 +377,7 @@ class AppRouter {
           name: state.name,
         ),
       ),
-      
+
       // History Routes
       GoRoute(
         path: '/history',
@@ -396,7 +387,7 @@ class AppRouter {
           name: state.name,
         ),
       ),
-      
+
       // Collections Routes
       GoRoute(
         path: '/collections',
@@ -417,7 +408,7 @@ class AppRouter {
           );
         },
       ),
-      
+
       // Challenges Routes
       GoRoute(
         path: '/challenges',
@@ -427,7 +418,7 @@ class AppRouter {
           name: state.name,
         ),
       ),
-      
+
       // Notifications Routes
       GoRoute(
         path: '/notifications',
@@ -438,7 +429,7 @@ class AppRouter {
           begin: const Offset(1.0, 0.0),
         ),
       ),
-      
+
       // Offline Routes
       GoRoute(
         path: '/offline',
@@ -448,7 +439,7 @@ class AppRouter {
           name: state.name,
         ),
       ),
-      
+
       // Book Routes
       GoRoute(
         path: '/book/:bookId',
@@ -471,7 +462,7 @@ class AppRouter {
           ),
         ],
       ),
-      
+
       // Reading Routes
       GoRoute(
         path: '/reading/:bookId',
@@ -480,10 +471,7 @@ class AppRouter {
           final bookId = state.pathParameters['bookId']!;
           final chapterId = state.uri.queryParameters['chapterId'];
           return PageTransitions.slideTransition(
-            child: PremiumReadingPage(
-              bookId: bookId,
-              chapterId: chapterId,
-            ),
+            child: PremiumReadingPage(bookId: bookId, chapterId: chapterId),
             name: state.name,
           );
         },
