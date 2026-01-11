@@ -75,16 +75,16 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: _close,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Stack(
+    return Material(
+      type: MaterialType.transparency,
+      child: GestureDetector(
+        onTap: _close,
+        child: Stack(
           children: [
             // Backdrop blur
             BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-              child: Container(color: Colors.black.withOpacity(0.5)),
+              child: Container(color: Colors.black.withOpacity(0.3)),
             ),
 
             // Search content
@@ -120,13 +120,28 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
                                 decoration: const InputDecoration(
                                   hintText: 'Tìm kiếm sách...',
                                   border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  filled: false,
                                   hintStyle: TextStyle(
                                     color: Colors.grey,
                                     fontSize: 16,
                                   ),
+                                  contentPadding: EdgeInsets.zero,
                                 ),
-                                style: const TextStyle(fontSize: 16),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black87,
+                                ),
                                 onSubmitted: (_) => _handleSearch(),
+                                onChanged: (_) {
+                                  // Clear results when typing
+                                  if (_searchController.text.isEmpty) {
+                                    setState(() {
+                                      _searchResults = [];
+                                    });
+                                  }
+                                },
                               ),
                             ),
                             // Search button
@@ -149,7 +164,6 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 8),
                           ],
                         ),
                       ),
