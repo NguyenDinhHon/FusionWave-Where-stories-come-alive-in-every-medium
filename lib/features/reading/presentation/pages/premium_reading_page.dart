@@ -1,29 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import '../providers/reading_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../home/presentation/providers/book_provider.dart';
-import '../../../settings/presentation/providers/settings_provider.dart';
-import '../../../../core/constants/app_constants.dart';
-import '../../../../core/widgets/premium_button.dart';
-import '../../../../core/widgets/interactive_button.dart';
-import '../../../../data/models/chapter_model.dart';
 import '../../../../data/models/book_model.dart';
-import '../widgets/reading_settings_dialog.dart';
-import '../widgets/reading_progress_indicator.dart';
-import '../widgets/page_view_reader.dart';
-import '../widgets/chapter_list_drawer.dart';
-import '../widgets/reading_progress_info.dart';
-import '../widgets/inline_commentable_text.dart';
-import '../../../bookmark/presentation/widgets/add_bookmark_dialog.dart';
-import '../../../audio/presentation/widgets/mini_audio_player.dart';
-import '../../../social/presentation/providers/social_provider.dart';
-import '../../../social/presentation/providers/chapter_like_provider.dart';
-import '../../../../core/services/share_service.dart';
-import '../../../../core/utils/reading_utils.dart';
 
-/// Premium Reading Page với design giống Wattpad & Waka
+// Phase 1: Providers & Models
+import '../../domain/models/chapter.dart';
+import '../../domain/models/reading_preferences.dart';
+import '../providers/reading_mode_provider.dart';
+import '../providers/reading_preferences_provider.dart';
+import '../providers/current_chapter_provider.dart';
+
+// Phase 2: Widgets
+import '../widgets/chapter_list_sheet.dart';
+import '../widgets/reading_settings_panel.dart';
+
+// Firebase data provider
+import '../providers/reading_provider.dart';
+
+/// Enhanced Reading Page - Simple, Clean, Beautiful
+/// Integrates Phase 1 (Models & Providers) + Phase 2 (UI Widgets)
 class PremiumReadingPage extends ConsumerStatefulWidget {
   final String bookId;
   final String? chapterId;
@@ -38,852 +36,721 @@ class PremiumReadingPage extends ConsumerStatefulWidget {
   ConsumerState<PremiumReadingPage> createState() => _PremiumReadingPageState();
 }
 
-class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> {
-  int _currentChapterNumber = 1;
-  ChapterModel? _currentChapter;
-  BookModel? _book;
-  double _fontSize = 16.0;
-  double _lineHeight = 1.6;
-  double _margin = 16.0;
-  String _theme = AppConstants.themeLight;
-  String _readingMode = AppConstants.readingModeScroll;
-  bool _showControls = false;
-  bool _showAudioPlayer = false;
+class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  int? _timeRemainingMinutes;
-  int? _readingSpeed;
-  
+  late AnimationController _controlsAnimationController;
+  double _lastScrollOffset = 0;
+
   @override
   void initState() {
     super.initState();
-    _loadSettings();
-    if (widget.chapterId != null) {
-      _loadChapterById(widget.chapterId!);
-    } else {
-      _loadFirstChapter();
-    }
+    
+    // Controls animation
+    _controlsAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    )..forward(); // Start visible
+    
+    // Auto-hide controls on scroll
+    _scrollController.addListener(_onScroll);
   }
   
   @override
   void dispose() {
     _scrollController.dispose();
+    _controlsAnimationController.dispose();
     super.dispose();
   }
   
-  void _updateReadingStats() {
-    if (_currentChapter == null) return;
+  void _onScroll() {
+    final currentOffset = _scrollController.offset;
+    final delta = currentOffset - _lastScrollOffset;
     
-    // Calculate reading time
-    final readingTime = _currentChapter!.estimatedReadingTimeMinutes ??
-        ReadingUtils.calculateReadingTime(_currentChapter!.content);
-    
-    // Calculate time remaining based on scroll position
-    if (_scrollController.hasClients) {
-      final position = _scrollController.position.pixels;
-      final maxScroll = _scrollController.position.maxScrollExtent;
-      _timeRemainingMinutes = ReadingUtils.calculateTimeRemaining(
-        scrollPosition: position,
-        maxScroll: maxScroll,
-        totalReadingTimeMinutes: readingTime,
-      );
-    } else {
-      _timeRemainingMinutes = readingTime;
+    // Hide controls when scrolling down >50px
+    if (delta > 50 && _controlsAnimationController.value > 0) {
+      _hideControls();
+    }
+    // Show controls when scrolling up
+    else if (delta < -20 && _controlsAnimationController.value == 0) {
+      _showControls();
     }
     
-    // Calculate reading speed (simplified - in production, track actual reading)
-    final wordCount = ReadingUtils.getWordCount(_currentChapter!.content);
-    if (readingTime > 0) {
-      _readingSpeed = (wordCount / readingTime).round();
-    }
-    
-    setState(() {});
+    _lastScrollOffset = currentOffset;
   }
   
-  void _onChapterSelected(ChapterModel chapter) {
-    setState(() {
-      _currentChapter = chapter;
-      _currentChapterNumber = chapter.chapterNumber;
-    });
-    _updateReadingProgress();
-    _scrollToTop();
-    _updateReadingStats();
+  void _showControls() {
+    _controlsAnimationController.forward();
+    ref.read(controlsVisibilityProvider.notifier).show();
+  }
+  
+  void _hideControls() {
+    _controlsAnimationController.reverse();
+    ref.read(controlsVisibilityProvider.notifier).hide();
+  }
+  
+  void _toggleControls() {
+    final isVisible = ref.read(controlsVisibilityProvider);
+    if (isVisible) {
+      _hideControls();
+    } else {
+      _showControls();
+    }
   }
   
   void _showChapterList() {
-    _scaffoldKey.currentState?.openEndDrawer();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const ChapterListSheet(),
+    );
   }
   
-  void _showJumpToChapterDialog() {
-    final chapterController = TextEditingController();
+  void _showSettings() {
+    final prefs = ref.read(readingPreferencesProvider);
     
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Jump to Chapter'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              _book != null
-                  ? 'Enter chapter number (1-${_book!.totalChapters}):'
-                  : 'Enter chapter number:',
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: chapterController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Chapter Number',
-                border: OutlineInputBorder(),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Handle bar
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
               ),
-              autofocus: true,
+              
+              // Title
+              Text(
+                'Cài đặt nhanh',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 24),
+              
+              // Font Size Slider
+              _buildSlider(
+                label: 'Cỡ chữ',
+                value: prefs.fontSize,
+                min: 12,
+                max: 32,
+                divisions: 20,
+                onChanged: (value) {
+                  ref.read(readingPreferencesProvider.notifier).updateFontSize(value);
+                },
+              ),
+              
+              // Line Height Slider
+              _buildSlider(
+                label: 'Khoảng cách dòng',
+                value: prefs.lineHeight,
+                min: 1.0,
+                max: 2.5,
+                divisions: 15,
+                onChanged: (value) {
+                  ref.read(readingPreferencesProvider.notifier).updateLineHeight(value);
+                },
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Theme Presets
+              Text(
+                'Chủ đề',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildThemeCard(
+                      label: 'Sáng',
+                      preset: ReadingPreferences.lightPreset,
+                      isSelected: prefs.backgroundColor == ReadingPreferences.lightPreset.backgroundColor,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildThemeCard(
+                      label: 'Tối',
+                      preset: ReadingPreferences.darkPreset,
+                      isSelected: prefs.backgroundColor == ReadingPreferences.darkPreset.backgroundColor,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildThemeCard(
+                      label: 'Sepia',
+                      preset: ReadingPreferences.sepiaPreset,
+                      isSelected: prefs.backgroundColor == ReadingPreferences.sepiaPreset.backgroundColor,
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // More Settings Button
+              OutlinedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => const ReadingSettingsPanel(),
+                  );
+                },
+                child: const Text('Cài đặt nâng cao'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildSlider({
+    required String label,
+    required double value,
+    required double min,
+    required double max,
+    required int divisions,
+    required ValueChanged<double> onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: Theme.of(context).textTheme.bodyMedium),
+            Text(
+              value.toStringAsFixed(1),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
-        actions: [
-          InteractiveButton(
-            label: 'Cancel',
-            onPressed: () => Navigator.pop(context),
-            isOutlined: true,
-            height: 40,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        Slider(
+          value: value,
+          min: min,
+          max: max,
+          divisions: divisions,
+          onChanged: onChanged,
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildThemeCard({
+    required String label,
+    required ReadingPreferences preset,
+    required bool isSelected,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        ref.read(readingPreferencesProvider.notifier).applyPreset(preset);
+      },
+      child: Container(
+        height: 60,
+        decoration: BoxDecoration(
+          color: preset.backgroundColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected 
+                ? Theme.of(context).colorScheme.primary 
+                : Colors.transparent,
+            width: 2,
           ),
-          InteractiveButton(
-            label: 'Go',
-            icon: Icons.arrow_forward,
-            onPressed: () {
-              final chapterNum = int.tryParse(chapterController.text);
-              if (chapterNum != null && 
-                  chapterNum >= 1 && 
-                  _book != null && 
-                  chapterNum <= _book!.totalChapters) {
-                // Load chapter by number
-                final chaptersAsync = ref.read(chaptersByBookIdProvider(widget.bookId));
-                chaptersAsync.whenData((chapters) {
-                  final chapter = chapters.firstWhere(
-                    (c) => c.chapterNumber == chapterNum,
-                    orElse: () => chapters.first,
-                  );
-                  _onChapterSelected(chapter);
-                });
-                Navigator.pop(context);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      _book != null
-                          ? 'Please enter a number between 1 and ${_book!.totalChapters}'
-                          : 'Invalid chapter number',
-                    ),
-                  ),
-                );
-              }
-            },
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: preset.textColor,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
   
-  Future<void> _shareChapter() async {
-    if (_currentChapter == null || _book == null) return;
+  void _addBookmark() async {
+    final currentChapter = ref.read(currentChapterProvider);
+    if (currentChapter == null) return;
     
-    final shareService = ShareService();
-    await shareService.shareQuote(
-      quote: _currentChapter!.content.length > 200
-          ? '${_currentChapter!.content.substring(0, 200)}...'
-          : _currentChapter!.content,
-      bookTitle: _book!.title,
-      author: _book!.authors.isNotEmpty ? _book!.authors.first : null,
-    );
-  }
-  
-  void _navigateToComments() {
-    context.push('/book/${widget.bookId}/comments?chapterId=${_currentChapter?.id}');
-  }
-  
-  Future<void> _loadSettings() async {
-    final prefsAsync = ref.read(preferencesServiceProvider);
-    await prefsAsync.whenData((prefs) {
-      setState(() {
-        _fontSize = prefs.getFontSize();
-        _lineHeight = prefs.getLineHeight();
-        _theme = prefs.getTheme();
-        _readingMode = prefs.getReadingMode();
-      });
-    });
-  }
-  
-  Future<void> _loadChapterById(String chapterId) async {
-    final chapterAsync = ref.read(chapterByIdProvider(chapterId));
-    chapterAsync.whenData((chapter) {
-      if (chapter != null) {
-        setState(() {
-          _currentChapter = chapter;
-          _currentChapterNumber = chapter.chapterNumber;
-        });
-        _updateReadingProgress();
-        _scrollToTop();
-        _updateReadingStats();
-      }
-    });
-  }
-  
-  Future<void> _loadFirstChapter() async {
-    final chaptersAsync = ref.read(chaptersByBookIdProvider(widget.bookId));
-    chaptersAsync.whenData((chapters) {
-      if (chapters.isNotEmpty) {
-        setState(() {
-          _currentChapter = chapters.first;
-          _currentChapterNumber = chapters.first.chapterNumber;
-        });
-        _updateReadingProgress();
-        _scrollToTop();
-        _updateReadingStats();
-      }
-    });
-  }
-  
-  void _scrollToTop() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollController.animateTo(
-        0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
+    final prefs = await SharedPreferences.getInstance();
+    final bookmarkKey = 'bookmarks_${widget.bookId}';
+    
+    // Get existing bookmarks
+    final bookmarksJson = prefs.getStringList(bookmarkKey) ?? [];
+    
+    // Add new bookmark
+    final newBookmark = {
+      'chapterId': currentChapter.id,
+      'chapterTitle': currentChapter.title,
+      'chapterNumber': currentChapter.chapterNumber,
+      'position': _scrollController.offset.toInt(),
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+    
+    bookmarksJson.add(newBookmark.toString());
+    await prefs.setStringList(bookmarkKey, bookmarksJson);
+    
+    // Show success message
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đã lưu bookmark: ${currentChapter.title}'),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
-    });
-  }
-  
-  Future<void> _updateReadingProgress() async {
-    if (_currentChapter == null || _book == null) return;
-    
-    final controller = ref.read(readingControllerProvider);
-    await controller.updateReadingProgress(
-      bookId: widget.bookId,
-      currentPage: _currentChapter!.pageNumber ?? 0,
-      currentChapter: _currentChapterNumber,
-      totalPages: _book!.totalPages,
-      totalChapters: _book!.totalChapters,
-    );
-  }
-  
-  Future<void> _loadNextChapter() async {
-    if (_currentChapter == null) return;
-    
-    final controller = ref.read(readingControllerProvider);
-    final nextChapter = await controller.getNextChapter(
-      widget.bookId,
-      _currentChapterNumber,
-    );
-    
-    if (nextChapter != null) {
-      setState(() {
-        _currentChapter = nextChapter;
-        _currentChapterNumber = nextChapter.chapterNumber;
-      });
-      _updateReadingProgress();
-      _scrollToTop();
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No more chapters')),
-        );
-      }
-    }
-  }
-  
-  Future<void> _loadPreviousChapter() async {
-    if (_currentChapter == null) return;
-    
-    final controller = ref.read(readingControllerProvider);
-    final prevChapter = await controller.getPreviousChapter(
-      widget.bookId,
-      _currentChapterNumber,
-    );
-    
-    if (prevChapter != null) {
-      setState(() {
-        _currentChapter = prevChapter;
-        _currentChapterNumber = prevChapter.chapterNumber;
-      });
-      _updateReadingProgress();
-      _scrollToTop();
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('This is the first chapter')),
-        );
-      }
-    }
-  }
-  
-  void _showReadingSettings() {
-    showDialog(
-      context: context,
-      builder: (context) => ReadingSettingsDialog(
-        previewText: _currentChapter?.content ?? '',
-      ),
-    ).then((_) {
-      _loadSettings();
-    });
-  }
-  
-  void _showAddBookmarkDialog() {
-    if (_currentChapter == null || _book == null) return;
-    
-    showDialog(
-      context: context,
-      builder: (context) => AddBookmarkDialog(
-        bookId: widget.bookId,
-        chapterId: _currentChapter!.id,
-        chapterNumber: _currentChapterNumber,
-        pageNumber: _currentChapter!.pageNumber,
-      ),
-    );
-  }
-  
-  double _calculateProgress() {
-    if (_book == null) return 0.0;
-    return (_currentChapterNumber / _book!.totalChapters).clamp(0.0, 1.0);
-  }
-  
-  Color _getBackgroundColor() {
-    switch (_theme) {
-      case AppConstants.themeDark:
-        return Colors.grey[900]!;
-      case AppConstants.themeSepia:
-        return const Color(0xFFF4E4BC);
-      default:
-        return Colors.white;
-    }
-  }
-  
-  Color _getTextColor() {
-    switch (_theme) {
-      case AppConstants.themeDark:
-        return Colors.white;
-      case AppConstants.themeSepia:
-        return const Color(0xFF5C4033);
-      default:
-        return Colors.black;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final currentChapter = ref.watch(currentChapterProvider);
+    final chapters = ref.watch(chaptersListProvider);
+    final controlsVisible = ref.watch(controlsVisibilityProvider);
+    final prefs = ref.watch(readingPreferencesProvider);
+    final mode = ref.watch(readingModeProvider);
+    
+    // Get book data
     final bookAsync = ref.watch(bookByIdProvider(widget.bookId));
     
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: _getBackgroundColor(),
-      endDrawer: _currentChapter != null && _book != null
-          ? ChapterListDrawer(
-              bookId: widget.bookId,
-              currentChapterNumber: _currentChapterNumber,
-              onChapterSelected: _onChapterSelected,
-            )
-          : null,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: _getBackgroundColor(),
-        leading: InteractiveIconButton(
-          icon: Icons.arrow_back,
-          iconColor: _getTextColor(),
-          size: 40,
-          onPressed: () => context.pop(),
-          tooltip: 'Back',
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              _currentChapter?.title ?? 'Reading',
-              style: TextStyle(
-                fontSize: 16,
-                color: _getTextColor(),
-                fontWeight: FontWeight.bold,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (_book != null)
-              Text(
-                'Chapter ${_currentChapterNumber} of ${_book!.totalChapters}',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: _getTextColor().withOpacity(0.7),
-                ),
-              ),
-          ],
-        ),
-        actions: [
-          // Chapter list
-          InteractiveIconButton(
-            icon: Icons.menu_book,
-            iconColor: _getTextColor(),
-            size: 40,
-            onPressed: _showChapterList,
-            tooltip: 'Chapter List',
-          ),
-          // Reading mode toggle
-          InteractiveIconButton(
-            icon: _readingMode == AppConstants.readingModePage
-                ? Icons.view_column
-                : Icons.view_agenda,
-            iconColor: _getTextColor(),
-            size: 40,
-            tooltip: _readingMode == AppConstants.readingModePage
-                ? 'Switch to Scroll Mode'
-                : 'Switch to Page Mode',
-            onPressed: () async {
-              final newMode = _readingMode == AppConstants.readingModePage
-                  ? AppConstants.readingModeScroll
-                  : AppConstants.readingModePage;
-              await ref.read(readingModeProvider.notifier).setReadingMode(newMode);
-              setState(() => _readingMode = newMode);
-            },
-          ),
-          // Bookmark
-          InteractiveIconButton(
-            icon: Icons.bookmark_border,
-            iconColor: _getTextColor(),
-            size: 40,
-            onPressed: _currentChapter != null ? _showAddBookmarkDialog : null,
-            tooltip: 'Add Bookmark',
-          ),
-          // Settings
-          InteractiveIconButton(
-            icon: Icons.settings,
-            iconColor: _getTextColor(),
-            size: 40,
-            onPressed: _showReadingSettings,
-            tooltip: 'Reading Settings',
-          ),
-        ],
-        bottom: _book != null
-            ? PreferredSize(
-                preferredSize: const Size.fromHeight(4),
-                child: ReadingProgressIndicator(
-                  progress: _calculateProgress(),
-                  height: 4,
-                ),
-              )
-            : null,
+    // Watch chapters and load them
+    final chaptersAsync = ref.watch(chaptersByBookIdProvider(widget.bookId));
+    
+    // Load chapters when data available
+    ref.listen(chaptersByBookIdProvider(widget.bookId), (previous, next) {
+      next.whenData((chapterModels) {
+        // Convert ChapterModel to Chapter (Phase 1 model)
+        final loadedChapters = chapterModels.map((cm) => Chapter(
+          id: cm.id,
+          title: cm.title,
+          chapterNumber: cm.chapterNumber,
+          content: cm.content,
+          estimatedDuration: cm.estimatedReadingTimeMinutes != null 
+              ? Duration(minutes: cm.estimatedReadingTimeMinutes!)
+              : null,
+        )).toList();
+        
+        // Only load if chapters changed
+        if (chapters.isEmpty || chapters.length != loadedChapters.length) {
+          ref.read(chapterNavigationProvider.notifier).loadChapters(loadedChapters);
+          
+          // If specific chapter requested, navigate to it
+          if (widget.chapterId != null && currentChapter == null) {
+            final index = loadedChapters.indexWhere((c) => c.id == widget.chapterId);
+            if (index >= 0) {
+              ref.read(chapterNavigationProvider.notifier).jumpToChapter(index);
+            }
+          }
+        }
+      });
+    });
+    
+    return bookAsync.when(
+      data: (book) => _buildReader(
+        book: book,
+        currentChapter: currentChapter,
+        chapters: chapters,
+        controlsVisible: controlsVisible,
+        prefs: prefs,
+        mode: mode,
       ),
-      body: GestureDetector(
-        onTap: () {
-          setState(() {
-            _showControls = !_showControls;
-          });
-        },
-        child: Stack(
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, stack) => Scaffold(
+        body: Center(child: Text('Error: $error')),
+      ),
+    );
+  }
+  
+  Widget _buildReader({
+    required BookModel? book,
+    required Chapter? currentChapter,
+    required List<Chapter> chapters,
+    required bool controlsVisible,
+    required dynamic prefs,
+    required dynamic mode,
+  }) {
+    if (book == null || currentChapter == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    
+    // Get theme colors from preferences
+    final bgColor = prefs.backgroundColor;
+    final textColor = prefs.textColor;
+    
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: _getBrightness(bgColor),
+        systemNavigationBarColor: bgColor,
+        systemNavigationBarIconBrightness: _getBrightness(bgColor),
+      ),
+      child: Scaffold(
+        backgroundColor: bgColor,
+        body: Stack(
           children: [
-            // Reading content
-            bookAsync.when(
-              data: (book) {
-                _book = book;
-                
-                if (_currentChapter == null) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                
-                // Reading mode: Scroll or Page view
-                if (_readingMode == AppConstants.readingModePage) {
-                  return PageViewReader(
-                    chapter: _currentChapter!,
-                    onNextChapter: _loadNextChapter,
-                    onPreviousChapter: _currentChapterNumber > 1 ? _loadPreviousChapter : null,
-                    hasNext: true,
-                    hasPrevious: _currentChapterNumber > 1,
-                  );
-                } else {
-                  // Scroll view mode với premium design
-                  return AnimationConfiguration.staggeredList(
-                    position: 0,
-                    duration: const Duration(milliseconds: 375),
-                    child: SlideAnimation(
-                      verticalOffset: 50.0,
-                      child: FadeInAnimation(
-                        child: NotificationListener<ScrollNotification>(
-                          onNotification: (notification) {
-                            if (notification is ScrollUpdateNotification) {
-                              _updateReadingStats();
-                            }
-                            return false;
-                          },
-                          child: SingleChildScrollView(
-                            controller: _scrollController,
-                            padding: EdgeInsets.all(_margin),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Chapter title với premium style
-                              Container(
-                                padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: _getTextColor().withOpacity(0.05),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      _currentChapter!.title,
-                                      style: TextStyle(
-                                        fontSize: _fontSize * 1.8,
-                                        fontWeight: FontWeight.bold,
-                                        color: _getTextColor(),
-                                        height: _lineHeight,
-                                      ),
-                                    ),
-                                    if (_currentChapter!.subtitle != null) ...[
-                                      const SizedBox(height: 12),
-                                      Text(
-                                        _currentChapter!.subtitle!,
-                                        style: TextStyle(
-                                          fontSize: _fontSize * 1.2,
-                                          color: _getTextColor().withOpacity(0.7),
-                                          height: _lineHeight,
-                                          fontStyle: FontStyle.italic,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 32),
-                              
-                              // Chapter content với premium typography và inline comments
-                              Builder(
-                                builder: (context) {
-                                  final content = _currentChapter!.content;
-                                  
-                                  // Check if content is empty
-                                  if (content.isEmpty) {
-                                    return Container(
-                                      padding: const EdgeInsets.all(24),
-                                      decoration: BoxDecoration(
-                                        color: Colors.orange.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                          color: Colors.orange.withOpacity(0.3),
-                                        ),
-                                      ),
-                                      child: Column(
-                                        children: [
-                                          Icon(
-                                            Icons.warning_amber_rounded,
-                                            size: 48,
-                                            color: Colors.orange[700],
-                                          ),
-                                          const SizedBox(height: 16),
-                                          Text(
-                                            'No content available',
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              color: _getTextColor(),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            'This chapter does not have any content yet.',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: _getTextColor().withOpacity(0.7),
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  }
-                                  
-                                  // Use InlineCommentableText for scroll mode
-                                  return InlineCommentableText(
-                                    text: content,
-                                    bookId: widget.bookId,
-                                    chapterId: _currentChapter!.id,
-                                    textStyle: TextStyle(
-                                      fontSize: _fontSize,
-                                      height: _lineHeight,
-                                      color: _getTextColor(),
-                                      letterSpacing: 0.5,
-                                    ),
-                                  );
-                                },
-                              ),
-                              
-                              const SizedBox(height: 48),
-                              
-                              // Chapter navigation buttons
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  PremiumButton(
-                                    label: 'Previous',
-                                    icon: Icons.arrow_back,
-                                    isOutlined: true,
-                                    color: _getTextColor().withOpacity(0.1) == Colors.white
-                                        ? Colors.blue
-                                        : _getTextColor(),
-                                    onPressed: _currentChapterNumber > 1 ? _loadPreviousChapter : null,
-                                  ),
-                                  PremiumButton(
-                                    label: 'Next',
-                                    icon: Icons.arrow_forward,
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.blue,
-                                        Colors.blue.withOpacity(0.8),
-                                      ],
-                                    ),
-                                    onPressed: _loadNextChapter,
-                                  ),
-                                ],
-                              ),
-                              
-                              const SizedBox(height: 32),
-                            ],
-                          ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
+            // Main Content - Tappable to toggle controls + Swipe for navigation
+            GestureDetector(
+              onTap: _toggleControls,
+              onHorizontalDragEnd: (details) {
+                // Swipe threshold: 350 pixels per second
+                final velocity = details.velocity.pixelsPerSecond.dx;
+                if (velocity.abs() > 350) {
+                  if (velocity > 0) {
+                    // Swipe right → Previous chapter
+                    final currentIndex = ref.read(chapterNavigationProvider);
+                    if (currentIndex > 0) {
+                      ref.read(chapterNavigationProvider.notifier).previousChapter();
+                      _scrollController.animateTo(
+                        0,
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeOut,
+                      );
+                    }
+                  } else {
+                    // Swipe left → Next chapter
+                    final chapters = ref.read(chaptersListProvider);
+                    final currentIndex = ref.read(chapterNavigationProvider);
+                    if (currentIndex < chapters.length - 1) {
+                      ref.read(chapterNavigationProvider.notifier).nextChapter();
+                      _scrollController.animateTo(
+                        0,
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeOut,
+                      );
+                    }
+                  }
                 }
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                    const SizedBox(height: 16),
-                    Text('Error: $error'),
-                    const SizedBox(height: 16),
-                    PremiumButton(
-                      label: 'Retry',
-                      onPressed: () {
-                        ref.invalidate(bookByIdProvider(widget.bookId));
-                      },
-                    ),
-                  ],
+              behavior: HitTestBehavior.opaque,
+              child: SafeArea(
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: prefs.margins.horizontal,
+                    vertical: prefs.margins.vertical,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Top spacing for header
+                      SizedBox(height: controlsVisible ? 80 : 24),
+                      
+                      // Chapter Title
+                      Text(
+                        currentChapter.title,
+                        style: TextStyle(
+                          fontSize: prefs.fontSize + 4,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                          fontFamily: prefs.fontFamily,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // Chapter Content
+                      SelectableText(
+                        currentChapter.content,
+                        style: TextStyle(
+                          fontSize: prefs.fontSize,
+                          height: prefs.lineHeight,
+                          letterSpacing: prefs.letterSpacing,
+                          color: textColor,
+                          fontFamily: prefs.fontFamily,
+                        ),
+                        textAlign: prefs.textAlign,
+                      ),
+                      
+                      const SizedBox(height: 80),
+                      
+                      // Chapter End Actions
+                      _buildChapterEndActions(chapters),
+                      
+                      const SizedBox(height: 40),
+                    ],
+                  ),
                 ),
               ),
             ),
             
-            // Reading progress info (always visible at bottom)
-            if (_currentChapter != null && _book != null && !_showControls)
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: ReadingProgressInfo(
-                  progress: _calculateProgress(),
-                  currentPage: _currentChapter!.pageNumber ?? 0,
-                  totalPages: _book!.totalPages,
-                  timeRemainingMinutes: _timeRemainingMinutes,
-                  readingSpeed: _readingSpeed,
-                ),
-              ),
+            // Top Bar (Auto-hide)
+            _buildTopBar(book, currentChapter, controlsVisible, textColor),
             
-            // Quick controls overlay (hiện khi tap)
-            if (_showControls)
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: _getBackgroundColor().withOpacity(0.95),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 20,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: SafeArea(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Social actions row
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            // Like button
-                            if (_currentChapter != null)
-                              Builder(
-                                builder: (context) {
-                                  final isLikedAsync = ref.watch(chapterLikedProvider(_currentChapter!.id));
-                                  final likeCountAsync = ref.watch(chapterLikeCountProvider(_currentChapter!.id));
-                                  
-                                  return isLikedAsync.when(
-                                    data: (isLiked) {
-                                      return likeCountAsync.when(
-                                        data: (likeCount) {
-                                          return Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              InteractiveIconButton(
-                                                icon: isLiked ? Icons.favorite : Icons.favorite_border,
-                                                iconColor: isLiked ? Colors.red : _getTextColor(),
-                                                size: 40,
-                                                onPressed: () async {
-                                                  try {
-                                                    await ref.read(socialControllerProvider).toggleChapterLike(_currentChapter!.id);
-                                                    ref.invalidate(chapterLikedProvider(_currentChapter!.id));
-                                                    ref.invalidate(chapterLikeCountProvider(_currentChapter!.id));
-                                                    if (mounted) {
-                                                      ScaffoldMessenger.of(context).showSnackBar(
-                                                        SnackBar(
-                                                          content: Text(isLiked ? 'Unliked' : 'Liked!'),
-                                                          duration: const Duration(seconds: 1),
-                                                        ),
-                                                      );
-                                                    }
-                                                  } catch (e) {
-                                                    if (mounted) {
-                                                      ScaffoldMessenger.of(context).showSnackBar(
-                                                        SnackBar(content: Text('Error: $e')),
-                                                      );
-                                                    }
-                                                  }
-                                                },
-                                                tooltip: isLiked ? 'Unlike' : 'Like',
-                                              ),
-                                              if (likeCount > 0)
-                                                Text(
-                                                  '$likeCount',
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    color: _getTextColor().withOpacity(0.7),
-                                                  ),
-                                                ),
-                                            ],
-                                          );
-                                        },
-                                        loading: () => InteractiveIconButton(
-                                          icon: Icons.favorite_border,
-                                          iconColor: _getTextColor(),
-                                          size: 40,
-                                          onPressed: null,
-                                          tooltip: 'Like',
-                                        ),
-                                        error: (_, __) => InteractiveIconButton(
-                                          icon: Icons.favorite_border,
-                                          iconColor: _getTextColor(),
-                                          size: 40,
-                                          onPressed: null,
-                                          tooltip: 'Like',
-                                        ),
-                                      );
-                                    },
-                                    loading: () => InteractiveIconButton(
-                                      icon: Icons.favorite_border,
-                                      iconColor: _getTextColor(),
-                                      size: 40,
-                                      onPressed: null,
-                                      tooltip: 'Like',
-                                    ),
-                                    error: (_, __) => InteractiveIconButton(
-                                      icon: Icons.favorite_border,
-                                      iconColor: _getTextColor(),
-                                      size: 40,
-                                      onPressed: null,
-                                      tooltip: 'Like',
-                                    ),
-                                  );
-                                },
-                              ),
-                            // Comment button
-                            InteractiveIconButton(
-                              icon: Icons.comment_outlined,
-                              iconColor: _getTextColor(),
-                              size: 40,
-                              onPressed: _navigateToComments,
-                              tooltip: 'Comments',
-                            ),
-                            // Share button
-                            InteractiveIconButton(
-                              icon: Icons.share,
-                              iconColor: _getTextColor(),
-                              size: 40,
-                              onPressed: _shareChapter,
-                              tooltip: 'Share',
-                            ),
-                            // Jump to chapter
-                            InteractiveIconButton(
-                              icon: Icons.numbers,
-                              iconColor: _getTextColor(),
-                              size: 40,
-                              onPressed: _showJumpToChapterDialog,
-                              tooltip: 'Jump to Chapter',
-                            ),
-                          ],
-                        ),
-                        const Divider(height: 1),
-                        // Navigation row
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            InteractiveIconButton(
-                              icon: Icons.skip_previous,
-                              iconColor: _getTextColor(),
-                              size: 40,
-                              onPressed: _currentChapterNumber > 1 ? _loadPreviousChapter : null,
-                              tooltip: 'Previous Chapter',
-                            ),
-                            InteractiveIconButton(
-                              icon: Icons.bookmark_border,
-                              iconColor: _getTextColor(),
-                              size: 40,
-                              onPressed: _showAddBookmarkDialog,
-                              tooltip: 'Bookmark',
-                            ),
-                            InteractiveIconButton(
-                              icon: Icons.settings,
-                              iconColor: _getTextColor(),
-                              size: 40,
-                              onPressed: _showReadingSettings,
-                              tooltip: 'Settings',
-                            ),
-                            InteractiveIconButton(
-                              icon: Icons.skip_next,
-                              iconColor: _getTextColor(),
-                              size: 40,
-                              onPressed: _loadNextChapter,
-                              tooltip: 'Next Chapter',
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            
-            // Audio player (nếu có)
-            if (_showAudioPlayer && _currentChapter != null)
-              Positioned(
-                bottom: _showControls ? 80 : 0,
-                left: 0,
-                right: 0,
-                child: MiniAudioPlayer(
-                  title: _currentChapter!.title,
-                  audioUrl: _currentChapter!.audioUrl,
-                  initialIndex: _currentChapterNumber - 1,
-                ),
-              ),
+            // Floating Action Buttons (Always visible)
+            _buildFloatingButtons(controlsVisible),
           ],
         ),
       ),
     );
   }
+  
+  Widget _buildTopBar(BookModel book, Chapter chapter, bool visible, Color textColor) {
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 200),
+      top: visible ? 0 : -100,
+      left: 0,
+      right: 0,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.black.withOpacity(0.7),
+              Colors.black.withOpacity(0),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Row(
+              children: [
+                // Back Button
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () => context.pop(),
+                  tooltip: 'Back',
+                ),
+                
+                // Book & Chapter Info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        book.title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'Chapter ${chapter.chapterNumber}',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.7),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // More Options
+                IconButton(
+                  icon: const Icon(Icons.more_vert, color: Colors.white),
+                  onPressed: _showMoreOptions,
+                  tooltip: 'More',
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildFloatingButtons(bool controlsVisible) {
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      right: 16,
+      bottom: controlsVisible ? 80 : 20,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 300),
+        opacity: controlsVisible ? 1.0 : 0.7,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Bookmark Button
+            FloatingActionButton.small(
+              heroTag: 'bookmark',
+              onPressed: _addBookmark,
+              backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
+              child: Icon(
+                Icons.bookmark_add_outlined,
+                color: Theme.of(context).colorScheme.onTertiaryContainer,
+              ),
+              tooltip: 'Bookmark',
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // Chapter List Button
+            FloatingActionButton.small(
+              heroTag: 'chapters',
+              onPressed: _showChapterList,
+              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              child: Icon(
+                Icons.list_rounded,
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
+              tooltip: 'Chapters',
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // Settings Button
+            FloatingActionButton.small(
+              heroTag: 'settings',
+              onPressed: _showSettings,
+              backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+              child: Icon(
+                Icons.tune_rounded,
+                color: Theme.of(context).colorScheme.onSecondaryContainer,
+              ),
+              tooltip: 'Settings',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildChapterEndActions(List<Chapter> chapters) {
+    final currentIndex = ref.watch(chapterNavigationProvider);
+    final currentChapter = ref.watch(currentChapterProvider);
+    
+    if (currentChapter == null || chapters.isEmpty) return const SizedBox.shrink();
+    
+    final hasNext = currentIndex < chapters.length - 1;
+    final hasPrev = currentIndex > 0;
+    
+    return Column(
+      children: [
+        const Divider(),
+        const SizedBox(height: 16),
+        
+        // Chapter Navigation
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Previous Chapter
+            if (hasPrev)
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    ref.read(chapterNavigationProvider.notifier).previousChapter();
+                    _scrollController.animateTo(
+                      0,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOut,
+                    );
+                  },
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  label: const Text('Previous'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              )
+            else
+              const Expanded(child: SizedBox.shrink()),
+            
+            const SizedBox(width: 16),
+            
+            // Next Chapter
+            if (hasNext)
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () {
+                    ref.read(chapterNavigationProvider.notifier).nextChapter();
+                    _scrollController.animateTo(
+                      0,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOut,
+                    );
+                  },
+                  icon: const Icon(Icons.arrow_forward_rounded),
+                  label: const Text('Next'),
+                  iconAlignment: IconAlignment.end,
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              )
+            else
+              const Expanded(child: SizedBox.shrink()),
+          ],
+        ),
+      ],
+    );
+  }
+  
+  void _showMoreOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.bookmark_add_outlined),
+              title: const Text('Add Bookmark'),
+              onTap: () {
+                Navigator.pop(context);
+                // TODO: Add bookmark
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.share_outlined),
+              title: const Text('Share'),
+              onTap: () {
+                Navigator.pop(context);
+                // TODO: Share
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.info_outline),
+              title: const Text('Book Info'),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/book/${widget.bookId}');
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Brightness _getBrightness(Color color) {
+    return color.computeLuminance() > 0.5 ? Brightness.dark : Brightness.light;
+  }
 }
-

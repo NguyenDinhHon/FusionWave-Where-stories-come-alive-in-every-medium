@@ -37,22 +37,29 @@ class ChapterNavigation extends _$ChapterNavigation {
   }
   
   void nextChapter() {
+    if (!ref.mounted) return;
     final chapters = ref.read(chaptersListProvider);
     if (state < chapters.length - 1) {
       state++;
-      ref.read(currentChapterProvider.notifier).setChapter(chapters[state]);
+      if (ref.mounted) {
+        ref.read(currentChapterProvider.notifier).setChapter(chapters[state]);
+      }
     }
   }
   
   void previousChapter() {
+    if (!ref.mounted) return;
     final chapters = ref.read(chaptersListProvider);
     if (state > 0) {
       state--;
-      ref.read(currentChapterProvider.notifier).setChapter(chapters[state]);
+      if (ref.mounted) {
+        ref.read(currentChapterProvider.notifier).setChapter(chapters[state]);
+      }
     }
   }
   
   bool get canGoNext {
+    if (!ref.mounted) return false;
     final chapters = ref.read(chaptersListProvider);
     return state < chapters.length - 1;
   }

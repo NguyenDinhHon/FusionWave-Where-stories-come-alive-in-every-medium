@@ -5,7 +5,7 @@ import '../../../home/presentation/providers/book_provider.dart';
 import '../../../library/presentation/providers/library_provider.dart';
 import '../../../social/presentation/providers/social_provider.dart';
 
-class BookDetailPage extends ConsumerWidget {
+class BookDetailPage extends ConsumerStatefulWidget {
   final String bookId;
   
   const BookDetailPage({
@@ -14,11 +14,42 @@ class BookDetailPage extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final bookAsync = ref.watch(bookByIdProvider(bookId));
-    final libraryItemAsync = ref.watch(libraryItemByBookIdProvider(bookId));
-    final userRatingAsync = ref.watch(userRatingProvider(bookId));
-    final averageRatingAsync = ref.watch(bookAverageRatingProvider(bookId));
+  ConsumerState<BookDetailPage> createState() => _BookDetailPageState();
+}
+
+class _BookDetailPageState extends ConsumerState<BookDetailPage> {
+  final ScrollController _scrollController = ScrollController();
+  bool _showStickyButton = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+  
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+  
+  void _onScroll() {
+    // Show button when scrolled past 300px (after description section)
+    final shouldShow = _scrollController.offset > 300;
+    if (shouldShow != _showStickyButton) {
+      setState(() {
+        _showStickyButton = shouldShow;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bookAsync = ref.watch(bookByIdProvider(widget.bookId));
+    final libraryItemAsync = ref.watch(libraryItemByBookIdProvider(widget.bookId));
+    final userRatingAsync = ref.watch(userRatingProvider(widget.bookId));
+    final averageRatingAsync = ref.watch(bookAverageRatingProvider(widget.bookId));
     
     return Scaffold(
       appBar: AppBar(
@@ -30,8 +61,11 @@ class BookDetailPage extends ConsumerWidget {
             return const Center(child: Text('Book not found'));
           }
           
-          return SingleChildScrollView(
-            child: Column(
+          return Stack(
+            children: [
+              SingleChildScrollView(
+                controller: _scrollController,
+                child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Cover image
@@ -201,6 +235,96 @@ class BookDetailPage extends ConsumerWidget {
                 ),
               ],
             ),
+          ),
+              
+              // Sticky Read Now button
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: AnimatedSlide(
+                  duration: const Duration(milliseconds: 300),
+                  offset: _showStickyButton ? Offset.zero : const Offset(0, 1),
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 300),
+                    opacity: _showStickyButton ? 1.0 : 0.0,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, -2),
+                          ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      child: SafeArea(
+                        top: false,
+                        child: libraryItemAsync.when(
+                          data: (libraryItem) {
+                            if (libraryItem != null) {
+                              return ElevatedButton.icon(
+                                onPressed: () {
+                                  context.push('/reading/${book.id}?chapterId=${libraryItem.currentChapter}');
+                                },
+                                icon: const Icon(Icons.play_arrow),
+                                label: const Text('Continue Reading'),
+                                style: ElevatedButton.styleFrom(
+                                  minimumSize: const Size(double.infinity, 52),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              );
+                            } else {
+                              return ElevatedButton.icon(
+                                onPressed: () {
+                                  context.push('/reading/${book.id}');
+                                },
+                                icon: const Icon(Icons.menu_book),
+                                label: const Text('Start Reading'),
+                                style: ElevatedButton.styleFrom(
+                                  minimumSize: const Size(double.infinity, 52),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                          loading: () => ElevatedButton.icon(
+                            onPressed: null,
+                            icon: const Icon(Icons.menu_book),
+                            label: const Text('Start Reading'),
+                            style: ElevatedButton.styleFrom(
+                              minimumSize: const Size(double.infinity, 52),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                          error: (_, __) => ElevatedButton.icon(
+                            onPressed: () {
+                              context.push('/reading/${book.id}');
+                            },
+                            icon: const Icon(Icons.menu_book),
+                            label: const Text('Start Reading'),
+                            style: ElevatedButton.styleFrom(
+                              minimumSize: const Size(double.infinity, 52),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -279,12 +403,12 @@ class BookDetailPage extends ConsumerWidget {
                       onPressed: () async {
                         try {
                           await ref.read(socialControllerProvider).rateBook(
-                            bookId: bookId,
+                            bookId: widget.bookId,
                             rating: index + 1,
                           );
-                          ref.invalidate(userRatingProvider(bookId));
-                          ref.invalidate(bookAverageRatingProvider(bookId));
-                          ref.invalidate(bookByIdProvider(bookId));
+                          ref.invalidate(userRatingProvider(widget.bookId));
+                          ref.invalidate(bookAverageRatingProvider(widget.bookId));
+                          ref.invalidate(bookByIdProvider(widget.bookId));
                         } catch (e) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(

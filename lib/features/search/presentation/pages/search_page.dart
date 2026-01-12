@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../home/presentation/providers/book_provider.dart';
 import '../../../../data/models/book_model.dart';
@@ -15,23 +16,81 @@ class SearchPage extends ConsumerStatefulWidget {
 class _SearchPageState extends ConsumerState<SearchPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  List<String> _recentSearches = [];
+  final FocusNode _searchFocusNode = FocusNode();
+  bool _showSuggestions = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    _loadRecentSearches();
+    _searchFocusNode.addListener(() {
+      setState(() {
+        _showSuggestions = _searchFocusNode.hasFocus && _searchQuery.isEmpty;
+      });
+    });
+  }
   
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
   
-  void _performSearch(String query) {
+  Future<void> _loadRecentSearches() async {
+    final prefs = await SharedPreferences.getInstance();
+    final searches = prefs.getStringList('recent_searches') ?? [];
     setState(() {
-      _searchQuery = query;
+      _recentSearches = searches;
     });
+  }
+  
+  Future<void> _saveRecentSearch(String query) async {
+    if (query.isEmpty) return;
+    
+    final prefs = await SharedPreferences.getInstance();
+    final searches = prefs.getStringList('recent_searches') ?? [];
+    
+    // Remove if already exists
+    searches.remove(query);
+    // Add to front
+    searches.insert(0, query);
+    // Keep only last 10
+    if (searches.length > 10) {
+      searches.removeRange(10, searches.length);
+    }
+    
+    await prefs.setStringList('recent_searches', searches);
+    setState(() {
+      _recentSearches = searches;
+    });
+  }
+  
+  Future<void> _clearRecentSearches() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('recent_searches');
+    setState(() {
+      _recentSearches = [];
+    });
+  }
+  
+  void _performSearch(String query) {
+    if (query.trim().isEmpty) return;
+    
+    setState(() {
+      _searchQuery = query.trim();
+      _showSuggestions = false;
+    });
+    _saveRecentSearch(query.trim());
+    _searchFocusNode.unfocus();
   }
   
   void _clearSearch() {
     setState(() {
       _searchQuery = '';
       _searchController.clear();
+      _showSuggestions = _searchFocusNode.hasFocus;
     });
   }
 
@@ -47,6 +106,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             padding: const EdgeInsets.all(16),
             child: TextField(
               controller: _searchController,
+              focusNode: _searchFocusNode,
               decoration: InputDecoration(
                 hintText: 'Search books, authors, categories...',
                 prefixIcon: const Icon(Icons.search),
@@ -62,18 +122,144 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               ),
               onSubmitted: _performSearch,
               onChanged: (value) {
+                setState(() {
+                  _showSuggestions = value.isEmpty && _searchFocusNode.hasFocus;
+                });
                 if (value.isEmpty) {
                   _clearSearch();
                 }
               },
+              onTap: () {
+                setState(() {
+                  _showSuggestions = _searchQuery.isEmpty;
+                });
+              },
             ),
           ),
           Expanded(
-            child: _searchQuery.isEmpty
-                ? _buildEmptyState()
-                : _buildSearchResults(),
+            child: Stack(
+              children: [
+                _searchQuery.isEmpty
+                    ? _buildEmptyState()
+                    : _buildSearchResults(),
+                    
+                // Suggestions overlay
+                if (_showSuggestions && _recentSearches.isNotEmpty)
+                  _buildSuggestionsOverlay(),
+              ],
+            ),
           ),
         ],
+      ),
+    );
+  }
+  
+  Widget _buildSuggestionsOverlay() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Recent Searches',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _clearRecentSearches,
+                    child: const Text('Clear All'),
+                  ),
+                ],
+              ),
+            ),
+            
+            const Divider(height: 1),
+            
+            // Recent searches list
+            ListView.builder(
+              shrinkWrap: true,
+              itemCount: _recentSearches.length,
+              itemBuilder: (context, index) {
+                final search = _recentSearches[index];
+                return ListTile(
+                  leading: const Icon(Icons.history, size: 20),
+                  title: Text(search),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.north_west, size: 18),
+                    onPressed: () {
+                      _searchController.text = search;
+                      _performSearch(search);
+                    },
+                    tooltip: 'Use this search',
+                  ),
+                  onTap: () {
+                    _searchController.text = search;
+                    _performSearch(search);
+                  },
+                );
+              },
+            ),
+            
+            const Divider(height: 1),
+            
+            // Popular searches section
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Popular',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      'Fantasy',
+                      'Romance',
+                      'Sci-Fi',
+                      'Mystery',
+                      'Thriller',
+                    ].map((category) {
+                      return ActionChip(
+                        label: Text(category),
+                        onPressed: () {
+                          _searchController.text = category;
+                          _performSearch(category);
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
