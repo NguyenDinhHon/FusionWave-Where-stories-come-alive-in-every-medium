@@ -34,7 +34,7 @@ class DarkBookCard extends StatelessWidget {
   // Horizontal layout cho Continue Reading
   Widget _buildHorizontalCard(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.darkCard,
@@ -50,21 +50,21 @@ class DarkBookCard extends StatelessWidget {
                 child: book.coverImageUrl != null
                     ? Image.network(
                         book.coverImageUrl!,
-                        width: 80,
-                        height: 120,
+                        width: 70,
+                        height: 105,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
-                          width: 80,
-                          height: 120,
+                          width: 70,
+                          height: 105,
                           color: AppColors.darkSurface,
-                          child: const Icon(Icons.book, color: Colors.grey),
+                          child: const Icon(Icons.book, color: Colors.grey, size: 30),
                         ),
                       )
                     : Container(
-                        width: 80,
-                        height: 120,
+                        width: 70,
+                        height: 105,
                         color: AppColors.darkSurface,
-                        child: const Icon(Icons.book, color: Colors.grey),
+                        child: const Icon(Icons.book, color: Colors.grey, size: 30),
                       ),
               ),
               // Status Badge
@@ -72,19 +72,20 @@ class DarkBookCard extends StatelessWidget {
                 Positioned(top: 4, left: 4, child: _buildStatusBadge(status!)),
             ],
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
 
           // Info Section
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 // Title
                 Text(
                   book.title,
                   style: const TextStyle(
                     color: AppColors.darkTextPrimary,
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
                   maxLines: 2,
@@ -98,50 +99,12 @@ class DarkBookCard extends StatelessWidget {
                     book.authors.join(', '),
                     style: const TextStyle(
                       color: AppColors.darkTextSecondary,
-                      fontSize: 13,
+                      fontSize: 12,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                const SizedBox(height: 6),
-
-                // Rating
-                if (book.averageRating != null && book.averageRating! > 0)
-                  Row(
-                    children: [
-                      ...List.generate(
-                        5,
-                        (index) => Icon(
-                          index < book.averageRating!.floor()
-                              ? Icons.star
-                              : Icons.star_border,
-                          size: 14,
-                          color: AppColors.ratingColor,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        book.averageRating!.toStringAsFixed(1),
-                        style: const TextStyle(
-                          color: AppColors.darkTextSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
                 const SizedBox(height: 4),
-
-                // Genre/Category
-                if (book.categories.isNotEmpty)
-                  Text(
-                    book.categories.first,
-                    style: const TextStyle(
-                      color: AppColors.darkTextTertiary,
-                      fontSize: 12,
-                    ),
-                  ),
-
-                const Spacer(),
 
                 // Progress Bar
                 if (progress != null) ...[
@@ -152,14 +115,14 @@ class DarkBookCard extends StatelessWidget {
                         'Progress',
                         style: TextStyle(
                           color: AppColors.darkTextTertiary,
-                          fontSize: 11,
+                          fontSize: 10,
                         ),
                       ),
                       Text(
                         '${(progress! * 100).toInt()}%',
                         style: const TextStyle(
                           color: AppColors.badgeReading,
-                          fontSize: 11,
+                          fontSize: 10,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -184,22 +147,32 @@ class DarkBookCard extends StatelessWidget {
 
           // Action Button
           if (actionLabel != null && onActionTap != null) ...[
-            const SizedBox(width: 12),
-            ElevatedButton(
-              onPressed: onActionTap,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _getActionColor(actionLabel!),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
+            const SizedBox(width: 8),
+            Flexible(
+              child: ElevatedButton(
+                onPressed: onActionTap,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _getActionColor(actionLabel!),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  elevation: 0,
+                  minimumSize: const Size(0, 36),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    actionLabel!,
+                    style: const TextStyle(fontSize: 11),
+                    maxLines: 1,
+                  ),
                 ),
-                elevation: 0,
               ),
-              child: Text(actionLabel!, style: const TextStyle(fontSize: 12)),
             ),
           ],
         ],

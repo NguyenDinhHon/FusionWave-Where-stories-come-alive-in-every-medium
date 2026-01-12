@@ -10,6 +10,7 @@ import '../../features/library/presentation/pages/premium_library_page.dart';
 import '../../features/search/presentation/pages/premium_search_page.dart';
 import '../../features/profile/presentation/pages/premium_profile_page.dart';
 import '../../features/profile/presentation/pages/edit_profile_page.dart';
+import '../../features/profile/presentation/pages/seed_user_data_page.dart';
 import '../../features/reading/presentation/pages/premium_reading_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/book/presentation/pages/premium_book_detail_page.dart';
@@ -234,6 +235,14 @@ class AppRouter {
         name: 'edit-profile',
         pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
           child: const EditProfilePage(),
+          name: state.name,
+        ),
+      ),
+      GoRoute(
+        path: '/seed-user-data',
+        name: 'seed-user-data',
+        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+          child: const SeedUserDataPage(),
           name: state.name,
         ),
       ),

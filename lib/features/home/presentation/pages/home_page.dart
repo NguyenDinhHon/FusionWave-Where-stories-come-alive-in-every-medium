@@ -425,12 +425,15 @@ class _HomePageState extends ConsumerState<HomePage> {
               continueReadingAsync.when(
                 data: (items) {
                   if (items.isEmpty) {
-                    return const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: EmptyState(
-                        title: 'No recent reading',
-                        message: 'Start reading a book to see it here',
-                        icon: Icons.book_outlined,
+                    return const SizedBox(
+                      height: 200,
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: EmptyState(
+                          title: 'No recent reading',
+                          message: 'Start reading a book to see it here',
+                          icon: Icons.book_outlined,
+                        ),
                       ),
                     );
                   }
@@ -442,16 +445,22 @@ class _HomePageState extends ConsumerState<HomePage> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: items.length,
                       itemBuilder: (context, index) {
-                        return AnimationConfiguration.staggeredList(
-                          position: index,
-                          duration: const Duration(milliseconds: 375),
-                          child: SlideAnimation(
-                            horizontalOffset: 50.0,
-                            child: FadeInAnimation(
-                              child: _buildContinueReadingCard(
-                                context,
-                                ref,
-                                items[index],
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: SizedBox(
+                            width: 320,
+                            child: AnimationConfiguration.staggeredList(
+                              position: index,
+                              duration: const Duration(milliseconds: 375),
+                              child: SlideAnimation(
+                                horizontalOffset: 50.0,
+                                child: FadeInAnimation(
+                                  child: _buildContinueReadingCard(
+                                    context,
+                                    ref,
+                                    items[index],
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -492,7 +501,15 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     return bookAsync.when(
       data: (book) {
-        if (book == null) return const SizedBox();
+        if (book == null) {
+          return const SizedBox(
+            width: 200,
+            height: 380,
+            child: Center(
+              child: Icon(Icons.error_outline, color: Colors.grey),
+            ),
+          );
+        }
 
         return DarkBookCard(
           book: book,
@@ -509,7 +526,13 @@ class _HomePageState extends ConsumerState<HomePage> {
         );
       },
       loading: () => const ShimmerBookCard(),
-      error: (_, __) => const SizedBox(),
+      error: (_, __) => const SizedBox(
+        width: 200,
+        height: 380,
+        child: Center(
+          child: Icon(Icons.error_outline, color: Colors.grey),
+        ),
+      ),
     );
   }
 
