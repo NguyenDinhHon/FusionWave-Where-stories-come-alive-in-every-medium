@@ -14,14 +14,71 @@ final libraryRepositoryForReadingProvider = Provider<LibraryRepository>((ref) {
   return LibraryRepository();
 });
 
-/// Chapters by book ID provider
-final chaptersByBookIdProvider = FutureProvider.family<List<ChapterModel>, String>((ref, bookId) async {
-  final repository = ref.watch(chapterRepositoryProvider);
-  return repository.getChaptersByBookId(bookId);
+/// Cache for chapters by book ID (keeps chapters in memory)
+class ChaptersCache {
+  final Map<String, List<ChapterModel>> _cache = {};
+  
+  void setChapters(String bookId, List<ChapterModel> chapters) {
+    _cache[bookId] = chapters;
+  }
+  
+  List<ChapterModel>? getChapters(String bookId) {
+    return _cache[bookId];
+  }
+  
+  bool hasChapters(String bookId) {
+    return _cache.containsKey(bookId) && _cache[bookId]!.isNotEmpty;
+  }
+  
+  Map<String, List<ChapterModel>> get all => Map.unmodifiable(_cache);
+}
+
+final _chaptersCacheProvider = Provider<ChaptersCache>((ref) {
+  return ChaptersCache();
 });
 
-/// Chapter by ID provider
+/// Public provider to check if chapters are cached for a book
+final chaptersCacheCheckProvider = Provider.family<bool, String>((ref, bookId) {
+  final cache = ref.watch(_chaptersCacheProvider);
+  return cache.hasChapters(bookId);
+});
+
+/// Chapters by book ID provider with cache support
+final chaptersByBookIdProvider = FutureProvider.family<List<ChapterModel>, String>((ref, bookId) async {
+  // Check cache first - if chapters exist in cache, return immediately
+  final cache = ref.read(_chaptersCacheProvider);
+  final cachedChapters = cache.getChapters(bookId);
+  if (cachedChapters != null && cachedChapters.isNotEmpty) {
+    // Return cached chapters immediately (no loading!)
+    return cachedChapters;
+  }
+  
+  // Load from repository if not in cache
+  final repository = ref.watch(chapterRepositoryProvider);
+  final chapters = await repository.getChaptersByBookId(bookId);
+  
+  // Update cache for future use
+  cache.setChapters(bookId, chapters);
+  
+  return chapters;
+});
+
+/// Chapter by ID provider with cache support
 final chapterByIdProvider = FutureProvider.family<ChapterModel?, String>((ref, chapterId) async {
+  // Try to find in cache first
+  final cache = ref.read(_chaptersCacheProvider);
+  for (var chapters in cache.all.values) {
+    try {
+      final chapter = chapters.firstWhere((c) => c.id == chapterId);
+      // Found in cache - return immediately
+      return chapter;
+    } catch (e) {
+      // Not found in this book's chapters, continue searching
+      continue;
+    }
+  }
+  
+  // Load from repository if not in cache
   final repository = ref.watch(chapterRepositoryProvider);
   return repository.getChapterById(chapterId);
 });

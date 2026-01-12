@@ -341,7 +341,7 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
     // Get book data
     final bookAsync = ref.watch(bookByIdProvider(widget.bookId));
     
-    // Watch chapters and load them
+    // Watch chapters and load them (with cache support)
     final chaptersAsync = ref.watch(chaptersByBookIdProvider(widget.bookId));
     
     // Load chapters when data available
@@ -362,26 +362,61 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
         if (chapters.isEmpty || chapters.length != loadedChapters.length) {
           ref.read(chapterNavigationProvider.notifier).loadChapters(loadedChapters);
           
-          // If specific chapter requested, navigate to it
-          if (widget.chapterId != null && currentChapter == null) {
-            final index = loadedChapters.indexWhere((c) => c.id == widget.chapterId);
-            if (index >= 0) {
-              ref.read(chapterNavigationProvider.notifier).jumpToChapter(index);
+          // Fallback: If currentChapter is null, set it to requested chapter or first chapter
+          if (currentChapter == null) {
+            if (widget.chapterId != null) {
+              // Try to find requested chapter
+              final index = loadedChapters.indexWhere((c) => c.id == widget.chapterId);
+              if (index >= 0) {
+                ref.read(chapterNavigationProvider.notifier).jumpToChapter(index);
+              } else {
+                // Fallback to first chapter if requested chapter not found
+                ref.read(chapterNavigationProvider.notifier).jumpToChapter(0);
+              }
+            } else {
+              // No chapter requested, use first chapter
+              ref.read(chapterNavigationProvider.notifier).jumpToChapter(0);
             }
           }
         }
       });
     });
     
+    // Check if chapters are in cache (instant display)
+    final hasCachedChapters = ref.watch(chaptersCacheCheckProvider(widget.bookId));
+    
     return bookAsync.when(
-      data: (book) => _buildReader(
-        book: book,
-        currentChapter: currentChapter,
-        chapters: chapters,
-        controlsVisible: controlsVisible,
-        prefs: prefs,
-        mode: mode,
-      ),
+      data: (book) {
+        // If chapters are cached and we have currentChapter, show immediately
+        if (hasCachedChapters && currentChapter != null) {
+          return _buildReader(
+            book: book,
+            currentChapter: currentChapter,
+            chapters: chapters,
+            controlsVisible: controlsVisible,
+            prefs: prefs,
+            mode: mode,
+          );
+        }
+        
+        // Otherwise, wait for chapters to load
+        return chaptersAsync.when(
+          data: (_) => _buildReader(
+            book: book,
+            currentChapter: currentChapter ?? (chapters.isNotEmpty ? chapters[0] : null),
+            chapters: chapters,
+            controlsVisible: controlsVisible,
+            prefs: prefs,
+            mode: mode,
+          ),
+          loading: () => const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          ),
+          error: (error, stack) => Scaffold(
+            body: Center(child: Text('Error: $error')),
+          ),
+        );
+      },
       loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       ),

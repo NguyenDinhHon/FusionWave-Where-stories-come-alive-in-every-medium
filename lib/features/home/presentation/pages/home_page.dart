@@ -439,7 +439,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   }
 
                   return SizedBox(
-                    height: 380,
+                    height: 280,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -448,7 +448,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                         return Padding(
                           padding: const EdgeInsets.only(right: 12),
                           child: SizedBox(
-                            width: 320,
+                            width: 360,
                             child: AnimationConfiguration.staggeredList(
                               position: index,
                               duration: const Duration(milliseconds: 375),
@@ -470,7 +470,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   );
                 },
                 loading: () => SizedBox(
-                  height: 380,
+                  height: 280,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
