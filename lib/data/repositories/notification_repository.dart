@@ -18,7 +18,8 @@ class NotificationRepository {
   }) async {
     try {
       if (_currentUserId == null) {
-        throw Exception('User not authenticated');
+        // Return empty list for unauthenticated users
+        return [];
       }
       
       Query query;

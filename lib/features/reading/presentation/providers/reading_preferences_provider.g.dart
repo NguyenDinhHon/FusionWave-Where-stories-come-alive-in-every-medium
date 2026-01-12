@@ -1,12 +1,5 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
-
 part of 'reading_preferences_provider.dart';
 
-// **************************************************************************
-// RiverpodGenerator
-// **************************************************************************
-
-// GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(ReadingPreferencesNotifier)

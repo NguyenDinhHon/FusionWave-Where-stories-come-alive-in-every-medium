@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/image_with_placeholder.dart';
 import '../../../../data/models/book_model.dart';
 
 /// Dark theme book card với 2 layouts: horizontal và vertical
@@ -34,172 +35,178 @@ class DarkBookCard extends StatelessWidget {
   // Horizontal layout cho Continue Reading
   Widget _buildHorizontalCard(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Book Cover với Badge
-          Stack(
+          // Top Section: Image and Content
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: book.coverImageUrl != null
-                    ? Image.network(
-                        book.coverImageUrl!,
-                        width: 80,
-                        height: 120,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          width: 80,
-                          height: 120,
-                          color: AppColors.darkSurface,
-                          child: const Icon(Icons.book, color: Colors.grey),
-                        ),
-                      )
-                    : Container(
-                        width: 80,
-                        height: 120,
-                        color: AppColors.darkSurface,
-                        child: const Icon(Icons.book, color: Colors.grey),
-                      ),
+              // Book Cover với Badge
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: book.coverImageUrl != null
+                        ? ImageWithPlaceholder(
+                            imageUrl: book.coverImageUrl!,
+                            width: 100,
+                            height: 150,
+                            fit: BoxFit.cover,
+                            borderRadius: BorderRadius.circular(8),
+                            errorWidget: Container(
+                              width: 100,
+                              height: 150,
+                              color: AppColors.darkSurface,
+                              child: const Icon(Icons.book, color: Colors.grey, size: 40),
+                            ),
+                          )
+                        : Container(
+                            width: 100,
+                            height: 150,
+                            color: AppColors.darkSurface,
+                            child: const Icon(Icons.book, color: Colors.grey, size: 40),
+                          ),
+                  ),
+                  // Status Badge
+                  if (status != null)
+                    Positioned(top: 4, left: 4, child: _buildStatusBadge(status!)),
+                ],
               ),
-              // Status Badge
-              if (status != null)
-                Positioned(top: 4, left: 4, child: _buildStatusBadge(status!)),
+              const SizedBox(width: 16),
+
+              // Info Section
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title
+                    Text(
+                      book.title,
+                      style: const TextStyle(
+                        color: AppColors.darkTextPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Author
+                    if (book.authors.isNotEmpty)
+                      Text(
+                        book.authors.join(', '),
+                        style: const TextStyle(
+                          color: AppColors.darkTextSecondary,
+                          fontSize: 14,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    const SizedBox(height: 12),
+
+                    // Rating
+                    if (book.averageRating != null && book.averageRating! > 0)
+                      Row(
+                        children: [
+                          ...List.generate(
+                            5,
+                            (index) => Icon(
+                              index < book.averageRating!.floor()
+                                  ? Icons.star
+                                  : Icons.star_border,
+                              size: 16,
+                              color: AppColors.ratingColor,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            book.averageRating!.toStringAsFixed(1),
+                            style: const TextStyle(
+                              color: AppColors.darkTextSecondary,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    const SizedBox(height: 12),
+
+                    // Progress Bar
+                    if (progress != null) ...[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Progress',
+                            style: TextStyle(
+                              color: AppColors.darkTextTertiary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            '${(progress! * 100).toInt()}%',
+                            style: const TextStyle(
+                              color: AppColors.badgeReading,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          backgroundColor: AppColors.darkBorder,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            AppColors.badgeReading,
+                          ),
+                          minHeight: 6,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ],
           ),
-          const SizedBox(width: 12),
 
-          // Info Section
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Title
-                Text(
-                  book.title,
+          // Action Button at Bottom
+          if (actionLabel != null && onActionTap != null) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: onActionTap,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _getActionColor(actionLabel!),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  actionLabel!,
                   style: const TextStyle(
-                    color: AppColors.darkTextPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
-
-                // Author
-                if (book.authors.isNotEmpty)
-                  Text(
-                    book.authors.join(', '),
-                    style: const TextStyle(
-                      color: AppColors.darkTextSecondary,
-                      fontSize: 13,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                const SizedBox(height: 6),
-
-                // Rating
-                if (book.averageRating != null && book.averageRating! > 0)
-                  Row(
-                    children: [
-                      ...List.generate(
-                        5,
-                        (index) => Icon(
-                          index < book.averageRating!.floor()
-                              ? Icons.star
-                              : Icons.star_border,
-                          size: 14,
-                          color: AppColors.ratingColor,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        book.averageRating!.toStringAsFixed(1),
-                        style: const TextStyle(
-                          color: AppColors.darkTextSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                const SizedBox(height: 4),
-
-                // Genre/Category
-                if (book.categories.isNotEmpty)
-                  Text(
-                    book.categories.first,
-                    style: const TextStyle(
-                      color: AppColors.darkTextTertiary,
-                      fontSize: 12,
-                    ),
-                  ),
-
-                const Spacer(),
-
-                // Progress Bar
-                if (progress != null) ...[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Progress',
-                        style: TextStyle(
-                          color: AppColors.darkTextTertiary,
-                          fontSize: 11,
-                        ),
-                      ),
-                      Text(
-                        '${(progress! * 100).toInt()}%',
-                        style: const TextStyle(
-                          color: AppColors.badgeReading,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      backgroundColor: AppColors.darkBorder,
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        AppColors.badgeReading,
-                      ),
-                      minHeight: 4,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-
-          // Action Button
-          if (actionLabel != null && onActionTap != null) ...[
-            const SizedBox(width: 12),
-            ElevatedButton(
-              onPressed: onActionTap,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _getActionColor(actionLabel!),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                elevation: 0,
               ),
-              child: Text(actionLabel!, style: const TextStyle(fontSize: 12)),
             ),
           ],
         ],
@@ -221,12 +228,13 @@ class DarkBookCard extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: book.coverImageUrl != null
-                  ? Image.network(
-                      book.coverImageUrl!,
+                  ? ImageWithPlaceholder(
+                      imageUrl: book.coverImageUrl!,
                       width: 140,
                       height: 200,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
+                      borderRadius: BorderRadius.circular(8),
+                      errorWidget: Container(
                         width: 140,
                         height: 200,
                         color: AppColors.darkSurface,

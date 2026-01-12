@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// Premium button với gradient và animations
-class PremiumButton extends StatefulWidget {
+/// App button với gradient và animations
+class AppButton extends StatefulWidget {
   final String label;
   final IconData? icon;
   final VoidCallback? onPressed;
@@ -11,8 +11,10 @@ class PremiumButton extends StatefulWidget {
   final double? width;
   final double? height;
   final EdgeInsets? padding;
+  final Color? textColor;
+  final Color? iconColor;
 
-  const PremiumButton({
+  const AppButton({
     super.key,
     required this.label,
     this.icon,
@@ -23,13 +25,15 @@ class PremiumButton extends StatefulWidget {
     this.width,
     this.height,
     this.padding,
+    this.textColor,
+    this.iconColor,
   });
 
   @override
-  State<PremiumButton> createState() => _PremiumButtonState();
+  State<AppButton> createState() => _AppButtonState();
 }
 
-class _PremiumButtonState extends State<PremiumButton>
+class _AppButtonState extends State<AppButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
@@ -41,9 +45,10 @@ class _PremiumButtonState extends State<PremiumButton>
       duration: const Duration(milliseconds: 150),
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -59,7 +64,8 @@ class _PremiumButtonState extends State<PremiumButton>
       height: widget.height ?? 48,
       padding: widget.padding,
       decoration: BoxDecoration(
-        gradient: widget.gradient ??
+        gradient:
+            widget.gradient ??
             (widget.color != null
                 ? LinearGradient(
                     colors: [widget.color!, widget.color!.withOpacity(0.8)],
@@ -108,9 +114,11 @@ class _PremiumButtonState extends State<PremiumButton>
                 if (widget.icon != null) ...[
                   Icon(
                     widget.icon,
-                    color: widget.isOutlined
-                        ? (widget.color ?? Theme.of(context).primaryColor)
-                        : Colors.white,
+                    color:
+                        widget.iconColor ??
+                        (widget.isOutlined
+                            ? (widget.color ?? Theme.of(context).primaryColor)
+                            : Colors.white),
                     size: 20,
                   ),
                   const SizedBox(width: 8),
@@ -118,9 +126,11 @@ class _PremiumButtonState extends State<PremiumButton>
                 Text(
                   widget.label,
                   style: TextStyle(
-                    color: widget.isOutlined
-                        ? (widget.color ?? Theme.of(context).primaryColor)
-                        : Colors.white,
+                    color:
+                        widget.textColor ??
+                        (widget.isOutlined
+                            ? (widget.color ?? Theme.of(context).primaryColor)
+                            : Colors.white),
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -132,10 +142,6 @@ class _PremiumButtonState extends State<PremiumButton>
       ),
     );
 
-    return ScaleTransition(
-      scale: _scaleAnimation,
-      child: button,
-    );
+    return ScaleTransition(scale: _scaleAnimation, child: button);
   }
 }
-
