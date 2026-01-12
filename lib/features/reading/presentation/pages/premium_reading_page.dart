@@ -26,17 +26,14 @@ class PremiumReadingPage extends ConsumerStatefulWidget {
   final String bookId;
   final String? chapterId;
 
-  const PremiumReadingPage({
-    super.key,
-    required this.bookId,
-    this.chapterId,
-  });
+  const PremiumReadingPage({super.key, required this.bookId, this.chapterId});
 
   @override
   ConsumerState<PremiumReadingPage> createState() => _PremiumReadingPageState();
 }
 
-class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with SingleTickerProviderStateMixin {
+class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage>
+    with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   late AnimationController _controlsAnimationController;
   double _lastScrollOffset = 0;
@@ -44,28 +41,28 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
   @override
   void initState() {
     super.initState();
-    
+
     // Controls animation
     _controlsAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
     )..forward(); // Start visible
-    
+
     // Auto-hide controls on scroll
     _scrollController.addListener(_onScroll);
   }
-  
+
   @override
   void dispose() {
     _scrollController.dispose();
     _controlsAnimationController.dispose();
     super.dispose();
   }
-  
+
   void _onScroll() {
     final currentOffset = _scrollController.offset;
     final delta = currentOffset - _lastScrollOffset;
-    
+
     // Hide controls when scrolling down >50px
     if (delta > 50 && _controlsAnimationController.value > 0) {
       _hideControls();
@@ -74,20 +71,20 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
     else if (delta < -20 && _controlsAnimationController.value == 0) {
       _showControls();
     }
-    
+
     _lastScrollOffset = currentOffset;
   }
-  
+
   void _showControls() {
     _controlsAnimationController.forward();
     ref.read(controlsVisibilityProvider.notifier).show();
   }
-  
+
   void _hideControls() {
     _controlsAnimationController.reverse();
     ref.read(controlsVisibilityProvider.notifier).hide();
   }
-  
+
   void _toggleControls() {
     final isVisible = ref.read(controlsVisibilityProvider);
     if (isVisible) {
@@ -96,7 +93,7 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
       _showControls();
     }
   }
-  
+
   void _showChapterList() {
     showModalBottomSheet(
       context: context,
@@ -105,10 +102,10 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
       builder: (context) => const ChapterListSheet(),
     );
   }
-  
+
   void _showSettings() {
     final prefs = ref.read(readingPreferencesProvider);
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -131,19 +128,21 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 20),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
-              
+
               // Title
               Text(
                 'Cài đặt nhanh',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 24),
-              
+
               // Font Size Slider
               _buildSlider(
                 label: 'Cỡ chữ',
@@ -152,10 +151,12 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
                 max: 32,
                 divisions: 20,
                 onChanged: (value) {
-                  ref.read(readingPreferencesProvider.notifier).updateFontSize(value);
+                  ref
+                      .read(readingPreferencesProvider.notifier)
+                      .updateFontSize(value);
                 },
               ),
-              
+
               // Line Height Slider
               _buildSlider(
                 label: 'Khoảng cách dòng',
@@ -164,26 +165,27 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
                 max: 2.5,
                 divisions: 15,
                 onChanged: (value) {
-                  ref.read(readingPreferencesProvider.notifier).updateLineHeight(value);
+                  ref
+                      .read(readingPreferencesProvider.notifier)
+                      .updateLineHeight(value);
                 },
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Theme Presets
-              Text(
-                'Chủ đề',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              Text('Chủ đề', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 12),
-              
+
               Row(
                 children: [
                   Expanded(
                     child: _buildThemeCard(
                       label: 'Sáng',
                       preset: ReadingPreferences.lightPreset,
-                      isSelected: prefs.backgroundColor == ReadingPreferences.lightPreset.backgroundColor,
+                      isSelected:
+                          prefs.backgroundColor ==
+                          ReadingPreferences.lightPreset.backgroundColor,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -191,7 +193,9 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
                     child: _buildThemeCard(
                       label: 'Tối',
                       preset: ReadingPreferences.darkPreset,
-                      isSelected: prefs.backgroundColor == ReadingPreferences.darkPreset.backgroundColor,
+                      isSelected:
+                          prefs.backgroundColor ==
+                          ReadingPreferences.darkPreset.backgroundColor,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -199,14 +203,16 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
                     child: _buildThemeCard(
                       label: 'Sepia',
                       preset: ReadingPreferences.sepiaPreset,
-                      isSelected: prefs.backgroundColor == ReadingPreferences.sepiaPreset.backgroundColor,
+                      isSelected:
+                          prefs.backgroundColor ==
+                          ReadingPreferences.sepiaPreset.backgroundColor,
                     ),
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // More Settings Button
               OutlinedButton(
                 onPressed: () {
@@ -226,7 +232,7 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
       ),
     );
   }
-  
+
   Widget _buildSlider({
     required String label,
     required double value,
@@ -261,7 +267,7 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
       ],
     );
   }
-  
+
   Widget _buildThemeCard({
     required String label,
     required ReadingPreferences preset,
@@ -277,8 +283,8 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
           color: preset.backgroundColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected 
-                ? Theme.of(context).colorScheme.primary 
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary
                 : Colors.transparent,
             width: 2,
           ),
@@ -295,17 +301,17 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
       ),
     );
   }
-  
+
   void _addBookmark() async {
     final currentChapter = ref.read(currentChapterProvider);
     if (currentChapter == null) return;
-    
+
     final prefs = await SharedPreferences.getInstance();
     final bookmarkKey = 'bookmarks_${widget.bookId}';
-    
+
     // Get existing bookmarks
     final bookmarksJson = prefs.getStringList(bookmarkKey) ?? [];
-    
+
     // Add new bookmark
     final newBookmark = {
       'chapterId': currentChapter.id,
@@ -314,10 +320,10 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
       'position': _scrollController.offset.toInt(),
       'timestamp': DateTime.now().toIso8601String(),
     };
-    
+
     bookmarksJson.add(newBookmark.toString());
     await prefs.setStringList(bookmarkKey, bookmarksJson);
-    
+
     // Show success message
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -337,60 +343,100 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
     final controlsVisible = ref.watch(controlsVisibilityProvider);
     final prefs = ref.watch(readingPreferencesProvider);
     final mode = ref.watch(readingModeProvider);
-    
+
     // Get book data
     final bookAsync = ref.watch(bookByIdProvider(widget.bookId));
-    
+
     // Watch chapters and load them
     final chaptersAsync = ref.watch(chaptersByBookIdProvider(widget.bookId));
-    
-    // Load chapters when data available
-    ref.listen(chaptersByBookIdProvider(widget.bookId), (previous, next) {
-      next.whenData((chapterModels) {
+
+    // Handle chapters loading
+    return chaptersAsync.when(
+      data: (chapterModels) {
         // Convert ChapterModel to Chapter (Phase 1 model)
-        final loadedChapters = chapterModels.map((cm) => Chapter(
-          id: cm.id,
-          title: cm.title,
-          chapterNumber: cm.chapterNumber,
-          content: cm.content,
-          estimatedDuration: cm.estimatedReadingTimeMinutes != null 
-              ? Duration(minutes: cm.estimatedReadingTimeMinutes!)
-              : null,
-        )).toList();
-        
-        // Only load if chapters changed
+        final loadedChapters = chapterModels
+            .map(
+              (cm) => Chapter(
+                id: cm.id,
+                title: cm.title,
+                chapterNumber: cm.chapterNumber,
+                content: cm.content,
+                estimatedDuration: cm.estimatedReadingTimeMinutes != null
+                    ? Duration(minutes: cm.estimatedReadingTimeMinutes!)
+                    : null,
+              ),
+            )
+            .toList();
+
+        // Load chapters into provider if not already loaded
         if (chapters.isEmpty || chapters.length != loadedChapters.length) {
-          ref.read(chapterNavigationProvider.notifier).loadChapters(loadedChapters);
-          
-          // If specific chapter requested, navigate to it
-          if (widget.chapterId != null && currentChapter == null) {
-            final index = loadedChapters.indexWhere((c) => c.id == widget.chapterId);
-            if (index >= 0) {
-              ref.read(chapterNavigationProvider.notifier).jumpToChapter(index);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ref
+                .read(chapterNavigationProvider.notifier)
+                .loadChapters(loadedChapters);
+
+            // If specific chapter requested, navigate to it
+            if (widget.chapterId != null && currentChapter == null) {
+              final index = loadedChapters.indexWhere(
+                (c) => c.id == widget.chapterId,
+              );
+              if (index >= 0) {
+                ref
+                    .read(chapterNavigationProvider.notifier)
+                    .jumpToChapter(index);
+              }
+            } else if (currentChapter == null && loadedChapters.isNotEmpty) {
+              // Default to first chapter if no chapter specified
+              ref.read(chapterNavigationProvider.notifier).jumpToChapter(0);
             }
-          }
+          });
         }
-      });
-    });
-    
-    return bookAsync.when(
-      data: (book) => _buildReader(
-        book: book,
-        currentChapter: currentChapter,
-        chapters: chapters,
-        controlsVisible: controlsVisible,
-        prefs: prefs,
-        mode: mode,
-      ),
+
+        // Now build the reader with book data
+        return bookAsync.when(
+          data: (book) => _buildReader(
+            book: book,
+            currentChapter: currentChapter,
+            chapters: chapters.isEmpty ? loadedChapters : chapters,
+            controlsVisible: controlsVisible,
+            prefs: prefs,
+            mode: mode,
+          ),
+          loading: () =>
+              const Scaffold(body: Center(child: CircularProgressIndicator())),
+          error: (error, stack) =>
+              Scaffold(body: Center(child: Text('Error loading book: $error'))),
+        );
+      },
       loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Loading chapters...'),
+            ],
+          ),
+        ),
       ),
       error: (error, stack) => Scaffold(
-        body: Center(child: Text('Error: $error')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 64, color: Colors.red),
+              SizedBox(height: 16),
+              Text('Error loading chapters: $error'),
+              SizedBox(height: 8),
+              Text('Stack: $stack', style: TextStyle(fontSize: 10)),
+            ],
+          ),
+        ),
       ),
     );
   }
-  
+
   Widget _buildReader({
     required BookModel? book,
     required Chapter? currentChapter,
@@ -400,15 +446,13 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
     required dynamic mode,
   }) {
     if (book == null || currentChapter == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    
+
     // Get theme colors from preferences
     final bgColor = prefs.backgroundColor;
     final textColor = prefs.textColor;
-    
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -431,7 +475,9 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
                     // Swipe right → Previous chapter
                     final currentIndex = ref.read(chapterNavigationProvider);
                     if (currentIndex > 0) {
-                      ref.read(chapterNavigationProvider.notifier).previousChapter();
+                      ref
+                          .read(chapterNavigationProvider.notifier)
+                          .previousChapter();
                       _scrollController.animateTo(
                         0,
                         duration: const Duration(milliseconds: 250),
@@ -443,7 +489,9 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
                     final chapters = ref.read(chaptersListProvider);
                     final currentIndex = ref.read(chapterNavigationProvider);
                     if (currentIndex < chapters.length - 1) {
-                      ref.read(chapterNavigationProvider.notifier).nextChapter();
+                      ref
+                          .read(chapterNavigationProvider.notifier)
+                          .nextChapter();
                       _scrollController.animateTo(
                         0,
                         duration: const Duration(milliseconds: 250),
@@ -466,7 +514,7 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
                     children: [
                       // Top spacing for header
                       SizedBox(height: controlsVisible ? 80 : 24),
-                      
+
                       // Chapter Title
                       Text(
                         currentChapter.title,
@@ -478,7 +526,7 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
                         ),
                       ),
                       const SizedBox(height: 24),
-                      
+
                       // Chapter Content
                       SelectableText(
                         currentChapter.content,
@@ -491,22 +539,22 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
                         ),
                         textAlign: prefs.textAlign,
                       ),
-                      
+
                       const SizedBox(height: 80),
-                      
+
                       // Chapter End Actions
                       _buildChapterEndActions(chapters),
-                      
+
                       const SizedBox(height: 40),
                     ],
                   ),
                 ),
               ),
             ),
-            
+
             // Top Bar (Auto-hide)
             _buildTopBar(book, currentChapter, controlsVisible, textColor),
-            
+
             // Floating Action Buttons (Always visible)
             _buildFloatingButtons(controlsVisible),
           ],
@@ -514,8 +562,13 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
       ),
     );
   }
-  
-  Widget _buildTopBar(BookModel book, Chapter chapter, bool visible, Color textColor) {
+
+  Widget _buildTopBar(
+    BookModel book,
+    Chapter chapter,
+    bool visible,
+    Color textColor,
+  ) {
     return AnimatedPositioned(
       duration: const Duration(milliseconds: 200),
       top: visible ? 0 : -100,
@@ -544,7 +597,7 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
                   onPressed: () => context.pop(),
                   tooltip: 'Back',
                 ),
-                
+
                 // Book & Chapter Info
                 Expanded(
                   child: Column(
@@ -571,7 +624,7 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
                     ],
                   ),
                 ),
-                
+
                 // More Options
                 IconButton(
                   icon: const Icon(Icons.more_vert, color: Colors.white),
@@ -585,7 +638,7 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
       ),
     );
   }
-  
+
   Widget _buildFloatingButtons(bool controlsVisible) {
     return AnimatedPositioned(
       duration: const Duration(milliseconds: 300),
@@ -609,9 +662,9 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
               ),
               tooltip: 'Bookmark',
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             // Chapter List Button
             FloatingActionButton.small(
               heroTag: 'chapters',
@@ -623,9 +676,9 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
               ),
               tooltip: 'Chapters',
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             // Settings Button
             FloatingActionButton.small(
               heroTag: 'settings',
@@ -642,21 +695,22 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
       ),
     );
   }
-  
+
   Widget _buildChapterEndActions(List<Chapter> chapters) {
     final currentIndex = ref.watch(chapterNavigationProvider);
     final currentChapter = ref.watch(currentChapterProvider);
-    
-    if (currentChapter == null || chapters.isEmpty) return const SizedBox.shrink();
-    
+
+    if (currentChapter == null || chapters.isEmpty)
+      return const SizedBox.shrink();
+
     final hasNext = currentIndex < chapters.length - 1;
     final hasPrev = currentIndex > 0;
-    
+
     return Column(
       children: [
         const Divider(),
         const SizedBox(height: 16),
-        
+
         // Chapter Navigation
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -666,7 +720,9 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () {
-                    ref.read(chapterNavigationProvider.notifier).previousChapter();
+                    ref
+                        .read(chapterNavigationProvider.notifier)
+                        .previousChapter();
                     _scrollController.animateTo(
                       0,
                       duration: const Duration(milliseconds: 300),
@@ -682,9 +738,9 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
               )
             else
               const Expanded(child: SizedBox.shrink()),
-            
+
             const SizedBox(width: 16),
-            
+
             // Next Chapter
             if (hasNext)
               Expanded(
@@ -712,7 +768,7 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
       ],
     );
   }
-  
+
   void _showMoreOptions() {
     showModalBottomSheet(
       context: context,
@@ -720,14 +776,6 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              leading: const Icon(Icons.bookmark_add_outlined),
-              title: const Text('Add Bookmark'),
-              onTap: () {
-                Navigator.pop(context);
-                // TODO: Add bookmark
-              },
-            ),
             ListTile(
               leading: const Icon(Icons.share_outlined),
               title: const Text('Share'),
@@ -749,7 +797,7 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> with Si
       ),
     );
   }
-  
+
   Brightness _getBrightness(Color color) {
     return color.computeLuminance() > 0.5 ? Brightness.dark : Brightness.light;
   }
