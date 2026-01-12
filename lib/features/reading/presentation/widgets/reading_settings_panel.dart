@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/reading_preferences_provider.dart';
 import '../../domain/models/reading_preferences.dart';
@@ -56,7 +56,7 @@ class _ReadingSettingsPanelState extends ConsumerState<ReadingSettingsPanel>
     return GestureDetector(
       onTap: _closePanel,
       child: Container(
-        color: Colors.black.withOpacity(0.5),
+        color: Colors.black.withValues(alpha: 0.5),
         child: GestureDetector(
           onTap: () {}, // Prevent closing when tapping panel
           child: SlideTransition(
@@ -74,7 +74,7 @@ class _ReadingSettingsPanelState extends ConsumerState<ReadingSettingsPanel>
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 20,
                       offset: const Offset(-4, 0),
                     ),
@@ -413,7 +413,7 @@ class _ReadingSettingsPanelState extends ConsumerState<ReadingSettingsPanel>
       child: Material(
         color: isSelected
             ? Theme.of(context).colorScheme.primary
-            : Theme.of(context).colorScheme.surfaceVariant,
+            : Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: () {

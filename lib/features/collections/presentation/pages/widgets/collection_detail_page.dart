@@ -27,7 +27,7 @@ class CollectionDetailPage extends ConsumerWidget {
         title: collectionAsync.when(
           data: (collection) => Text(collection?.name ?? 'Collection'),
           loading: () => const Text('Collection'),
-          error: (_, __) => const Text('Collection'),
+          error: (_, _) => const Text('Collection'),
         ),
         actions: [
           collectionAsync.when(
@@ -44,7 +44,12 @@ class CollectionDetailPage extends ConsumerWidget {
                       ],
                     ),
                     onTap: () {
-                      // TODO: Show edit dialog
+                      final dialogContext = context;
+                      Future.delayed(const Duration(milliseconds: 100), () {
+                        if (dialogContext.mounted) {
+                          _showEditDialog(dialogContext, ref, collection);
+                        }
+                      });
                     },
                   ),
                   PopupMenuItem(
@@ -69,7 +74,7 @@ class CollectionDetailPage extends ConsumerWidget {
               );
             },
             loading: () => const SizedBox(),
-            error: (_, __) => const SizedBox(),
+            error: (_, _) => const SizedBox(),
           ),
         ],
       ),
@@ -80,7 +85,7 @@ class CollectionDetailPage extends ConsumerWidget {
           }
           
           if (collection.bookIds.isEmpty) {
-            return EmptyState(
+            return const EmptyState(
               title: 'No books in collection',
               message: 'Add books to this collection to see them here',
               icon: Icons.book_outlined,
@@ -146,7 +151,7 @@ class CollectionDetailPage extends ConsumerWidget {
                       child: Image.network(
                         book.coverImageUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.book),
+                        errorBuilder: (_, _, _) => const Icon(Icons.book),
                       ),
                     )
                   : const Icon(Icons.book),
@@ -177,7 +182,86 @@ class CollectionDetailPage extends ConsumerWidget {
         );
       },
       loading: () => const ShimmerListItem(),
-      error: (_, __) => const SizedBox(),
+      error: (_, _) => const SizedBox(),
+    );
+  }
+
+  void _showEditDialog(
+    BuildContext context,
+    WidgetRef ref,
+    CollectionModel collection,
+  ) {
+    final nameController = TextEditingController(text: collection.name);
+    final descriptionController = TextEditingController(text: collection.description ?? '');
+    bool isPublic = collection.isPublic;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Edit Collection'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Name',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: descriptionController,
+                    decoration: const InputDecoration(
+                      labelText: 'Description',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                  ),
+                  const SizedBox(height: 16),
+                  CheckboxListTile(
+                    title: const Text('Public'),
+                    value: isPublic,
+                    onChanged: (value) {
+                      setState(() {
+                        isPublic = value ?? false;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await ref.read(collectionControllerProvider).updateCollection(
+                    collectionId: collection.id,
+                    name: nameController.text.trim(),
+                    description: descriptionController.text.trim().isEmpty
+                        ? null
+                        : descriptionController.text.trim(),
+                    isPublic: isPublic,
+                  );
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Collection updated')),
+                    );
+                  }
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }

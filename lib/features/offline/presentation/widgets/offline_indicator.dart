@@ -27,11 +27,11 @@ class OfflineIndicator extends ConsumerWidget {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           color: Colors.orange,
-          child: Row(
+          child: const Row(
             children: [
-              const Icon(Icons.cloud_off, color: Colors.white, size: 20),
-              const SizedBox(width: 8),
-              const Expanded(
+              Icon(Icons.cloud_off, color: Colors.white, size: 20),
+              SizedBox(width: 8),
+              Expanded(
                 child: Text(
                   'You are offline. Some features may be limited.',
                   style: TextStyle(
@@ -46,7 +46,7 @@ class OfflineIndicator extends ConsumerWidget {
         );
       },
       loading: () => const SizedBox(),
-      error: (_, __) => const SizedBox(),
+      error: (_, _) => const SizedBox(),
     );
   }
 }

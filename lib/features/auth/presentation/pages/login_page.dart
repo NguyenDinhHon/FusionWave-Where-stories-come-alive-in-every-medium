@@ -316,7 +316,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(AppStrings.dontHaveAccount),
+                    const Text(AppStrings.dontHaveAccount),
                     TextButton(
                       onPressed: () => context.go('/register'),
                       child: const Text(AppStrings.register),

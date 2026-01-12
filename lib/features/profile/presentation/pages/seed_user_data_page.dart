@@ -377,9 +377,9 @@ class _SeedUserDataPageState extends State<SeedUserDataPage> {
 
     await firestore.collection(AppConstants.readingStatsCollection).doc(userId).set({
       'userId': userId,
-      'totalMinutesRead': dailyStats.values.fold(0, (sum, stat) => sum + (stat['minutesRead'] as int)),
-      'totalPagesRead': dailyStats.values.fold(0, (sum, stat) => sum + (stat['pagesRead'] as int)),
-      'totalChaptersRead': dailyStats.values.fold(0, (sum, stat) => sum + (stat['chaptersRead'] as int)),
+      'totalMinutesRead': dailyStats.values.fold(0, (total, stat) => total + (stat['minutesRead'] as int)),
+      'totalPagesRead': dailyStats.values.fold(0, (total, stat) => total + (stat['pagesRead'] as int)),
+      'totalChaptersRead': dailyStats.values.fold(0, (total, stat) => total + (stat['chaptersRead'] as int)),
       'totalBooksCompleted': 0,
       'currentStreak': _random.nextInt(7),
       'longestStreak': 7 + _random.nextInt(14),

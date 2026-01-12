@@ -158,7 +158,7 @@ class AdminDashboardPage extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 28),
@@ -171,7 +171,7 @@ class AdminDashboardPage extends ConsumerWidget {
               children: [
                 Text(
                   value,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimaryLight,
@@ -179,7 +179,7 @@ class AdminDashboardPage extends ConsumerWidget {
                 ),
                 Text(
                   title,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.textSecondaryLight,
                   ),
@@ -312,7 +312,7 @@ class AdminDashboardPage extends ConsumerWidget {
                                     child: Image.network(
                                       book.coverImageUrl!,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) =>
+                                      errorBuilder: (_, _, _) =>
                                           const Icon(Icons.book),
                                     ),
                                   )
@@ -328,7 +328,7 @@ class AdminDashboardPage extends ConsumerWidget {
                             book.authors.isNotEmpty
                                 ? book.authors.join(', ')
                                 : 'Unknown',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 12,
                               color: AppColors.textSecondaryLight,
                             ),
@@ -354,7 +354,7 @@ class AdminDashboardPage extends ConsumerWidget {
                   },
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  error: (_, __) =>
+                  error: (_, _) =>
                       const Center(child: Text('Error loading books')),
                 ),
               ],
@@ -414,7 +414,7 @@ class AdminDashboardPage extends ConsumerWidget {
                           ),
                           subtitle: Text(
                             user['email'] ?? '',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 12,
                               color: AppColors.textSecondaryLight,
                             ),
@@ -428,8 +428,8 @@ class AdminDashboardPage extends ConsumerWidget {
                             ),
                             decoration: BoxDecoration(
                               color: user['role'] == AppConstants.roleAdmin
-                                  ? Colors.red.withOpacity(0.1)
-                                  : Colors.blue.withOpacity(0.1),
+                                  ? Colors.red.withValues(alpha: 0.1)
+                                  : Colors.blue.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -450,7 +450,7 @@ class AdminDashboardPage extends ConsumerWidget {
                   },
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  error: (_, __) =>
+                  error: (_, _) =>
                       const Center(child: Text('Error loading users')),
                 ),
               ],

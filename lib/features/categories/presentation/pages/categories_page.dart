@@ -144,14 +144,14 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        (category['color'] as Color).withOpacity(0.8),
-                        (category['color'] as Color).withOpacity(0.6),
+                        (category['color'] as Color).withValues(alpha: 0.8),
+                        (category['color'] as Color).withValues(alpha: 0.6),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: (category['color'] as Color).withOpacity(0.3),
+                        color: (category['color'] as Color).withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),
@@ -192,7 +192,7 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
     return booksAsync.when(
       data: (books) {
         if (books.isEmpty) {
-          return EmptyState(
+          return const EmptyState(
             title: 'No books in this category',
             message: 'Check back later for new content',
             icon: Icons.category_outlined,
@@ -231,7 +231,7 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
                                       child: Image.network(
                                         books[index].coverImageUrl!,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) => const Icon(Icons.book),
+                                        errorBuilder: (_, _, _) => const Icon(Icons.book),
                                       ),
                                     )
                                   : const Icon(Icons.book),

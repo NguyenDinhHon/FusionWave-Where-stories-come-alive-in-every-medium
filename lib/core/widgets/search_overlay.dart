@@ -84,7 +84,7 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
             // Backdrop blur
             BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-              child: Container(color: Colors.black.withOpacity(0.3)),
+              child: Container(color: Colors.black.withValues(alpha: 0.3)),
             ),
 
             // Search content
@@ -104,7 +104,7 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
@@ -152,7 +152,7 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
                                 borderRadius: BorderRadius.circular(24),
                                 child: Container(
                                   padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
+                                  decoration: const BoxDecoration(
                                     gradient: AppColors.primaryGradient,
                                     shape: BoxShape.circle,
                                   ),
@@ -188,14 +188,14 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
                                         Icon(
                                           Icons.search_off,
                                           size: 64,
-                                          color: Colors.white.withOpacity(0.5),
+                                          color: Colors.white.withValues(alpha: 0.5),
                                         ),
                                         const SizedBox(height: 16),
                                         Text(
                                           'Không tìm thấy kết quả',
                                           style: TextStyle(
-                                            color: Colors.white.withOpacity(
-                                              0.8,
+                                            color: Colors.white.withValues(
+                                              alpha: 0.8,
                                             ),
                                             fontSize: 16,
                                           ),
@@ -238,7 +238,7 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -256,7 +256,7 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
                       width: 60,
                       height: 90,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
+                      errorBuilder: (_, _, _) => Container(
                         width: 60,
                         height: 90,
                         color: Colors.grey[300],
@@ -301,7 +301,7 @@ class _SearchOverlayState extends ConsumerState<SearchOverlay> {
                       book.categories.first,
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.primary.withOpacity(0.7),
+                        color: AppColors.primary.withValues(alpha: 0.7),
                       ),
                     ),
                   if (book.averageRating != null &&

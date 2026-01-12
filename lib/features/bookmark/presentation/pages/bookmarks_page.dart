@@ -31,7 +31,11 @@ class BookmarksPage extends ConsumerWidget {
             IconButton(
               icon: const Icon(Icons.add),
               onPressed: () {
-                // TODO: Add bookmark from book detail
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Vui lòng thêm bookmark từ trang đọc sách'),
+                  ),
+                );
               },
             ),
         ],
@@ -106,7 +110,7 @@ class BookmarksPage extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       loading: () => const Text('Loading...'),
-                      error: (_, __) => const Text('Unknown Book'),
+                      error: (_, _) => const Text('Unknown Book'),
                     ),
                   ),
                   IconButton(
@@ -119,7 +123,7 @@ class BookmarksPage extends ConsumerWidget {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Icon(Icons.bookmark, size: 16, color: Colors.amber),
+                  const Icon(Icons.bookmark, size: 16, color: Colors.amber),
                   const SizedBox(width: 4),
                   Text(
                     'Chapter ${bookmark.chapterNumber}',
@@ -145,7 +149,7 @@ class BookmarksPage extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.yellow.withOpacity(0.2),
+                    color: Colors.yellow.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -205,9 +209,9 @@ class BookmarksPage extends ConsumerWidget {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Bookmark deleted')),
-                );
-              }
-            },
+    );
+  }
+},
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],

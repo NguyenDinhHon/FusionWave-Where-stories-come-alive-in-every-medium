@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 
 /// Interactive card với các hiệu ứng chuyên nghiệp:
@@ -90,8 +90,8 @@ class _InteractiveCardState extends State<InteractiveCard>
               border: widget.border,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(
-                    _isHovered ? 0.15 : 0.1,
+                  color: Colors.black.withValues(
+                    alpha: _isHovered ? 0.15 : 0.1,
                   ),
                   blurRadius: _elevationAnimation.value,
                   spreadRadius: _isHovered ? 2 : 0,
@@ -104,8 +104,8 @@ class _InteractiveCardState extends State<InteractiveCard>
               child: InkWell(
                 onTap: widget.onTap,
                 borderRadius: BorderRadius.circular(widget.borderRadius),
-                splashColor: AppColors.primary.withOpacity(0.1),
-                highlightColor: AppColors.primary.withOpacity(0.05),
+                splashColor: AppColors.primary.withValues(alpha: 0.1),
+                highlightColor: AppColors.primary.withValues(alpha: 0.05),
                 child: widget.child,
               ),
             ),

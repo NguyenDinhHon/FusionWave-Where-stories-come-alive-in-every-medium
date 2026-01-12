@@ -53,6 +53,7 @@ class ReadingGoalsNotifier extends Notifier<ReadingGoalsState> {
     return prefsAsync.maybeWhen(
       data: (prefs) {
         final dailyGoal = prefs.getReadingGoal();
+        // ignore: todo
         // TODO: Load today's minutes and streak from Firestore or local storage
         return ReadingGoalsState(
           dailyGoalMinutes: dailyGoal,
@@ -72,7 +73,7 @@ class ReadingGoalsNotifier extends Notifier<ReadingGoalsState> {
   
   Future<void> setDailyGoal(int minutes) async {
     final prefsAsync = ref.read(preferencesServiceProvider);
-    await prefsAsync.whenData((prefs) async {
+    prefsAsync.whenData((prefs) async {
       await prefs.setReadingGoal(minutes);
       state = state.copyWith(dailyGoalMinutes: minutes);
       AppLogger.info('Daily reading goal set to: $minutes minutes');
@@ -115,6 +116,7 @@ class ReadingGoalsNotifier extends Notifier<ReadingGoalsState> {
       lastReadingDate: today,
     );
     
+    // ignore: todo
     // TODO: Save to Firestore or local storage
     AppLogger.info('Reading time added: $minutes minutes');
   }

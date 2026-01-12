@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -61,7 +61,7 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
     final book = await bookAsync.when(
       data: (book) => Future.value(book),
       loading: () => Future.value(null),
-      error: (_, __) => Future.value(null),
+      error: (_, _) => Future.value(null),
     );
 
     if (book != null && mounted) {
@@ -124,7 +124,7 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
       final currentBook = await bookAsync.when(
         data: (book) => Future.value(book),
         loading: () => Future.value(null),
-        error: (_, __) => Future.value(null),
+        error: (_, _) => Future.value(null),
       );
 
       if (currentBook == null) {
@@ -276,7 +276,7 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
                                         child: Image.network(
                                           _currentCoverUrl!,
                                           fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) =>
+                                          errorBuilder: (_, _, _) =>
                                               const Icon(Icons.book),
                                         ),
                                       )
@@ -350,6 +350,7 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
 
                             // Category
                             DropdownButtonFormField<String>(
+                              // ignore: deprecated_member_use
                               value: _selectedCategory,
                               decoration: const InputDecoration(
                                 labelText: 'Thể loại',

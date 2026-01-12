@@ -39,6 +39,14 @@ import '../../features/notifications/presentation/pages/notifications_page.dart'
 import '../../features/social/presentation/pages/social_feed_page.dart';
 import '../../features/recommendations/presentation/pages/enhanced_recommendations_page.dart';
 import '../../features/offline/presentation/pages/offline_books_page.dart';
+import '../../features/info/presentation/pages/premium_page.dart';
+import '../../features/info/presentation/pages/terms_page.dart';
+import '../../features/info/presentation/pages/privacy_page.dart';
+import '../../features/info/presentation/pages/payment_policy_page.dart';
+import '../../features/info/presentation/pages/help_page.dart';
+import '../../features/info/presentation/pages/brand_partnerships_page.dart';
+import '../../features/info/presentation/pages/jobs_page.dart';
+import '../../features/info/presentation/pages/press_page.dart';
 import 'page_transitions.dart';
 import 'shell_scaffold.dart';
 
@@ -527,6 +535,72 @@ class AppRouter {
             name: state.name,
           );
         },
+      ),
+
+      // Info Routes
+      GoRoute(
+        path: '/premium',
+        name: 'premium',
+        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+          child: const PremiumPage(),
+          name: state.name,
+        ),
+      ),
+      GoRoute(
+        path: '/terms',
+        name: 'terms',
+        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+          child: const TermsPage(),
+          name: state.name,
+        ),
+      ),
+      GoRoute(
+        path: '/privacy',
+        name: 'privacy',
+        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+          child: const PrivacyPage(),
+          name: state.name,
+        ),
+      ),
+      GoRoute(
+        path: '/payment-policy',
+        name: 'payment-policy',
+        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+          child: const PaymentPolicyPage(),
+          name: state.name,
+        ),
+      ),
+      GoRoute(
+        path: '/help',
+        name: 'help',
+        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+          child: const HelpPage(),
+          name: state.name,
+        ),
+      ),
+      GoRoute(
+        path: '/brand-partnerships',
+        name: 'brand-partnerships',
+        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+          child: const BrandPartnershipsPage(),
+          name: state.name,
+        ),
+      ),
+      GoRoute(
+        path: '/jobs',
+        name: 'jobs',
+        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+          child: const JobsPage(),
+          name: state.name,
+        ),
+      ),
+      GoRoute(
+        path: '/press',
+        name: 'press',
+        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+          child: const PressPage(),
+          name: state.name,
+        ),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

@@ -120,7 +120,8 @@ class OfflineService {
     required String imageUrl,
   }) async {
     try {
-      // TODO: Download và cache image từ URL
+      // ignore: todo
+      // TODO: Download và cache image từ URL - requires image caching implementation
       AppLogger.info('Book cover cached: $bookId');
     } catch (e) {
       AppLogger.error('Cache book cover error', error: e);

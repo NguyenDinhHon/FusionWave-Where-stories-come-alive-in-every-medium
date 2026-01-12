@@ -40,16 +40,14 @@ class AppTheme {
         bodyColor: AppColors.textPrimaryLight,
         displayColor: AppColors.textPrimaryLight,
       ),
-      colorScheme: ColorScheme.light(
+      colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         secondary: AppColors.secondary,
         surface: AppColors.surfaceLight,
-        background: AppColors.backgroundLight,
         error: AppColors.error,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
         onSurface: AppColors.textPrimaryLight,
-        onBackground: AppColors.textPrimaryLight,
         onError: Colors.white,
       ),
       scaffoldBackgroundColor: AppColors.backgroundLight,
@@ -121,16 +119,14 @@ class AppTheme {
         bodyColor: AppColors.textPrimaryDark,
         displayColor: AppColors.textPrimaryDark,
       ),
-      colorScheme: ColorScheme.dark(
+      colorScheme: const ColorScheme.dark(
         primary: AppColors.primaryLight,
         secondary: AppColors.secondaryLight,
         surface: AppColors.surfaceDark,
-        background: AppColors.backgroundDark,
         error: AppColors.error,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
         onSurface: AppColors.textPrimaryDark,
-        onBackground: AppColors.textPrimaryDark,
         onError: Colors.white,
       ),
       scaffoldBackgroundColor: AppColors.backgroundDark,
@@ -202,25 +198,23 @@ class AppTheme {
         bodyColor: AppColors.textPrimaryLight,
         displayColor: AppColors.textPrimaryLight,
       ),
-      colorScheme: ColorScheme.light(
+      colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         secondary: AppColors.secondary,
         surface: AppColors.surfaceSepia,
-        background: AppColors.backgroundSepia,
         error: AppColors.error,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
         onSurface: AppColors.textPrimaryLight,
-        onBackground: AppColors.textPrimaryLight,
         onError: Colors.white,
       ),
       scaffoldBackgroundColor: AppColors.backgroundSepia,
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         elevation: 0,
         centerTitle: true,
         backgroundColor: AppColors.backgroundSepia,
         foregroundColor: AppColors.textPrimaryLight,
-        titleTextStyle: const TextStyle(
+        titleTextStyle: TextStyle(
           color: AppColors.textPrimaryLight,
           fontSize: 20,
           fontWeight: FontWeight.bold,

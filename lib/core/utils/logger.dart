@@ -44,6 +44,7 @@ class AppLogger {
     }
     
     // Log to Firebase Crashlytics in production
+    // ignore: todo
     // TODO: Enable when firebase_crashlytics is added
     // if (!kDebugMode) {
     //   FirebaseCrashlytics.instance.log(message);

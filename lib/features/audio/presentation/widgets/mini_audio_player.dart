@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/audio_provider.dart';
 
@@ -32,7 +32,7 @@ class MiniAudioPlayer extends ConsumerWidget {
         color: Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -110,11 +110,11 @@ class MiniAudioPlayer extends ConsumerWidget {
                   );
                 },
                 loading: () => const LinearProgressIndicator(),
-                error: (_, __) => const SizedBox(),
+                error: (_, _) => const SizedBox(),
               );
             },
             loading: () => const LinearProgressIndicator(),
-            error: (_, __) => const SizedBox(),
+            error: (_, _) => const SizedBox(),
           ),
           
           const SizedBox(height: 8),
@@ -161,7 +161,7 @@ class MiniAudioPlayer extends ConsumerWidget {
                   height: 40,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-                error: (_, __) => const Icon(Icons.error, size: 40),
+                error: (_, _) => const Icon(Icons.error, size: 40),
               ),
               
               // Next button

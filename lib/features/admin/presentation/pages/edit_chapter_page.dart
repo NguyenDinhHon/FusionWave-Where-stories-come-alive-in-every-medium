@@ -78,7 +78,7 @@ class _EditChapterPageState extends ConsumerState<EditChapterPage> {
     final chapter = await chapterAsync.when(
       data: (chapter) => Future.value(chapter),
       loading: () => Future.value(null),
-      error: (_, __) => Future.value(null),
+      error: (_, _) => Future.value(null),
     );
 
     if (chapter != null && mounted) {
@@ -323,7 +323,7 @@ class _EditChapterPageState extends ConsumerState<EditChapterPage> {
                         const SizedBox(height: 8),
                         Text(
                           '${_contentController.text.length} characters • ~${_estimateReadingTime(_contentController.text)} min reading',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 12,
                             color: AppColors.textSecondaryLight,
                           ),

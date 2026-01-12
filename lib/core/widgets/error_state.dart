@@ -36,7 +36,7 @@ class ErrorState extends StatelessWidget {
               Container(
                 padding: AppSpacing.paddingXL,
                 decoration: BoxDecoration(
-                  color: AppColors.error.withOpacity(0.1),
+                  color: AppColors.error.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -45,7 +45,7 @@ class ErrorState extends StatelessWidget {
                   color: AppColors.error,
                 ),
               ),
-              SizedBox(height: AppSpacing.spacing16),
+              const SizedBox(height: AppSpacing.spacing16),
               Text(
                 title ?? 'Đã xảy ra lỗi',
                 style: AppTextStyles.heading3().copyWith(
@@ -54,7 +54,7 @@ class ErrorState extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: AppSpacing.spacing8),
+              const SizedBox(height: AppSpacing.spacing8),
               Text(
                 message,
                 style: AppTextStyles.body().copyWith(
@@ -65,7 +65,7 @@ class ErrorState extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               if (onRetry != null) ...[
-                SizedBox(height: AppSpacing.spacing24),
+                const SizedBox(height: AppSpacing.spacing24),
                 InteractiveButton(
                   label: 'Thử lại',
                   onPressed: onRetry,

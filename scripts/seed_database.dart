@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_relative_lib_imports, avoid_print
+
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';

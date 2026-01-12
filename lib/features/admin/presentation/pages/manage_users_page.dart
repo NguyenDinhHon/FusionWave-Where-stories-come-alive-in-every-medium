@@ -98,8 +98,8 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                     DropdownButton<String>(
                       value: _roleFilter,
                       hint: const Text('Role'),
-                      items: [
-                        const DropdownMenuItem(
+                      items: const [
+                        DropdownMenuItem(
                           value: null,
                           child: Text('All Roles'),
                         ),
@@ -245,8 +245,8 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                       ),
                       decoration: BoxDecoration(
                         color: user['role'] == AppConstants.roleAdmin
-                            ? Colors.red.withOpacity(0.1)
-                            : Colors.blue.withOpacity(0.1),
+                            ? Colors.red.withValues(alpha: 0.1)
+                            : Colors.blue.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -335,7 +335,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
               const SizedBox(height: 4),
               Text(
                 user['email'] ?? '',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 12,
                   color: AppColors.textSecondaryLight,
                 ),
@@ -347,8 +347,8 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: user['role'] == AppConstants.roleAdmin
-                      ? Colors.red.withOpacity(0.1)
-                      : Colors.blue.withOpacity(0.1),
+                      ? Colors.red.withValues(alpha: 0.1)
+                      : Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -388,12 +388,13 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
             Text('Email: ${user['email']}'),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
+              // ignore: deprecated_member_use
               value: user['role'] ?? AppConstants.roleUser,
               decoration: const InputDecoration(
                 labelText: 'Role',
                 border: OutlineInputBorder(),
               ),
-              items: [
+              items: const [
                 DropdownMenuItem(
                   value: AppConstants.roleUser,
                   child: Text(AppConstants.roleUser),

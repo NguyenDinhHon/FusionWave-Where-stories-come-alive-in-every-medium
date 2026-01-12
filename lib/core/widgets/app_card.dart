@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../constants/app_spacing.dart';
 import '../constants/app_shadows.dart';
 
@@ -34,7 +34,7 @@ class AppCard extends StatelessWidget {
         gradient: gradient,
         borderRadius: borderRadius ?? BorderRadius.circular(12),
         boxShadow: AppShadows.shadowMedium,
-        border: Border.all(color: Colors.grey.withOpacity(0.1), width: 1),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.1), width: 1),
       ),
       child: Material(
         color: Colors.transparent,

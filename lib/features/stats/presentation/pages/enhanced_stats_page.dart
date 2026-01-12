@@ -180,10 +180,10 @@ class EnhancedStatsPage extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: color.withOpacity(0.3),
+          color: color.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -223,14 +223,14 @@ class EnhancedStatsPage extends ConsumerWidget {
           borderRadius: BorderRadius.circular(16),
           gradient: LinearGradient(
             colors: [
-              Colors.orange.withOpacity(0.2),
-              Colors.red.withOpacity(0.1),
+              Colors.orange.withValues(alpha: 0.2),
+              Colors.red.withValues(alpha: 0.1),
             ],
           ),
         ),
         child: Row(
           children: [
-            Icon(
+            const Icon(
               Icons.local_fire_department,
               size: 64,
               color: Colors.orange,
@@ -299,7 +299,7 @@ class EnhancedStatsPage extends ConsumerWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Icon(Icons.bar_chart, color: AppColors.primary),
+                const Icon(Icons.bar_chart, color: AppColors.primary),
               ],
             ),
             const SizedBox(height: 24),
@@ -413,7 +413,7 @@ class EnhancedStatsPage extends ConsumerWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Icon(Icons.trending_up, color: AppColors.secondary),
+                const Icon(Icons.trending_up, color: AppColors.secondary),
               ],
             ),
             const SizedBox(height: 24),
@@ -491,7 +491,7 @@ class EnhancedStatsPage extends ConsumerWidget {
                       ),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: AppColors.secondary.withOpacity(0.1),
+                        color: AppColors.secondary.withValues(alpha: 0.1),
                       ),
                     ),
                   ],
@@ -520,10 +520,10 @@ class EnhancedStatsPage extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.accent.withOpacity(0.2),
+                color: AppColors.accent.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.access_time,
                 size: 40,
                 color: AppColors.accent,

@@ -34,14 +34,14 @@ class NotificationsPage extends ConsumerWidget {
               );
             },
             loading: () => const SizedBox(),
-            error: (_, __) => const SizedBox(),
+            error: (_, _) => const SizedBox(),
           ),
         ],
       ),
       body: notificationsAsync.when(
         data: (notifications) {
           if (notifications.isEmpty) {
-            return EmptyState(
+            return const EmptyState(
               title: 'No notifications',
               message: 'You\'re all caught up!',
               icon: Icons.notifications_none,
@@ -91,12 +91,12 @@ class NotificationsPage extends ConsumerWidget {
   ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      color: notification.isRead ? null : Colors.blue.withOpacity(0.05),
+      color: notification.isRead ? null : Colors.blue.withValues(alpha: 0.05),
       child: ListTile(
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: _getNotificationColor(notification.type).withOpacity(0.2),
+            color: _getNotificationColor(notification.type).withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
@@ -136,6 +136,10 @@ class NotificationsPage extends ConsumerWidget {
                 ),
               ),
         onTap: () async {
+          // Capture context and router before async operations
+          final currentContext = context;
+          final router = GoRouter.of(currentContext);
+          
           // Mark as read
           if (!notification.isRead) {
             await ref.read(notificationDataControllerProvider).markAsRead(notification.id);
@@ -146,12 +150,13 @@ class NotificationsPage extends ConsumerWidget {
           
           // Navigate based on notification type
           if (notification.relatedId != null) {
+            if (!currentContext.mounted) return;
             switch (notification.type) {
               case NotificationType.challenge:
-                context.push('/challenges');
+                router.push('/challenges');
                 break;
               case NotificationType.bookUpdate:
-                context.push('/book/${notification.relatedId}');
+                router.push('/book/${notification.relatedId}');
                 break;
               default:
                 break;

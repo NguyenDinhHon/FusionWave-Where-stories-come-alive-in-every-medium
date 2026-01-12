@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../home/presentation/providers/book_provider.dart';
 import '../../../../data/models/book_model.dart';
 
@@ -130,7 +131,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
                   decoration: BoxDecoration(
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.3),
+                    ).colorScheme.onSurface.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -425,11 +426,11 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.red),
-              SizedBox(height: 16),
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
               Text('Error loading chapters: $error'),
-              SizedBox(height: 8),
-              Text('Stack: $stack', style: TextStyle(fontSize: 10)),
+              const SizedBox(height: 8),
+              Text('Stack: $stack', style: const TextStyle(fontSize: 10)),
             ],
           ),
         ),
@@ -580,8 +581,8 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Colors.black.withOpacity(0.7),
-              Colors.black.withOpacity(0),
+              Colors.black.withValues(alpha: 0.7),
+              Colors.black.withValues(alpha: 0),
             ],
           ),
         ),
@@ -617,7 +618,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
                       Text(
                         'Chapter ${chapter.chapterNumber}',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                           fontSize: 12,
                         ),
                       ),
@@ -656,11 +657,11 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
               heroTag: 'bookmark',
               onPressed: _addBookmark,
               backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
+              tooltip: 'Bookmark',
               child: Icon(
                 Icons.bookmark_add_outlined,
                 color: Theme.of(context).colorScheme.onTertiaryContainer,
               ),
-              tooltip: 'Bookmark',
             ),
 
             const SizedBox(height: 12),
@@ -670,11 +671,11 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
               heroTag: 'chapters',
               onPressed: _showChapterList,
               backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              tooltip: 'Chapters',
               child: Icon(
                 Icons.list_rounded,
                 color: Theme.of(context).colorScheme.onPrimaryContainer,
               ),
-              tooltip: 'Chapters',
             ),
 
             const SizedBox(height: 12),
@@ -684,11 +685,11 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
               heroTag: 'settings',
               onPressed: _showSettings,
               backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+              tooltip: 'Settings',
               child: Icon(
                 Icons.tune_rounded,
                 color: Theme.of(context).colorScheme.onSecondaryContainer,
               ),
-              tooltip: 'Settings',
             ),
           ],
         ),
@@ -700,8 +701,9 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
     final currentIndex = ref.watch(chapterNavigationProvider);
     final currentChapter = ref.watch(currentChapterProvider);
 
-    if (currentChapter == null || chapters.isEmpty)
+    if (currentChapter == null || chapters.isEmpty) {
       return const SizedBox.shrink();
+    }
 
     final hasNext = currentIndex < chapters.length - 1;
     final hasPrev = currentIndex > 0;
@@ -779,9 +781,9 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
             ListTile(
               leading: const Icon(Icons.share_outlined),
               title: const Text('Share'),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                // TODO: Share
+                await _shareBook(context, ref);
               },
             ),
             ListTile(
@@ -800,5 +802,37 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
 
   Brightness _getBrightness(Color color) {
     return color.computeLuminance() > 0.5 ? Brightness.dark : Brightness.light;
+  }
+
+  Future<void> _shareBook(BuildContext context, WidgetRef ref) async {
+    final bookAsync = ref.read(bookByIdProvider(widget.bookId));
+    final currentChapter = ref.read(currentChapterProvider);
+    
+    await bookAsync.when(
+      data: (book) async {
+        if (book == null) return;
+        
+        String shareText = 'Check out "${book.title}" on FusionWave!\n\n';
+        if (book.authors.isNotEmpty) {
+          shareText += 'By: ${book.authors.join(', ')}\n';
+        }
+        if (currentChapter != null) {
+          shareText += 'Currently reading: ${currentChapter.title}\n';
+        }
+        shareText += '\nDownload FusionWave to read more!';
+        
+        await SharePlus.instance.share(ShareParams(text: shareText));
+      },
+      loading: () async {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Loading book information...')),
+        );
+      },
+      error: (error, stack) async {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $error')),
+        );
+      },
+    );
   }
 }

@@ -300,7 +300,8 @@ class BookRepository {
   // Get recommended books (simple implementation)
   Future<List<BookModel>> getRecommendedBooks(String userId, {int limit = 10}) async {
     try {
-      // TODO: Implement AI-based recommendations
+      // ignore: todo
+      // TODO: Implement AI-based recommendations - requires ML/AI service integration
       // For now, return popular books
       return getFeaturedBooks(limit: limit);
     } catch (e) {

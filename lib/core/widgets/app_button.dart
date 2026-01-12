@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 /// App button với gradient và animations
 class AppButton extends StatefulWidget {
@@ -68,7 +68,7 @@ class _AppButtonState extends State<AppButton>
             widget.gradient ??
             (widget.color != null
                 ? LinearGradient(
-                    colors: [widget.color!, widget.color!.withOpacity(0.8)],
+                    colors: [widget.color!, widget.color!.withValues(alpha: 0.8)],
                   )
                 : null),
         color: widget.gradient == null && widget.color != null
@@ -86,7 +86,7 @@ class _AppButtonState extends State<AppButton>
             : [
                 BoxShadow(
                   color: (widget.color ?? Theme.of(context).primaryColor)
-                      .withOpacity(0.3),
+                      .withValues(alpha: 0.3),
                   blurRadius: 8,
                   spreadRadius: 0,
                   offset: const Offset(0, 4),

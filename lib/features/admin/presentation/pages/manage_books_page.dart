@@ -26,7 +26,8 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
   DateTime? _dateFrom;
   DateTime? _dateTo;
   bool _isGridView = false;
-  Set<String> _selectedBookIds = {};
+  final Set<String> _selectedBookIds = {};
+  // ignore: prefer_final_fields
   bool _isSelectionMode = false;
 
   @override
@@ -247,7 +248,7 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
                       child: Image.network(
                         book.coverImageUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.book),
+                        errorBuilder: (_, _, _) => const Icon(Icons.book),
                       ),
                     )
                   : const Icon(Icons.book),
@@ -400,7 +401,7 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
                               child: Image.network(
                                 book.coverImageUrl!,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) =>
+                                errorBuilder: (_, _, _) =>
                                     const Icon(Icons.book),
                               ),
                             )
@@ -422,7 +423,7 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
                     book.authors.isNotEmpty
                         ? book.authors.join(', ')
                         : 'Unknown',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 12,
                       color: AppColors.textSecondaryLight,
                     ),
