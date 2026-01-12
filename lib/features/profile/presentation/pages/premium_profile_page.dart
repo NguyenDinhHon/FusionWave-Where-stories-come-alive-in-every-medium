@@ -88,20 +88,23 @@ class PremiumProfilePage extends ConsumerWidget {
                               Positioned(
                                 bottom: 0,
                                 right: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: Colors.white,
-                                      width: 2,
+                                child: GestureDetector(
+                                  onTap: () => context.push('/edit-profile'),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 2,
+                                      ),
                                     ),
-                                  ),
-                                  child: const Icon(
-                                    Icons.camera_alt,
-                                    size: 20,
-                                    color: Colors.white,
+                                    child: const Icon(
+                                      Icons.camera_alt,
+                                      size: 20,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -126,11 +129,11 @@ class PremiumProfilePage extends ConsumerWidget {
                           PremiumButton(
                             label: 'Edit Profile',
                             icon: Icons.edit,
-                            isOutlined: true,
+                            isOutlined: false,
                             color: AppColors.primary,
-                            onPressed: () {
-                              // TODO: Edit profile
-                            },
+                            textColor: Colors.white,
+                            iconColor: Colors.white,
+                            onPressed: () => context.push('/edit-profile'),
                           ),
                         ],
                       ),

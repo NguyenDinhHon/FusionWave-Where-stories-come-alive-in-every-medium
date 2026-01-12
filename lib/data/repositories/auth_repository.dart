@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -379,6 +380,73 @@ class AuthRepository {
       AppLogger.info('User data updated: ${userModel.id}');
     } catch (e) {
       AppLogger.error('Update user data error', error: e);
+      rethrow;
+    }
+  }
+  
+  // Update profile (displayName and photoUrl)
+  Future<UserModel> updateProfile({
+    required String userId,
+    String? displayName,
+    String? photoUrl,
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null || user.uid != userId) {
+        throw Exception('User not authenticated');
+      }
+      
+      // Update Firebase Auth profile
+      if (displayName != null && displayName != user.displayName) {
+        await user.updateDisplayName(displayName);
+        await user.reload();
+      }
+      
+      if (photoUrl != null && photoUrl != user.photoURL) {
+        await user.updatePhotoURL(photoUrl);
+        await user.reload();
+      }
+      
+      // Update Firestore
+      final updateData = <String, dynamic>{};
+      if (displayName != null) {
+        updateData['displayName'] = displayName;
+      }
+      if (photoUrl != null) {
+        updateData['photoUrl'] = photoUrl;
+      }
+      
+      if (updateData.isNotEmpty) {
+        await _firestore
+            .collection(AppConstants.usersCollection)
+            .doc(userId)
+            .update(updateData);
+      }
+      
+      // Get updated user data
+      final updatedUserModel = await getUserData(userId);
+      
+      AppLogger.info('Profile updated: $userId');
+      return updatedUserModel;
+    } catch (e) {
+      AppLogger.error('Update profile error', error: e);
+      rethrow;
+    }
+  }
+  
+  // Upload profile photo to Firebase Storage
+  Future<String> uploadProfilePhoto(String userId, File imageFile) async {
+    try {
+      final storage = _firebaseService.storage;
+      final ref = storage.ref().child('profile_photos/$userId.jpg');
+      
+      await ref.putFile(imageFile);
+      final downloadUrl = await ref.getDownloadURL();
+      
+      AppLogger.info('Profile photo uploaded: $userId');
+      return downloadUrl;
+    } catch (e) {
+      AppLogger.error('Upload profile photo error', error: e);
       rethrow;
     }
   }

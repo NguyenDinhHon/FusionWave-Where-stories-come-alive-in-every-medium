@@ -49,6 +49,7 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
     final averageRatingAsync = ref.watch(bookAverageRatingProvider(widget.bookId));
     
     return Scaffold(
+      backgroundColor: AppColors.backgroundDark,
       body: Column(
         children: [
           const OfflineIndicator(),
@@ -56,7 +57,12 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
             child: bookAsync.when(
               data: (book) {
                 if (book == null) {
-                  return const Center(child: Text('Book not found'));
+                  return const Center(
+                    child: Text(
+                      'Book not found',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  );
                 }
                 
                 return CustomScrollView(
@@ -243,19 +249,20 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
           book.title,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
         if (book.authors.isNotEmpty) ...[
           const SizedBox(height: 8),
           Row(
             children: [
-              Icon(Icons.person_outline, size: 18, color: AppColors.iconLight),
+              const Icon(Icons.person_outline, size: 18, color: Colors.white70),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   book.authors.join(', '),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: Colors.white70,
                   ),
                 ),
               ),
@@ -344,6 +351,7 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                   loading: () => const CircularProgressIndicator(),
@@ -352,7 +360,7 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
                 const SizedBox(height: 4),
                 Text(
                   'Rating',
-                  style: TextStyle(color: AppColors.textSecondaryLight, fontSize: 12),
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
             ),
@@ -370,12 +378,13 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Chapters',
-                  style: TextStyle(color: AppColors.textSecondaryLight, fontSize: 12),
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
             ),
@@ -393,12 +402,13 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Reads',
-                  style: TextStyle(color: AppColors.textSecondaryLight, fontSize: 12),
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
             ),
@@ -426,6 +436,7 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
                 'Rating',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
               averageRatingAsync.when(
@@ -447,13 +458,20 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
                           ),
                         ],
                       )
-                    : const Text('No ratings yet'),
+                    : const Text(
+                        'No ratings yet',
+                        style: TextStyle(color: Colors.white70),
+                      ),
                 loading: () => const CircularProgressIndicator(),
-                error: (_, __) => const Text('Error'),
+                error: (_, __) => const Text(
+                  'Error',
+                  style: TextStyle(color: Colors.white70),
+                ),
               ),
             ],
           ),
@@ -560,12 +578,17 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
             'Description',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
           const SizedBox(height: 12),
           Text(
             book.description!,
-            style: Theme.of(context).textTheme.bodyMedium,
+            style: const TextStyle(
+              color: Colors.white,
+              height: 1.6,
+              fontSize: 16,
+            ),
             maxLines: _isDescriptionExpanded ? null : 4,
             overflow: _isDescriptionExpanded ? null : TextOverflow.ellipsis,
           ),
@@ -603,6 +626,7 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
                 'Chapters (${book.totalChapters})',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
               InteractiveButton(
@@ -623,7 +647,10 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
               if (chapters.isEmpty) {
                 return const Padding(
                   padding: EdgeInsets.all(16.0),
-                  child: Text('No chapters available'),
+                  child: Text(
+                    'No chapters available',
+                    style: TextStyle(color: Colors.white70),
+                  ),
                 );
               }
               
@@ -663,6 +690,7 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
                               chapter.title,
                               style: const TextStyle(
                                 fontWeight: FontWeight.w600,
+                                color: Colors.white,
                               ),
                             ),
                             subtitle: chapter.subtitle != null
@@ -670,13 +698,16 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
                                     chapter.subtitle!,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                    ),
                                   )
                                 : chapter.estimatedReadingTimeMinutes != null
                                     ? Text(
                                         '${chapter.estimatedReadingTimeMinutes} min read',
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           fontSize: 12,
-                                          color: Colors.grey[600],
+                                          color: Colors.white70,
                                         ),
                                       )
                                     : null,
@@ -707,7 +738,10 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, stack) => Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text('Error loading chapters: $error'),
+              child: Text(
+                'Error loading chapters: $error',
+                style: const TextStyle(color: Colors.white70),
+              ),
             ),
           ),
         ],
@@ -744,6 +778,7 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
                       'All Chapters (${book.totalChapters})',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
                     InteractiveIconButton(
@@ -761,7 +796,10 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
                     if (chapters.isEmpty) {
                       return const Padding(
                         padding: EdgeInsets.all(32.0),
-                        child: Text('No chapters available'),
+                        child: Text(
+                          'No chapters available',
+                          style: TextStyle(color: Colors.white70),
+                        ),
                       );
                     }
                     
@@ -792,6 +830,7 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
                             chapter.title,
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
+                              color: Colors.white,
                             ),
                           ),
                           subtitle: chapter.subtitle != null
@@ -799,13 +838,16 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
                                   chapter.subtitle!,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                  ),
                                 )
                               : chapter.estimatedReadingTimeMinutes != null
                                   ? Text(
                                       '${chapter.estimatedReadingTimeMinutes} min read',
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 12,
-                                        color: Colors.grey[600],
+                                        color: Colors.white70,
                                       ),
                                     )
                                   : null,
@@ -821,7 +863,10 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
                   loading: () => const Center(child: CircularProgressIndicator()),
                   error: (error, stack) => Padding(
                     padding: const EdgeInsets.all(32.0),
-                    child: Text('Error: $error'),
+                    child: Text(
+                      'Error: $error',
+                      style: const TextStyle(color: Colors.white70),
+                    ),
                   ),
                 ),
               ),
@@ -846,6 +891,7 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
                 'Reviews',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
               InteractiveButton(
@@ -870,10 +916,10 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
                     children: [
                       Icon(Icons.rate_review_outlined, size: 48, color: AppColors.textSecondaryLight),
                       const SizedBox(height: 8),
-                      Text(
+                      const Text(
                         'No reviews yet',
                         style: TextStyle(
-                          color: AppColors.textSecondaryLight,
+                          color: Colors.white70,
                           fontSize: 14,
                         ),
                       ),
@@ -935,9 +981,9 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
                                     const SizedBox(width: 8),
                                     Text(
                                       _formatDate(review.createdAt),
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 12,
-                                        color: Colors.grey[600],
+                                        color: Colors.white70,
                                       ),
                                     ),
                                   ],
@@ -949,6 +995,7 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
                                   style: const TextStyle(
                                     fontSize: 14,
                                     height: 1.5,
+                                    color: Colors.white,
                                   ),
                                   maxLines: 4,
                                   overflow: TextOverflow.ellipsis,
@@ -978,7 +1025,10 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, stack) => Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text('Error loading reviews: $error'),
+              child: Text(
+                'Error loading reviews: $error',
+                style: const TextStyle(color: Colors.white70),
+              ),
             ),
           ),
         ],
@@ -1120,6 +1170,7 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
           'Similar Books',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
         const SizedBox(height: 12),
