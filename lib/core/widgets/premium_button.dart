@@ -11,6 +11,8 @@ class PremiumButton extends StatefulWidget {
   final double? width;
   final double? height;
   final EdgeInsets? padding;
+  final Color? textColor;
+  final Color? iconColor;
 
   const PremiumButton({
     super.key,
@@ -23,6 +25,8 @@ class PremiumButton extends StatefulWidget {
     this.width,
     this.height,
     this.padding,
+    this.textColor,
+    this.iconColor,
   });
 
   @override
@@ -108,9 +112,10 @@ class _PremiumButtonState extends State<PremiumButton>
                 if (widget.icon != null) ...[
                   Icon(
                     widget.icon,
-                    color: widget.isOutlined
-                        ? (widget.color ?? Theme.of(context).primaryColor)
-                        : Colors.white,
+                    color: widget.iconColor ??
+                        (widget.isOutlined
+                            ? (widget.color ?? Theme.of(context).primaryColor)
+                            : Colors.white),
                     size: 20,
                   ),
                   const SizedBox(width: 8),
@@ -118,9 +123,10 @@ class _PremiumButtonState extends State<PremiumButton>
                 Text(
                   widget.label,
                   style: TextStyle(
-                    color: widget.isOutlined
-                        ? (widget.color ?? Theme.of(context).primaryColor)
-                        : Colors.white,
+                    color: widget.textColor ??
+                        (widget.isOutlined
+                            ? (widget.color ?? Theme.of(context).primaryColor)
+                            : Colors.white),
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),

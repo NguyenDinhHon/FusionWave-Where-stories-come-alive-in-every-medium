@@ -11,6 +11,7 @@ import '../../../../core/widgets/top_navigation_bar.dart';
 import '../../../../core/widgets/footer_widget.dart';
 import '../../../../core/widgets/book_carousel.dart';
 import '../../../../core/widgets/interactive_button.dart';
+import '../../../../core/widgets/image_with_placeholder.dart';
 import '../providers/book_provider.dart';
 import '../../../library/presentation/providers/library_provider.dart';
 import '../../../recommendations/presentation/providers/recommendation_provider.dart';
@@ -157,7 +158,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
                 // Page Indicators
                 Positioned(
-                  bottom: 16,
+                  bottom: 8,
                   left: 0,
                   right: 0,
                   child: Row(
@@ -220,21 +221,32 @@ class _HomePageState extends ConsumerState<HomePage> {
           fit: StackFit.expand,
           children: [
             // Background image
-            book.coverImageUrl != null
-                ? Image.network(
-                    book.coverImageUrl!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                      ),
-                    ),
-                  )
-                : Container(
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                    ),
+            ImageWithPlaceholder(
+              imageUrl: book.coverImageUrl,
+              fit: BoxFit.cover,
+              placeholder: Container(
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                ),
+                child: const Center(
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
                   ),
+                ),
+              ),
+              errorWidget: Container(
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.book,
+                    color: Colors.white70,
+                    size: 48,
+                  ),
+                ),
+              ),
+            ),
 
             // Gradient overlay
             Container(
@@ -242,7 +254,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.4)],
                 ),
               ),
             ),
@@ -253,7 +265,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               left: 0,
               right: 0,
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -413,12 +425,15 @@ class _HomePageState extends ConsumerState<HomePage> {
               continueReadingAsync.when(
                 data: (items) {
                   if (items.isEmpty) {
-                    return const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: EmptyState(
-                        title: 'No recent reading',
-                        message: 'Start reading a book to see it here',
-                        icon: Icons.book_outlined,
+                    return const SizedBox(
+                      height: 200,
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: EmptyState(
+                          title: 'No recent reading',
+                          message: 'Start reading a book to see it here',
+                          icon: Icons.book_outlined,
+                        ),
                       ),
                     );
                   }
@@ -430,16 +445,22 @@ class _HomePageState extends ConsumerState<HomePage> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: items.length,
                       itemBuilder: (context, index) {
-                        return AnimationConfiguration.staggeredList(
-                          position: index,
-                          duration: const Duration(milliseconds: 375),
-                          child: SlideAnimation(
-                            horizontalOffset: 50.0,
-                            child: FadeInAnimation(
-                              child: _buildContinueReadingCard(
-                                context,
-                                ref,
-                                items[index],
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: SizedBox(
+                            width: 320,
+                            child: AnimationConfiguration.staggeredList(
+                              position: index,
+                              duration: const Duration(milliseconds: 375),
+                              child: SlideAnimation(
+                                horizontalOffset: 50.0,
+                                child: FadeInAnimation(
+                                  child: _buildContinueReadingCard(
+                                    context,
+                                    ref,
+                                    items[index],
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -480,7 +501,15 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     return bookAsync.when(
       data: (book) {
-        if (book == null) return const SizedBox();
+        if (book == null) {
+          return const SizedBox(
+            width: 200,
+            height: 380,
+            child: Center(
+              child: Icon(Icons.error_outline, color: Colors.grey),
+            ),
+          );
+        }
 
         return DarkBookCard(
           book: book,
@@ -497,7 +526,13 @@ class _HomePageState extends ConsumerState<HomePage> {
         );
       },
       loading: () => const ShimmerBookCard(),
-      error: (_, __) => const SizedBox(),
+      error: (_, __) => const SizedBox(
+        width: 200,
+        height: 380,
+        child: Center(
+          child: Icon(Icons.error_outline, color: Colors.grey),
+        ),
+      ),
     );
   }
 
