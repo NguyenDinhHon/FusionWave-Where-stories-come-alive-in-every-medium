@@ -6,14 +6,14 @@ import '../providers/auth_guard_provider.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
-import '../../features/library/presentation/pages/premium_library_page.dart';
-import '../../features/search/presentation/pages/premium_search_page.dart';
-import '../../features/profile/presentation/pages/premium_profile_page.dart';
+import '../../features/library/presentation/pages/library_page.dart';
+import '../../features/search/presentation/pages/search_page.dart';
+import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/pages/edit_profile_page.dart';
 import '../../features/profile/presentation/pages/seed_user_data_page.dart';
-import '../../features/reading/presentation/pages/premium_reading_page.dart';
+import '../../features/reading/presentation/pages/reading_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
-import '../../features/book/presentation/pages/premium_book_detail_page.dart';
+import '../../features/book/presentation/pages/book_detail_page.dart';
 import '../../features/social/presentation/pages/comments_page.dart';
 import '../../features/social/presentation/pages/leaderboard_page.dart';
 import '../../features/admin/presentation/pages/seed_data_page.dart';
@@ -187,7 +187,7 @@ class AppRouter {
                 name: 'library',
                 pageBuilder: (context, state) =>
                     PageTransitions.slideFadeTransition(
-                      child: const PremiumLibraryPage(),
+                      child: const LibraryPage(),
                       name: state.name,
                     ),
               ),
@@ -220,7 +220,7 @@ class AppRouter {
                 name: 'profile',
                 pageBuilder: (context, state) =>
                     PageTransitions.slideFadeTransition(
-                      child: const PremiumProfilePage(),
+                      child: const ProfilePage(),
                       name: state.name,
                     ),
               ),
@@ -246,12 +246,12 @@ class AppRouter {
           name: state.name,
         ),
       ),
-      
+
       GoRoute(
         path: '/search',
         name: 'search',
         pageBuilder: (context, state) => PageTransitions.slideTransition(
-          child: const PremiumSearchPage(),
+          child: const SearchPage(),
           name: state.name,
           begin: const Offset(0.0, -1.0),
         ),
@@ -499,7 +499,7 @@ class AppRouter {
         pageBuilder: (context, state) {
           final bookId = state.pathParameters['bookId']!;
           return PageTransitions.slideFadeTransition(
-            child: PremiumBookDetailPage(bookId: bookId),
+            child: BookDetailPage(bookId: bookId),
             name: state.name,
           );
         },
@@ -523,7 +523,7 @@ class AppRouter {
           final bookId = state.pathParameters['bookId']!;
           final chapterId = state.uri.queryParameters['chapterId'];
           return PageTransitions.slideTransition(
-            child: PremiumReadingPage(bookId: bookId, chapterId: chapterId),
+            child: ReadingPage(bookId: bookId, chapterId: chapterId),
             name: state.name,
           );
         },
