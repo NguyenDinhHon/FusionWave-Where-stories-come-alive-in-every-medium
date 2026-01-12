@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/top_navigation_bar.dart';
-import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/interactive_button.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../providers/admin_stats_provider.dart';
@@ -34,17 +34,17 @@ class AdminDashboardPage extends ConsumerWidget {
                       children: [
                         Text(
                           'Admin Dashboard',
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimaryLight,
-                          ),
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimaryLight,
+                              ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Quản lý nội dung và hệ thống',
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: AppColors.textSecondaryLight,
-                          ),
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(color: AppColors.textSecondaryLight),
                         ),
                       ],
                     ),
@@ -57,15 +57,15 @@ class AdminDashboardPage extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 32),
-                
+
                 // Stats Cards
                 _buildStatsSection(context, ref),
                 const SizedBox(height: 32),
-                
+
                 // Quick Actions
                 _buildQuickActionsSection(context),
                 const SizedBox(height: 32),
-                
+
                 // Management Sections
                 _buildManagementSection(context, ref),
               ],
@@ -152,7 +152,7 @@ class AdminDashboardPage extends ConsumerWidget {
     required IconData icon,
     required Color color,
   }) {
-    return PremiumCard(
+    return AppCard(
       child: Row(
         children: [
           Container(
@@ -193,7 +193,7 @@ class AdminDashboardPage extends ConsumerWidget {
   }
 
   Widget _buildQuickActionsSection(BuildContext context) {
-    return PremiumCard(
+    return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -270,7 +270,7 @@ class AdminDashboardPage extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          child: PremiumCard(
+          child: AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -312,7 +312,8 @@ class AdminDashboardPage extends ConsumerWidget {
                                     child: Image.network(
                                       book.coverImageUrl!,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => const Icon(Icons.book),
+                                      errorBuilder: (_, __, ___) =>
+                                          const Icon(Icons.book),
                                     ),
                                   )
                                 : const Icon(Icons.book),
@@ -324,21 +325,37 @@ class AdminDashboardPage extends ConsumerWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                           subtitle: Text(
-                            book.authors.isNotEmpty ? book.authors.join(', ') : 'Unknown',
-                            style: TextStyle(fontSize: 12, color: AppColors.textSecondaryLight),
+                            book.authors.isNotEmpty
+                                ? book.authors.join(', ')
+                                : 'Unknown',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondaryLight,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           trailing: book.isPublished
-                              ? const Icon(Icons.check_circle, color: Colors.green, size: 20)
-                              : const Icon(Icons.circle_outlined, color: Colors.grey, size: 20),
-                          onTap: () => context.push('/admin/edit-book/${book.id}'),
+                              ? const Icon(
+                                  Icons.check_circle,
+                                  color: Colors.green,
+                                  size: 20,
+                                )
+                              : const Icon(
+                                  Icons.circle_outlined,
+                                  color: Colors.grey,
+                                  size: 20,
+                                ),
+                          onTap: () =>
+                              context.push('/admin/edit-book/${book.id}'),
                         );
                       }).toList(),
                     );
                   },
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (_, __) => const Center(child: Text('Error loading books')),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (_, __) =>
+                      const Center(child: Text('Error loading books')),
                 ),
               ],
             ),
@@ -346,7 +363,7 @@ class AdminDashboardPage extends ConsumerWidget {
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: PremiumCard(
+          child: AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -383,7 +400,8 @@ class AdminDashboardPage extends ConsumerWidget {
                             child: user['photoUrl'] == null
                                 ? Text(
                                     (user['displayName'] as String).isNotEmpty
-                                        ? (user['displayName'] as String)[0].toUpperCase()
+                                        ? (user['displayName'] as String)[0]
+                                              .toUpperCase()
                                         : 'U',
                                   )
                                 : null,
@@ -396,12 +414,18 @@ class AdminDashboardPage extends ConsumerWidget {
                           ),
                           subtitle: Text(
                             user['email'] ?? '',
-                            style: TextStyle(fontSize: 12, color: AppColors.textSecondaryLight),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondaryLight,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           trailing: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: user['role'] == AppConstants.roleAdmin
                                   ? Colors.red.withOpacity(0.1)
@@ -424,8 +448,10 @@ class AdminDashboardPage extends ConsumerWidget {
                       }).toList(),
                     );
                   },
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (_, __) => const Center(child: Text('Error loading users')),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (_, __) =>
+                      const Center(child: Text('Error loading users')),
                 ),
               ],
             ),
@@ -441,7 +467,7 @@ class _ShimmerStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PremiumCard(
+    return AppCard(
       child: Row(
         children: [
           Container(
@@ -458,17 +484,9 @@ class _ShimmerStatCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  width: 60,
-                  height: 20,
-                  color: Colors.grey[200],
-                ),
+                Container(width: 60, height: 20, color: Colors.grey[200]),
                 const SizedBox(height: 8),
-                Container(
-                  width: 80,
-                  height: 12,
-                  color: Colors.grey[200],
-                ),
+                Container(width: 80, height: 12, color: Colors.grey[200]),
               ],
             ),
           ),
@@ -477,4 +495,3 @@ class _ShimmerStatCard extends StatelessWidget {
     );
   }
 }
-

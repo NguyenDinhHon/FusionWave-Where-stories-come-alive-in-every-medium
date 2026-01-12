@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/top_navigation_bar.dart';
-import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/interactive_button.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
 import '../../../../core/widgets/empty_state.dart';
@@ -53,10 +53,11 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
                     Expanded(
                       child: Text(
                         'Quản Lý Sách',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimaryLight,
-                        ),
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimaryLight,
+                            ),
                       ),
                     ),
                     InteractiveButton(
@@ -65,7 +66,10 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
                       onPressed: () => context.push('/admin/upload-book'),
                       gradient: AppColors.primaryGradient,
                       height: 40,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                     ),
                   ],
                 ),
@@ -95,21 +99,22 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
                     DropdownButton<String>(
                       value: _selectedCategory,
                       hint: const Text('Thể loại'),
-                      items: [
-                        'All',
-                        'Fiction',
-                        'Non-Fiction',
-                        'Science',
-                        'History',
-                        'Romance',
-                        'Mystery',
-                        'Fantasy',
-                      ].map((category) {
-                        return DropdownMenuItem(
-                          value: category == 'All' ? null : category,
-                          child: Text(category),
-                        );
-                      }).toList(),
+                      items:
+                          [
+                            'All',
+                            'Fiction',
+                            'Non-Fiction',
+                            'Science',
+                            'History',
+                            'Romance',
+                            'Mystery',
+                            'Fantasy',
+                          ].map((category) {
+                            return DropdownMenuItem(
+                              value: category == 'All' ? null : category,
+                              child: Text(category),
+                            );
+                          }).toList(),
                       onChanged: (value) {
                         setState(() {
                           _selectedCategory = value;
@@ -133,58 +138,58 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
             ),
           ),
           // Books list
-          Expanded(
-            child: _buildBooksList(),
-          ),
+          Expanded(child: _buildBooksList()),
         ],
       ),
     );
   }
 
   Widget _buildBooksList() {
-    final booksAsync = ref.watch(allBooksProvider({
-      'searchQuery': _searchQuery.isEmpty ? null : _searchQuery,
-      'category': _selectedCategory,
-      'isPublished': _publishedStatus,
-      'dateFrom': _dateFrom,
-      'dateTo': _dateTo,
-    }));
+    final booksAsync = ref.watch(
+      allBooksProvider({
+        'searchQuery': _searchQuery.isEmpty ? null : _searchQuery,
+        'category': _selectedCategory,
+        'isPublished': _publishedStatus,
+        'dateFrom': _dateFrom,
+        'dateTo': _dateTo,
+      }),
+    );
 
     return booksAsync.when(
       data: (books) {
         if (books.isEmpty) {
-      return _isGridView
-          ? GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.7,
-              ),
-              itemCount: 6,
-              itemBuilder: (context, index) => const ShimmerBookCard(),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: 5,
-              itemBuilder: (context, index) => const ShimmerListItem(),
-            );
-    }
+          return _isGridView
+              ? GridView.builder(
+                  padding: const EdgeInsets.all(16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.7,
+                  ),
+                  itemCount: 6,
+                  itemBuilder: (context, index) => const ShimmerBookCard(),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: 5,
+                  itemBuilder: (context, index) => const ShimmerListItem(),
+                );
+        }
 
-    if (books.isEmpty) {
-      return EmptyState(
-        title: 'Chưa có sách nào',
-        message: 'Bắt đầu bằng cách upload sách mới',
-        icon: Icons.library_books_outlined,
-        action: InteractiveButton(
-          label: 'Upload Sách',
-          icon: Icons.add,
-          onPressed: () => context.push('/admin/upload-book'),
-          gradient: AppColors.primaryGradient,
-        ),
-      );
-    }
+        if (books.isEmpty) {
+          return EmptyState(
+            title: 'Chưa có sách nào',
+            message: 'Bắt đầu bằng cách upload sách mới',
+            icon: Icons.library_books_outlined,
+            action: InteractiveButton(
+              label: 'Upload Sách',
+              icon: Icons.add,
+              onPressed: () => context.push('/admin/upload-book'),
+              gradient: AppColors.primaryGradient,
+            ),
+          );
+        }
 
         return _isGridView ? _buildGridView(books) : _buildListView(books);
       },
@@ -205,16 +210,18 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
               itemCount: 5,
               itemBuilder: (context, index) => const ShimmerListItem(),
             ),
-              error: (error, stack) => ErrorState(
-                message: error.toString(),
-                onRetry: () => ref.invalidate(allBooksProvider({
-                  'searchQuery': _searchQuery.isEmpty ? null : _searchQuery,
-                  'category': _selectedCategory,
-                  'isPublished': _publishedStatus,
-                  'dateFrom': _dateFrom,
-                  'dateTo': _dateTo,
-                })),
-              ),
+      error: (error, stack) => ErrorState(
+        message: error.toString(),
+        onRetry: () => ref.invalidate(
+          allBooksProvider({
+            'searchQuery': _searchQuery.isEmpty ? null : _searchQuery,
+            'category': _selectedCategory,
+            'isPublished': _publishedStatus,
+            'dateFrom': _dateFrom,
+            'dateTo': _dateTo,
+          }),
+        ),
+      ),
     );
   }
 
@@ -224,7 +231,7 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
       itemCount: books.length,
       itemBuilder: (context, index) {
         final book = books[index];
-        return PremiumCard(
+        return AppCard(
           margin: const EdgeInsets.only(bottom: 12),
           child: ListTile(
             leading: Container(
@@ -250,7 +257,9 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: Text(
-              book.authors.isNotEmpty ? book.authors.join(', ') : 'Unknown Author',
+              book.authors.isNotEmpty
+                  ? book.authors.join(', ')
+                  : 'Unknown Author',
             ),
             trailing: _isSelectionMode
                 ? null
@@ -260,7 +269,9 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
                       InteractiveButton(
                         icon: Icons.menu_book,
                         onPressed: () {
-                          context.push('/admin/manage-chapters?bookId=${book.id}');
+                          context.push(
+                            '/admin/manage-chapters?bookId=${book.id}',
+                          );
                         },
                         isIconButton: true,
                         iconColor: AppColors.primary,
@@ -295,7 +306,11 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context, WidgetRef ref, BookModel book) {
+  void _showDeleteConfirmation(
+    BuildContext context,
+    WidgetRef ref,
+    BookModel book,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -311,13 +326,15 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
               try {
                 final repository = ref.read(bookRepositoryProvider);
                 await repository.deleteBook(book.id);
-                ref.invalidate(allBooksProvider({
-                  'searchQuery': _searchQuery.isEmpty ? null : _searchQuery,
-                  'category': _selectedCategory,
-                  'isPublished': _publishedStatus,
-                  'dateFrom': _dateFrom,
-                  'dateTo': _dateTo,
-                }));
+                ref.invalidate(
+                  allBooksProvider({
+                    'searchQuery': _searchQuery.isEmpty ? null : _searchQuery,
+                    'category': _selectedCategory,
+                    'isPublished': _publishedStatus,
+                    'dateFrom': _dateFrom,
+                    'dateTo': _dateTo,
+                  }),
+                );
                 if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -326,9 +343,9 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Lỗi: $e')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
                 }
               }
             },
@@ -351,7 +368,7 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
       itemCount: books.length,
       itemBuilder: (context, index) {
         final book = books[index];
-        return PremiumCard(
+        return AppCard(
           onTap: () {
             if (_isSelectionMode) {
               setState(() {
@@ -383,7 +400,8 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
                               child: Image.network(
                                 book.coverImageUrl!,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => const Icon(Icons.book),
+                                errorBuilder: (_, __, ___) =>
+                                    const Icon(Icons.book),
                               ),
                             )
                           : const Icon(Icons.book),
@@ -401,7 +419,9 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    book.authors.isNotEmpty ? book.authors.join(', ') : 'Unknown',
+                    book.authors.isNotEmpty
+                        ? book.authors.join(', ')
+                        : 'Unknown',
                     style: TextStyle(
                       fontSize: 12,
                       color: AppColors.textSecondaryLight,
@@ -437,15 +457,18 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
 }
 
 // Provider for all books (admin) with advanced filters
-final allBooksProvider = FutureProvider.family<List<BookModel>, Map<String, dynamic>>((ref, filters) async {
-  final repository = ref.read(bookRepositoryProvider);
-  return repository.getAllBooks(
-    limit: 100,
-    searchQuery: filters['searchQuery'] as String?,
-    category: filters['category'] as String?,
-    isPublished: filters['isPublished'] as bool?,
-    dateFrom: filters['dateFrom'] as DateTime?,
-    dateTo: filters['dateTo'] as DateTime?,
-  );
-});
-
+final allBooksProvider =
+    FutureProvider.family<List<BookModel>, Map<String, dynamic>>((
+      ref,
+      filters,
+    ) async {
+      final repository = ref.read(bookRepositoryProvider);
+      return repository.getAllBooks(
+        limit: 100,
+        searchQuery: filters['searchQuery'] as String?,
+        category: filters['category'] as String?,
+        isPublished: filters['isPublished'] as bool?,
+        dateFrom: filters['dateFrom'] as DateTime?,
+        dateTo: filters['dateTo'] as DateTime?,
+      );
+    });

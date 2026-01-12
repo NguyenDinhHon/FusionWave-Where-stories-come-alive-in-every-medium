@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/top_navigation_bar.dart';
-import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/interactive_button.dart';
 import '../../../../data/models/book_model.dart';
 import '../../../home/presentation/providers/book_provider.dart';
@@ -15,10 +15,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 class EditBookPage extends ConsumerStatefulWidget {
   final String bookId;
 
-  const EditBookPage({
-    super.key,
-    required this.bookId,
-  });
+  const EditBookPage({super.key, required this.bookId});
 
   @override
   ConsumerState<EditBookPage> createState() => _EditBookPageState();
@@ -29,7 +26,7 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
   late TextEditingController _titleController;
   late TextEditingController _authorController;
   late TextEditingController _descriptionController;
-  
+
   String? _selectedCategory;
   double? _rating;
   File? _newCoverImage;
@@ -66,13 +63,15 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
       loading: () => Future.value(null),
       error: (_, __) => Future.value(null),
     );
-    
+
     if (book != null && mounted) {
       setState(() {
         _titleController.text = book.title;
         _authorController.text = book.authors.join(', ');
         _descriptionController.text = book.description ?? '';
-        _selectedCategory = book.categories.isNotEmpty ? book.categories.first : null;
+        _selectedCategory = book.categories.isNotEmpty
+            ? book.categories.first
+            : null;
         _rating = book.averageRating;
         _isPublished = book.isPublished;
         _currentCoverUrl = book.coverImageUrl;
@@ -144,7 +143,9 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
           .where((a) => a.isNotEmpty)
           .toList();
 
-      final categories = _selectedCategory != null ? [_selectedCategory!] : <String>[];
+      final categories = _selectedCategory != null
+          ? [_selectedCategory!]
+          : <String>[];
 
       final updatedBook = BookModel(
         id: currentBook.id,
@@ -179,9 +180,9 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
       }
     } finally {
       if (mounted) {
@@ -226,27 +227,29 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
                           const SizedBox(width: 16),
                           Text(
                             'Chỉnh Sửa Sách',
-                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimaryLight,
-                            ),
+                            style: Theme.of(context).textTheme.headlineMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimaryLight,
+                                ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 32),
-                      
+
                       // Form
-                      PremiumCard(
+                      AppCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Cover Image
                             Text(
                               'Ảnh Bìa',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimaryLight,
-                              ),
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textPrimaryLight,
+                                  ),
                             ),
                             const SizedBox(height: 12),
                             GestureDetector(
@@ -268,29 +271,37 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
                                         ),
                                       )
                                     : _currentCoverUrl != null
-                                        ? ClipRRect(
-                                            borderRadius: BorderRadius.circular(12),
-                                            child: Image.network(
-                                              _currentCoverUrl!,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (_, __, ___) => const Icon(Icons.book),
-                                            ),
-                                          )
-                                        : Column(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Icon(Icons.add_photo_alternate, size: 48, color: Colors.grey[400]),
-                                              const SizedBox(height: 8),
-                                              Text(
-                                                'Chọn ảnh bìa',
-                                                style: TextStyle(color: Colors.grey[600]),
-                                              ),
-                                            ],
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Image.network(
+                                          _currentCoverUrl!,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) =>
+                                              const Icon(Icons.book),
+                                        ),
+                                      )
+                                    : Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.add_photo_alternate,
+                                            size: 48,
+                                            color: Colors.grey[400],
                                           ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'Chọn ảnh bìa',
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                               ),
                             ),
                             const SizedBox(height: 32),
-                            
+
                             // Title
                             TextFormField(
                               controller: _titleController,
@@ -306,14 +317,15 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
                               },
                             ),
                             const SizedBox(height: 16),
-                            
+
                             // Author
                             TextFormField(
                               controller: _authorController,
                               decoration: const InputDecoration(
                                 labelText: 'Tác giả *',
                                 border: OutlineInputBorder(),
-                                hintText: 'Nhập tên tác giả, cách nhau bởi dấu phẩy',
+                                hintText:
+                                    'Nhập tên tác giả, cách nhau bởi dấu phẩy',
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
@@ -323,7 +335,7 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
                               },
                             ),
                             const SizedBox(height: 16),
-                            
+
                             // Description
                             TextFormField(
                               controller: _descriptionController,
@@ -335,7 +347,7 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
                               maxLines: 5,
                             ),
                             const SizedBox(height: 16),
-                            
+
                             // Category
                             DropdownButtonFormField<String>(
                               value: _selectedCategory,
@@ -356,7 +368,7 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
                               },
                             ),
                             const SizedBox(height: 16),
-                            
+
                             // Rating
                             TextFormField(
                               initialValue: _rating?.toString(),
@@ -372,7 +384,7 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
                               },
                             ),
                             const SizedBox(height: 16),
-                            
+
                             // Published status
                             Row(
                               children: [
@@ -388,27 +400,37 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
                               ],
                             ),
                             const SizedBox(height: 32),
-                            
+
                             // Save Button
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 InteractiveButton(
                                   label: 'Hủy',
-                                  onPressed: _isSaving ? null : () => context.pop(),
+                                  onPressed: _isSaving
+                                      ? null
+                                      : () => context.pop(),
                                   isOutlined: true,
                                   height: 48,
-                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 12,
+                                  ),
                                 ),
                                 const SizedBox(width: 12),
                                 InteractiveButton(
-                                  label: _isSaving ? 'Đang lưu...' : 'Lưu Thay Đổi',
+                                  label: _isSaving
+                                      ? 'Đang lưu...'
+                                      : 'Lưu Thay Đổi',
                                   icon: _isSaving ? null : Icons.save,
                                   onPressed: _isSaving ? null : _saveBook,
                                   isLoading: _isSaving,
                                   gradient: AppColors.primaryGradient,
                                   height: 48,
-                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 12,
+                                  ),
                                 ),
                               ],
                             ),
@@ -445,11 +467,10 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
 }
 
 // Provider for all books (admin)
-final allBooksProvider = FutureProvider.family<List<BookModel>, String?>((ref, searchQuery) async {
+final allBooksProvider = FutureProvider.family<List<BookModel>, String?>((
+  ref,
+  searchQuery,
+) async {
   final repository = ref.read(bookRepositoryProvider);
-  return repository.getAllBooks(
-    limit: 100,
-    searchQuery: searchQuery,
-  );
+  return repository.getAllBooks(limit: 100, searchQuery: searchQuery);
 });
-
