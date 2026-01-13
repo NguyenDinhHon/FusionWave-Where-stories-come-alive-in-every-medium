@@ -592,7 +592,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: AppColors.textPrimaryLight,
+                        color: Colors.white,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -602,46 +602,13 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                       Text(
                         book.authors.join(', '),
                         style: const TextStyle(
-                          color: AppColors.textSecondaryLight,
+                          color: Colors.white70,
                           fontSize: 14,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _getStatusColor(
-                              item.status,
-                            ).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            item.status,
-                            style: TextStyle(
-                              color: _getStatusColor(item.status),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          '${(item.progress * 100).toStringAsFixed(0)}%',
-                          style: const TextStyle(
-                            color: AppColors.textSecondaryLight,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),
@@ -756,176 +723,6 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
       },
       loading: () => const ShimmerBookCard(),
       error: (_, _) => const SizedBox(),
-    );
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case AppConstants.bookStatusReading:
-        return Colors.blue;
-      case AppConstants.bookStatusCompleted:
-        return Colors.green;
-      case AppConstants.bookStatusWantToRead:
-        return Colors.orange;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  void _showLibraryItemMenu(
-    BuildContext context,
-    WidgetRef ref,
-    LibraryItemModel item,
-    BookModel book,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.book),
-              title: const Text('View Book Details'),
-              onTap: () {
-                Navigator.pop(context);
-                context.push('/book/${book.id}');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.bookmark),
-              title: const Text('Change Status'),
-              onTap: () {
-                Navigator.pop(context);
-                _showStatusDialog(context, ref, item);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete, color: Colors.red),
-              title: const Text('Remove from Library', style: TextStyle(color: Colors.red)),
-              onTap: () {
-                Navigator.pop(context);
-                _showRemoveDialog(context, ref, item, book);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showStatusDialog(
-    BuildContext context,
-    WidgetRef ref,
-    LibraryItemModel item,
-  ) {
-    String? selectedStatus = item.status;
-    showDialog(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Change Status'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              RadioListTile<String>(
-                title: const Text('Reading'),
-                value: AppConstants.bookStatusReading,
-                // ignore: deprecated_member_use
-                groupValue: selectedStatus,
-                // ignore: deprecated_member_use
-                onChanged: (value) {
-                  setState(() {
-                    selectedStatus = value;
-                  });
-                },
-              ),
-              RadioListTile<String>(
-                title: const Text('Want to Read'),
-                value: AppConstants.bookStatusWantToRead,
-                // ignore: deprecated_member_use
-                groupValue: selectedStatus,
-                // ignore: deprecated_member_use
-                onChanged: (value) {
-                  setState(() {
-                    selectedStatus = value;
-                  });
-                },
-              ),
-              RadioListTile<String>(
-                title: const Text('Completed'),
-                value: AppConstants.bookStatusCompleted,
-                // ignore: deprecated_member_use
-                groupValue: selectedStatus,
-                // ignore: deprecated_member_use
-                onChanged: (value) {
-                  setState(() {
-                    selectedStatus = value;
-                  });
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                if (selectedStatus != null && selectedStatus != item.status) {
-                  await ref.read(libraryControllerProvider).updateBookStatus(
-                        item.bookId,
-                        selectedStatus!,
-                      );
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Status changed to $selectedStatus')),
-                    );
-                    Navigator.pop(context);
-                  }
-                } else {
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showRemoveDialog(
-    BuildContext context,
-    WidgetRef ref,
-    LibraryItemModel item,
-    BookModel book,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Remove from Library'),
-        content: Text('Are you sure you want to remove "${book.title}" from your library?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              await ref.read(libraryControllerProvider).removeFromLibrary(item.bookId);
-              if (context.mounted) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Removed from library')),
-                );
-              }
-            },
-            child: const Text('Remove', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
     );
   }
 }

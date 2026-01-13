@@ -331,9 +331,9 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
         const SizedBox(width: 12),
         AppButton(
           label: 'Read Now',
-          icon: Icons.book,
           isOutlined: true,
           color: AppColors.primary,
+          textColor: Colors.white,
           onPressed: () => context.push('/reading/${book.id}'),
         ),
       ],
@@ -490,9 +490,9 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
               if (userRating == null) {
                 return AppButton(
                   label: 'Rate this book',
-                  icon: Icons.star_outline,
                   isOutlined: true,
                   color: AppColors.primary,
+                  textColor: Colors.white,
                   onPressed: () {
                     _showRatingDialog(context, ref, book);
                   },
@@ -1054,7 +1054,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                                   style: const TextStyle(
                                     fontSize: 14,
                                     height: 1.5,
-                                    color: Colors.white,
+                                    color: Colors.black,
                                   ),
                                   maxLines: 4,
                                   overflow: TextOverflow.ellipsis,
