@@ -23,11 +23,15 @@ import '../../features/admin/presentation/pages/comprehensive_seed_data_page.dar
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 import '../../features/admin/presentation/pages/upload_book_page.dart';
 import '../../features/admin/presentation/pages/manage_books_page.dart';
-import '../../features/admin/presentation/pages/manage_chapters_page.dart';
 import '../../features/admin/presentation/pages/edit_book_page.dart';
 import '../../features/admin/presentation/pages/edit_chapter_page.dart';
 import '../../features/admin/presentation/pages/manage_users_page.dart';
 import '../../features/admin/presentation/pages/manage_comments_page.dart';
+import '../../features/admin/presentation/pages/manage_ratings_page.dart';
+import '../../features/admin/presentation/pages/manage_bookmarks_page.dart';
+import '../../features/admin/presentation/pages/manage_library_items_page.dart';
+import '../../features/admin/presentation/pages/manage_collections_page.dart';
+import '../../features/admin/presentation/pages/analytics_page.dart';
 import '../../features/admin/presentation/pages/manage_categories_page.dart';
 import '../../features/admin/presentation/pages/system_settings_page.dart';
 import '../../features/auth/presentation/pages/email_link_verify_page.dart';
@@ -420,24 +424,7 @@ class AppRouter {
               ),
             ],
           ),
-          // Branch 2: Manage Chapters
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/admin/manage-chapters',
-                name: 'manage-chapters',
-                redirect: (context, state) => _adminGuard(context, state),
-                pageBuilder: (context, state) {
-                  final bookId = state.uri.queryParameters['bookId'];
-                  return PageTransitions.slideFadeTransition(
-                    child: ManageChaptersPage(bookId: bookId),
-                    name: state.name,
-                  );
-                },
-              ),
-            ],
-          ),
-          // Branch 3: Manage Users
+          // Branch 2: Manage Users
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -465,7 +452,21 @@ class AppRouter {
               ),
             ],
           ),
-          // Branch 5: Manage Categories
+          // Branch 5: Manage Ratings
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/manage-ratings',
+                name: 'manage-ratings',
+                redirect: (context, state) => _adminGuard(context, state),
+                pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+                  child: const ManageRatingsPage(),
+                  name: state.name,
+                ),
+              ),
+            ],
+          ),
+          // Branch 6: Manage Categories
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -479,7 +480,63 @@ class AppRouter {
               ),
             ],
           ),
-          // Branch 6: System Settings
+          // Branch 7: Analytics
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/analytics',
+                name: 'analytics',
+                redirect: (context, state) => _adminGuard(context, state),
+                pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+                  child: const AnalyticsPage(),
+                  name: state.name,
+                ),
+              ),
+            ],
+          ),
+          // Branch 8: Manage Bookmarks
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/manage-bookmarks',
+                name: 'manage-bookmarks',
+                redirect: (context, state) => _adminGuard(context, state),
+                pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+                  child: const ManageBookmarksPage(),
+                  name: state.name,
+                ),
+              ),
+            ],
+          ),
+          // Branch 9: Manage Library Items
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/manage-library-items',
+                name: 'manage-library-items',
+                redirect: (context, state) => _adminGuard(context, state),
+                pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+                  child: const ManageLibraryItemsPage(),
+                  name: state.name,
+                ),
+              ),
+            ],
+          ),
+          // Branch 10: Manage Collections
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/manage-collections',
+                name: 'manage-collections',
+                redirect: (context, state) => _adminGuard(context, state),
+                pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+                  child: const ManageCollectionsPage(),
+                  name: state.name,
+                ),
+              ),
+            ],
+          ),
+          // Branch 11: System Settings
           StatefulShellBranch(
             routes: [
               GoRoute(

@@ -55,9 +55,13 @@ class AdminDashboardPage extends ConsumerWidget {
                     constraints.maxWidth,
                   ),
                   const SizedBox(height: 32),
-                  _buildQuickActionsSection(context),
-                  const SizedBox(height: 32),
                   _buildManagementSection(
+                    context,
+                    ref,
+                    isMobile,
+                  ),
+                  const SizedBox(height: 32),
+                  _buildRecentActivitySection(
                     context,
                     ref,
                     isMobile,
@@ -79,7 +83,7 @@ class AdminDashboardPage extends ConsumerWidget {
           'Admin Dashboard',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimaryLight,
+                color: Colors.white, // White text
               ),
         ),
         const SizedBox(height: 8),
@@ -88,7 +92,7 @@ class AdminDashboardPage extends ConsumerWidget {
           style: Theme.of(context)
               .textTheme
               .bodyLarge
-              ?.copyWith(color: AppColors.textSecondaryLight),
+              ?.copyWith(color: Colors.white70), // White text
         ),
       ],
     );
@@ -217,14 +221,14 @@ class AdminDashboardPage extends ConsumerWidget {
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimaryLight,
+                    color: Colors.white, // White text
                   ),
                 ),
                 Text(
                   title,
                   style: const TextStyle(
                     fontSize: 12,
-                    color: AppColors.textSecondaryLight,
+                    color: Colors.black54, // Darker for better contrast
                   ),
                 ),
               ],
@@ -232,94 +236,6 @@ class AdminDashboardPage extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildQuickActionsSection(BuildContext context) {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Quick Actions',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimaryLight,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              _buildActionButton(
-                context,
-                label: 'Upload Sách',
-                icon: Icons.upload_file,
-                onPressed: () => context.push('/admin/upload-book'),
-              ),
-              _buildActionButton(
-                context,
-                label: 'Quản Lý Sách',
-                icon: Icons.library_books,
-                onPressed: () => context.push('/admin/manage-books'),
-              ),
-              _buildActionButton(
-                context,
-                label: 'Quản Lý Chapters',
-                icon: Icons.menu_book,
-                onPressed: () => context.push('/admin/manage-chapters'),
-              ),
-              _buildActionButton(
-                context,
-                label: 'Quản Lý Users',
-                icon: Icons.people,
-                onPressed: () => context.push('/admin/manage-users'),
-              ),
-              _buildActionButton(
-                context,
-                label: 'Quản Lý Comments',
-                icon: Icons.comment,
-                onPressed: () => context.push('/admin/manage-comments'),
-              ),
-              _buildActionButton(
-                context,
-                label: 'Quản Lý Categories',
-                icon: Icons.category,
-                onPressed: () => context.push('/admin/manage-categories'),
-              ),
-              _buildActionButton(
-                context,
-                label: 'System Settings',
-                icon: Icons.settings,
-                onPressed: () => context.push('/admin/system-settings'),
-              ),
-              _buildActionButton(
-                context,
-                label: 'Seed Data',
-                icon: Icons.storage,
-                onPressed: () => context.push('/admin/seed-data'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionButton(
-    BuildContext context, {
-    required String label,
-    required IconData icon,
-    required VoidCallback onPressed,
-  }) {
-    return InteractiveButton(
-      label: label,
-      icon: icon,
-      onPressed: onPressed,
-      isOutlined: true,
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
     );
   }
 
@@ -338,13 +254,13 @@ class AdminDashboardPage extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Recent Books',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimaryLight,
+                    Text(
+                      'Recent Books',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white, // White text
+                      ),
                     ),
-              ),
               TextButton(
                 onPressed: () => context.push('/admin/manage-books'),
                 child: const Text('View All'),
@@ -391,7 +307,7 @@ class AdminDashboardPage extends ConsumerWidget {
                           : 'Unknown',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppColors.textSecondaryLight,
+                        color: Colors.black54, // Darker for better contrast
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -413,7 +329,7 @@ class AdminDashboardPage extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, __) => const Center(child: Text('Error loading books')),
+            error: (_, _) => const Center(child: Text('Error loading books')),
           ),
         ],
       ),
@@ -426,13 +342,13 @@ class AdminDashboardPage extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Recent Users',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimaryLight,
+                    Text(
+                      'Recent Users',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white, // White text
+                      ),
                     ),
-              ),
               TextButton(
                 onPressed: () => context.push('/admin/manage-users'),
                 child: const Text('View All'),
@@ -472,7 +388,7 @@ class AdminDashboardPage extends ConsumerWidget {
                       user['email'] ?? '',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: AppColors.textSecondaryLight,
+                        color: Colors.black54, // Darker for better contrast
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -505,7 +421,7 @@ class AdminDashboardPage extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, __) => const Center(child: Text('Error loading users')),
+            error: (_, _) => const Center(child: Text('Error loading users')),
           ),
         ],
       ),
@@ -528,6 +444,172 @@ class AdminDashboardPage extends ConsumerWidget {
         const SizedBox(width: 16),
         Expanded(child: usersCard),
       ],
+    );
+  }
+
+  Widget _buildRecentActivitySection(
+    BuildContext context,
+    WidgetRef ref,
+    bool isMobile,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Hoạt Động Gần Đây',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+        ),
+        const SizedBox(height: 16),
+        if (isMobile)
+          Column(
+            children: [
+              _buildActivityCardWithProvider(
+                context,
+                ref: ref,
+                icon: Icons.comment,
+                title: 'Comments',
+                provider: recentCommentsCountProvider,
+                route: '/admin/manage-comments',
+                color: Colors.orange,
+              ),
+              const SizedBox(height: 12),
+              _buildActivityCardWithProvider(
+                context,
+                ref: ref,
+                icon: Icons.star,
+                title: 'Ratings',
+                provider: recentRatingsCountProvider,
+                route: '/admin/manage-ratings',
+                color: Colors.amber,
+              ),
+              const SizedBox(height: 12),
+              _buildActivityCardWithProvider(
+                context,
+                ref: ref,
+                icon: Icons.bookmark,
+                title: 'Bookmarks',
+                provider: recentBookmarksCountProvider,
+                route: '/admin/manage-bookmarks',
+                color: Colors.pink,
+              ),
+            ],
+          )
+        else
+          Row(
+            children: [
+              Expanded(
+                child: _buildActivityCardWithProvider(
+                  context,
+                  ref: ref,
+                  icon: Icons.comment,
+                  title: 'Comments',
+                  provider: recentCommentsCountProvider,
+                  route: '/admin/manage-comments',
+                  color: Colors.orange,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildActivityCardWithProvider(
+                  context,
+                  ref: ref,
+                  icon: Icons.star,
+                  title: 'Ratings',
+                  provider: recentRatingsCountProvider,
+                  route: '/admin/manage-ratings',
+                  color: Colors.amber,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildActivityCardWithProvider(
+                  context,
+                  ref: ref,
+                  icon: Icons.bookmark,
+                  title: 'Bookmarks',
+                  provider: recentBookmarksCountProvider,
+                  route: '/admin/manage-bookmarks',
+                  color: Colors.pink,
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Widget _buildActivityCardWithProvider(
+    BuildContext context, {
+    required WidgetRef ref,
+    required IconData icon,
+    required String title,
+    required FutureProvider<int> provider,
+    required String route,
+    required Color color,
+  }) {
+    final countAsync = ref.watch(provider);
+    
+    return AppCard(
+      child: InkWell(
+        onTap: () => context.push(route),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    countAsync.when(
+                      data: (count) => Text(
+                        count.toString(),
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      loading: () => const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      error: (_, _) => const Text(
+                        '0',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.white70),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

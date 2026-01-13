@@ -22,21 +22,21 @@ class AdminShellScaffold extends ConsumerWidget {
       branchIndex: 1,
     ),
     _AdminNavDestination(
-      icon: Icons.menu_book,
-      label: 'Manage Chapters',
-      route: '/admin/manage-chapters',
-      branchIndex: 2,
-    ),
-    _AdminNavDestination(
       icon: Icons.people,
       label: 'Manage Users',
       route: '/admin/manage-users',
-      branchIndex: 3,
+      branchIndex: 2,
     ),
     _AdminNavDestination(
       icon: Icons.comment,
       label: 'Manage Comments',
       route: '/admin/manage-comments',
+      branchIndex: 3,
+    ),
+    _AdminNavDestination(
+      icon: Icons.star,
+      label: 'Manage Ratings',
+      route: '/admin/manage-ratings',
       branchIndex: 4,
     ),
     _AdminNavDestination(
@@ -46,10 +46,34 @@ class AdminShellScaffold extends ConsumerWidget {
       branchIndex: 5,
     ),
     _AdminNavDestination(
+      icon: Icons.analytics,
+      label: 'Analytics',
+      route: '/admin/analytics',
+      branchIndex: 6,
+    ),
+    _AdminNavDestination(
+      icon: Icons.bookmark,
+      label: 'Manage Bookmarks',
+      route: '/admin/manage-bookmarks',
+      branchIndex: 7,
+    ),
+    _AdminNavDestination(
+      icon: Icons.my_library_books,
+      label: 'Manage Library',
+      route: '/admin/manage-library-items',
+      branchIndex: 8,
+    ),
+    _AdminNavDestination(
+      icon: Icons.collections,
+      label: 'Manage Collections',
+      route: '/admin/manage-collections',
+      branchIndex: 9,
+    ),
+    _AdminNavDestination(
       icon: Icons.settings,
       label: 'System Settings',
       route: '/admin/system-settings',
-      branchIndex: 6,
+      branchIndex: 10,
     ),
     _AdminNavDestination(
       icon: Icons.upload_file,
@@ -128,7 +152,7 @@ class AdminShellScaffold extends ConsumerWidget {
       loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       ),
-      error: (_, __) => const Scaffold(
+      error: (_, _) => const Scaffold(
         body: Center(child: Text('Error loading user data')),
       ),
     );
@@ -160,7 +184,11 @@ class AdminShellScaffold extends ConsumerWidget {
     return AppBar(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       elevation: 0,
-      title: const Text('Admin Panel'),
+      title: const Text(
+        'Admin Panel',
+        style: TextStyle(color: Colors.white), // White text
+      ),
+      iconTheme: const IconThemeData(color: Colors.white), // White icons
       leading: Builder(
         builder: (context) => IconButton(
           icon: const Icon(Icons.menu),
@@ -168,11 +196,6 @@ class AdminShellScaffold extends ConsumerWidget {
         ),
       ),
       actions: [
-        IconButton(
-          tooltip: 'Back to user view',
-          icon: const Icon(Icons.person),
-          onPressed: () => context.go('/home'),
-        ),
         IconButton(
           tooltip: 'Logout',
           icon: const Icon(Icons.logout),
@@ -207,39 +230,25 @@ class AdminShellScaffold extends ConsumerWidget {
                     closeDrawerAfterTap: true,
                   );
                 },
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
                 itemCount: _navDestinations.length,
               ),
             ),
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  InteractiveButton(
-                    label: 'Back to User View',
-                    icon: Icons.person,
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      context.go('/home');
-                    },
-                    isOutlined: true,
-                  ),
-                  const SizedBox(height: 8),
-                  InteractiveButton(
-                    label: 'Logout',
-                    icon: Icons.logout,
-                    onPressed: () async {
-                      Navigator.of(context).pop();
-                      final authController =
-                          ref.read(authControllerProvider.notifier);
-                      await authController.signOut();
-                      if (context.mounted) {
-                        context.go('/login');
-                      }
-                    },
-                    iconColor: Colors.red,
-                  ),
-                ],
+              child: InteractiveButton(
+                label: 'Logout',
+                icon: Icons.logout,
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  final authController =
+                      ref.read(authControllerProvider.notifier);
+                  await authController.signOut();
+                  if (context.mounted) {
+                    context.go('/login');
+                  }
+                },
+                iconColor: Colors.red,
               ),
             ),
           ],
@@ -252,7 +261,7 @@ class AdminShellScaffold extends ConsumerWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: AppColors.primaryGradient,
       ),
       child: const Row(
@@ -315,7 +324,7 @@ class AdminShellScaffold extends ConsumerWidget {
           // Admin Header
           Container(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: AppColors.primaryGradient,
             ),
             child: Column(
@@ -377,7 +386,7 @@ class AdminShellScaffold extends ConsumerWidget {
                   currentIndex: navigationShell.currentIndex,
                 );
               },
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemCount: _navDestinations.length,
             ),
           ),
@@ -393,28 +402,17 @@ class AdminShellScaffold extends ConsumerWidget {
                 ),
               ),
             ),
-            child: Column(
-              children: [
-                InteractiveButton(
-                  label: 'Back to User View',
-                  icon: Icons.person,
-                  onPressed: () => context.go('/home'),
-                  isOutlined: true,
-                ),
-                const SizedBox(height: 8),
-                InteractiveButton(
-                  label: 'Logout',
-                  icon: Icons.logout,
-                  onPressed: () async {
-                    final authController = ref.read(authControllerProvider.notifier);
-                    await authController.signOut();
-                    if (context.mounted) {
-                      context.go('/login');
-                    }
-                  },
-                  iconColor: Colors.red,
-                ),
-              ],
+            child: InteractiveButton(
+              label: 'Logout',
+              icon: Icons.logout,
+              onPressed: () async {
+                final authController = ref.read(authControllerProvider.notifier);
+                await authController.signOut();
+                if (context.mounted) {
+                  context.go('/login');
+                }
+              },
+              iconColor: Colors.red,
             ),
           ),
         ],
@@ -460,7 +458,9 @@ class AdminShellScaffold extends ConsumerWidget {
           children: [
             Icon(
               destination.icon,
-              color: isActive ? AppColors.primary : AppColors.iconLight,
+              color: isActive 
+                  ? AppColors.primary 
+                  : Colors.white, // White icon
               size: 24,
             ),
             const SizedBox(width: 12),
@@ -470,8 +470,8 @@ class AdminShellScaffold extends ConsumerWidget {
                 style: TextStyle(
                   color: isActive
                       ? AppColors.primary
-                      : AppColors.textPrimaryLight,
-                  fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                      : Colors.white, // White text
+                  fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
                   fontSize: 14,
                 ),
               ),
