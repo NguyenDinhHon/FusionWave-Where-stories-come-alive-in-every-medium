@@ -279,9 +279,35 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
             ListTile(
               leading: const Icon(Icons.play_arrow),
               title: const Text('Continue Reading'),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                context.push('/read/${book.id}');
+
+                try {
+                  final chapters = await ref.read(
+                    chaptersByBookIdProvider(book.id).future,
+                  );
+
+                  if (chapters.isNotEmpty && item.currentChapter != null) {
+                    // Find the chapter matching currentChapter number
+                    final chapter = chapters.firstWhere(
+                      (c) => c.chapterNumber == item.currentChapter,
+                      orElse: () => chapters.first,
+                    );
+                    if (context.mounted) {
+                      context.push(
+                        '/reading/${book.id}?chapterId=${chapter.id}',
+                      );
+                    }
+                  } else if (context.mounted) {
+                    // Fallback to first chapter
+                    context.push('/reading/${book.id}');
+                  }
+                } catch (e) {
+                  // Fallback on error
+                  if (context.mounted) {
+                    context.push('/reading/${book.id}');
+                  }
+                }
               },
             ),
             ListTile(
