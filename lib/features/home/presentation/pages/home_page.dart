@@ -1,109 +1,123 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/constants/app_strings.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/widgets/shimmer_loading.dart';
+import '../../../../core/widgets/empty_state.dart';
+import '../../../../core/widgets/error_state.dart';
+import '../../../../core/widgets/top_navigation_bar.dart';
+import '../../../../core/widgets/footer_widget.dart';
+import '../../../../core/widgets/book_carousel.dart';
+import '../../../../core/widgets/interactive_button.dart';
+import '../../../../core/widgets/image_with_placeholder.dart';
 import '../providers/book_provider.dart';
+import '../../../library/presentation/providers/library_provider.dart';
+import '../../../recommendations/presentation/providers/recommendation_provider.dart';
 import '../../../../data/models/book_model.dart';
+import '../../../../data/models/library_item_model.dart';
+import '../../../offline/presentation/widgets/offline_indicator.dart';
+import '../widgets/dark_book_card.dart';
 
-class HomePage extends ConsumerWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage> {
+  final PageController _carouselController = PageController();
+  int _currentCarouselPage = 0;
+
+  @override
+  void dispose() {
+    _carouselController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final featuredBooksAsync = ref.watch(featuredBooksProvider);
-    
+    final trendingBooksAsync = ref.watch(trendingBooksProvider);
+    final personalizedAsync = ref.watch(personalizedRecommendationsProvider);
+    final newReleasesAsync = ref.watch(newReleasesProvider);
+    final hotThisWeekAsync = ref.watch(hotThisWeekProvider);
+    final risingStarsAsync = ref.watch(risingStarsProvider);
+    final editorsPicksAsync = ref.watch(editorsPicksProvider);
+    final continueReadingAsync = ref.watch(
+      libraryItemsProvider(AppConstants.bookStatusReading),
+    );
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.appName),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              context.go('/search');
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {
-              // TODO: Show notifications
-            },
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(featuredBooksProvider);
-        },
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Welcome Section
-              _buildWelcomeSection(context),
-              const SizedBox(height: 24),
-              
-              // Continue Reading Section
-              _buildSectionHeader('Continue Reading', () {}),
-              const SizedBox(height: 12),
-              _buildContinueReadingSection(context, ref),
-              const SizedBox(height: 24),
-              
-              // Featured Books Section
-              _buildSectionHeader('Featured Books', () {}),
-              const SizedBox(height: 12),
-              featuredBooksAsync.when(
-                data: (books) => _buildFeaturedBooksSection(context, books),
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) => Center(
-                  child: Text('Error: $error'),
-                ),
-              ),
-              const SizedBox(height: 24),
-              
-              // Categories Section
-              _buildSectionHeader('Categories', () {}),
-              const SizedBox(height: 12),
-              _buildCategoriesSection(context),
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: _buildBottomNavigationBar(context),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          context.go('/admin/seed-data');
-        },
-        tooltip: 'Seed Database',
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.storage),
-      ),
-    );
-  }
-
-  Widget _buildWelcomeSection(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: AppColors.darkBackground,
+      appBar: const TopNavigationBar(),
+      body: Column(
         children: [
-          Text(
-            'Welcome back!',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Discover new stories and continue your reading journey',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.white70,
+          // Offline indicator
+          const OfflineIndicator(),
+          Expanded(
+            child: CustomScrollView(
+              slivers: [
+                // Hero Banner Section (giống Waka)
+                _buildHeroBanner(context, ref, featuredBooksAsync),
+
+                // Continue Reading Section
+                _buildContinueReadingSection(
+                  context,
+                  ref,
+                  continueReadingAsync,
+                ),
+
+                // Trending Books Section (giống Wattpad)
+                _buildTrendingSection(context, ref, trendingBooksAsync),
+
+                // New Releases Section
+                _buildNewReleasesSection(context, ref, newReleasesAsync),
+
+                // Hot This Week Section
+                _buildHotThisWeekSection(context, ref, hotThisWeekAsync),
+
+                // Rising Stars Section
+                _buildRisingStarsSection(context, ref, risingStarsAsync),
+
+                // Editor's Picks Section
+                _buildEditorsPicksSection(context, ref, editorsPicksAsync),
+
+                // Personalized Recommendations
+                _buildPersonalizedSection(context, ref, personalizedAsync),
+
+                // Featured Books Section
+                _buildFeaturedBooksSection(context, ref, featuredBooksAsync),
+
+                // Spacing and divider before footer
+                SliverToBoxAdapter(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 40),
+                      // Divider
+                      Container(
+                        height: 1,
+                        margin: const EdgeInsets.symmetric(horizontal: 24),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.transparent,
+                              Colors.grey[300]!,
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                    ],
+                  ),
+                ),
+
+                // Footer
+                const SliverToBoxAdapter(child: FooterWidget()),
+              ],
             ),
           ),
         ],
@@ -111,118 +125,198 @@ class HomePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title, VoidCallback onSeeAll) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        TextButton(
-          onPressed: onSeeAll,
-          style: TextButton.styleFrom(
-            foregroundColor: AppColors.primary,
-          ),
-          child: const Text('See All'),
-        ),
-      ],
-    );
-  }
+  Widget _buildHeroBanner(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<List<BookModel>> featuredAsync,
+  ) {
+    return SliverToBoxAdapter(
+      child: featuredAsync.when(
+        data: (books) {
+          if (books.isEmpty) return const SizedBox();
 
-  Widget _buildContinueReadingSection(BuildContext context, WidgetRef ref) {
-    // TODO: Load from library items
-    return SizedBox(
-      height: 200,
-      child: Center(
-        child: Text(
-          'No recent reading',
-          style: TextStyle(color: Colors.grey[600]),
-        ),
-      ),
-    );
-  }
+          // Take up to 5 featured books for carousel
+          final carouselBooks = books.take(5).toList();
 
-  Widget _buildFeaturedBooksSection(BuildContext context, List<BookModel> books) {
-    if (books.isEmpty) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(32.0),
-          child: Text('No featured books available'),
-        ),
-      );
-    }
-    
-    return SizedBox(
-      height: 280,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: books.length,
-        itemBuilder: (context, index) {
-          return _buildBookCard(context, books[index]);
-        },
-      ),
-    );
-  }
-
-  Widget _buildBookCard(BuildContext context, BookModel book) {
-    return GestureDetector(
-      onTap: () {
-        context.push('/reading/${book.id}');
-      },
-      child: Container(
-        width: 140,
-        margin: const EdgeInsets.only(right: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(12),
-                  image: book.coverImageUrl != null
-                      ? DecorationImage(
-                          image: NetworkImage(book.coverImageUrl!),
-                          fit: BoxFit.cover,
-                          onError: (_, __) {},
-                        )
-                      : null,
-                ),
-                child: book.coverImageUrl == null
-                    ? const Icon(Icons.book, size: 50, color: Colors.grey)
-                    : null,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              book.title,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            Row(
+          return Container(
+            height: 240,
+            margin: const EdgeInsets.symmetric(vertical: 16),
+            child: Stack(
               children: [
-                if (book.averageRating != null) ...[
-                  const Icon(Icons.star, size: 14, color: Colors.amber),
-                  const SizedBox(width: 4),
-                  Text(
-                    book.averageRating!.toStringAsFixed(1),
-                    style: const TextStyle(fontSize: 12),
+                // Carousel
+                PageView.builder(
+                  controller: _carouselController,
+                  onPageChanged: (index) {
+                    setState(() => _currentCarouselPage = index);
+                  },
+                  itemCount: carouselBooks.length,
+                  itemBuilder: (context, index) {
+                    final book = carouselBooks[index];
+                    return _buildCarouselItem(context, ref, book);
+                  },
+                ),
+
+                // Page Indicators
+                Positioned(
+                  bottom: 8,
+                  left: 0,
+                  right: 0,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      carouselBooks.length,
+                      (index) => AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        width: _currentCarouselPage == index ? 24 : 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: _currentCarouselPage == index
+                              ? Colors.white
+                              : Colors.white.withOpacity(0.4),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
                   ),
-                ] else
-                  const Text(
-                    'No rating',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
+                ),
               ],
+            ),
+          );
+        },
+        loading: () => Container(
+          height: 240,
+          margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.grey[300],
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: const Center(child: CircularProgressIndicator()),
+        ),
+        error: (error, _) => const SizedBox.shrink(),
+      ),
+    );
+  }
+
+  Widget _buildCarouselItem(
+    BuildContext context,
+    WidgetRef ref,
+    BookModel book,
+  ) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Background image
+            ImageWithPlaceholder(
+              imageUrl: book.coverImageUrl,
+              fit: BoxFit.cover,
+              placeholder: Container(
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                ),
+                child: const Center(
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              errorWidget: Container(
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.book,
+                    color: Colors.white70,
+                    size: 48,
+                  ),
+                ),
+              ),
+            ),
+
+            // Gradient overlay
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.4)],
+                ),
+              ),
+            ),
+
+            // Content
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      book.title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (book.authors.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        book.authors.join(', '),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InteractiveButton(
+                            label: 'Read Now',
+                            icon: Icons.book_rounded,
+                            onPressed: () => context.push('/book/${book.id}'),
+                            backgroundColor: Colors.white,
+                            textColor: AppColors.primary,
+                            iconColor: AppColors.primary,
+                            height: 36,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        _buildBookmarkButton(context, ref, book),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -230,60 +324,479 @@ class HomePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildCategoriesSection(BuildContext context) {
-    final categories = ['Fiction', 'Non-Fiction', 'Science', 'History', 'Biography'];
-    
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: categories.map((category) {
-        return Chip(
-          label: Text(category),
-          onDeleted: () {},
-          deleteIcon: const Icon(Icons.close, size: 18),
+  Widget _buildBookmarkButton(
+    BuildContext context,
+    WidgetRef ref,
+    BookModel book,
+  ) {
+    final libraryItemAsync = ref.watch(libraryItemByBookIdProvider(book.id));
+
+    return libraryItemAsync.when(
+      data: (libraryItem) {
+        final isInLibrary = libraryItem != null;
+        return InteractiveIconButton(
+          icon: isInLibrary ? Icons.bookmark : Icons.bookmark_border,
+          iconColor: Colors.white,
+          backgroundColor: Colors.white.withOpacity(0.2),
+          size: 36,
+          onPressed: () async {
+            try {
+              final controller = ref.read(libraryControllerProvider);
+              if (isInLibrary) {
+                await controller.removeFromLibrary(book.id);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Removed from library')),
+                  );
+                }
+              } else {
+                await controller.addToLibrary(book.id);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Added to library')),
+                  );
+                }
+              }
+              ref.invalidate(libraryItemByBookIdProvider(book.id));
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('Error: $e')));
+              }
+            }
+          },
+          tooltip: isInLibrary ? 'Remove from library' : 'Add to library',
         );
-      }).toList(),
+      },
+      loading: () => InteractiveIconButton(
+        icon: Icons.bookmark_border,
+        iconColor: Colors.white,
+        backgroundColor: Colors.white.withOpacity(0.2),
+        size: 36,
+        onPressed: null,
+      ),
+      error: (_, __) => InteractiveIconButton(
+        icon: Icons.bookmark_border,
+        iconColor: Colors.white,
+        backgroundColor: Colors.white.withOpacity(0.2),
+        size: 36,
+        onPressed: () async {
+          try {
+            final controller = ref.read(libraryControllerProvider);
+            await controller.addToLibrary(book.id);
+            if (context.mounted) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Added to library')));
+            }
+            ref.invalidate(libraryItemByBookIdProvider(book.id));
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('Error: $e')));
+            }
+          }
+        },
+        tooltip: 'Add to library',
+      ),
     );
   }
 
-  Widget _buildBottomNavigationBar(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: 0,
-      onTap: (index) {
-        switch (index) {
-          case 0:
-            context.go('/home');
-            break;
-          case 1:
-            context.go('/library');
-            break;
-          case 2:
-            context.go('/search');
-            break;
-          case 3:
-            context.go('/profile');
-            break;
+  Widget _buildContinueReadingSection(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<List<LibraryItemModel>> continueReadingAsync,
+  ) {
+    return SliverToBoxAdapter(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionHeader(
+                context,
+                title: 'Continue Reading',
+                emoji: '📖',
+                onSeeAll: () => context.go('/library'),
+              ),
+              continueReadingAsync.when(
+                data: (items) {
+                  if (items.isEmpty) {
+                    return const SizedBox(
+                      height: 200,
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: EmptyState(
+                          title: 'No recent reading',
+                          message: 'Start reading a book to see it here',
+                          icon: Icons.book_outlined,
+                        ),
+                      ),
+                    );
+                  }
+
+                  return SizedBox(
+                    height: 280,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: items.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: SizedBox(
+                            width: 360,
+                            child: AnimationConfiguration.staggeredList(
+                              position: index,
+                              duration: const Duration(milliseconds: 375),
+                              child: SlideAnimation(
+                                horizontalOffset: 50.0,
+                                child: FadeInAnimation(
+                                  child: _buildContinueReadingCard(
+                                    context,
+                                    ref,
+                                    items[index],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+                loading: () => SizedBox(
+                  height: 280,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: 3,
+                    itemBuilder: (context, index) => const ShimmerBookCard(),
+                  ),
+                ),
+                error: (error, stack) => ErrorState(
+                  message: error.toString(),
+                  onRetry: () => ref.invalidate(
+                    libraryItemsProvider(AppConstants.bookStatusReading),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContinueReadingCard(
+    BuildContext context,
+    WidgetRef ref,
+    LibraryItemModel item,
+  ) {
+    final bookAsync = ref.watch(bookByIdProvider(item.bookId));
+
+    return bookAsync.when(
+      data: (book) {
+        if (book == null) {
+          return const SizedBox(
+            width: 200,
+            height: 380,
+            child: Center(
+              child: Icon(Icons.error_outline, color: Colors.grey),
+            ),
+          );
         }
+
+        return DarkBookCard(
+          book: book,
+          isHorizontal: true,
+          progress: item.progress,
+          status: 'Reading',
+          actionLabel: 'Continue Reading',
+          onActionTap: () {
+            context.push(
+              '/reading/${book.id}?chapterId=${item.currentChapter}',
+            );
+          },
+          onTap: () => context.push('/book/${book.id}'),
+        );
       },
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: AppStrings.home,
+      loading: () => const ShimmerBookCard(),
+      error: (_, __) => const SizedBox(
+        width: 200,
+        height: 380,
+        child: Center(
+          child: Icon(Icons.error_outline, color: Colors.grey),
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.library_books),
-          label: AppStrings.library,
+      ),
+    );
+  }
+
+  Widget _buildNewReleasesSection(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<List<BookModel>> newReleasesAsync,
+  ) {
+    return SliverToBoxAdapter(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: newReleasesAsync.when(
+            data: (books) {
+              if (books.isEmpty) return const SizedBox();
+              return BookCarousel(
+                books: books,
+                title: 'New Releases',
+                onSeeAll: () => context.go('/categories'),
+              );
+            },
+            loading: () => const SizedBox(
+              height: 280,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, __) => const SizedBox(),
+          ),
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.search),
-          label: AppStrings.search,
+      ),
+    );
+  }
+
+  Widget _buildHotThisWeekSection(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<List<BookModel>> hotThisWeekAsync,
+  ) {
+    return SliverToBoxAdapter(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: hotThisWeekAsync.when(
+            data: (books) {
+              if (books.isEmpty) return const SizedBox();
+              return BookCarousel(
+                books: books,
+                title: 'Hot This Week',
+                onSeeAll: () => context.go('/recommendations'),
+              );
+            },
+            loading: () => const SizedBox(
+              height: 280,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, __) => const SizedBox(),
+          ),
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person),
-          label: AppStrings.profile,
+      ),
+    );
+  }
+
+  Widget _buildRisingStarsSection(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<List<BookModel>> risingStarsAsync,
+  ) {
+    return SliverToBoxAdapter(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: risingStarsAsync.when(
+            data: (books) {
+              if (books.isEmpty) return const SizedBox();
+              return BookCarousel(
+                books: books,
+                title: 'Rising Stars',
+                onSeeAll: () => context.go('/recommendations'),
+              );
+            },
+            loading: () => const SizedBox(
+              height: 280,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, __) => const SizedBox(),
+          ),
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildEditorsPicksSection(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<List<BookModel>> editorsPicksAsync,
+  ) {
+    return SliverToBoxAdapter(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: editorsPicksAsync.when(
+            data: (books) {
+              if (books.isEmpty) return const SizedBox();
+              return BookCarousel(
+                books: books,
+                title: 'Editor\'s Picks',
+                onSeeAll: () => context.go('/recommendations'),
+              );
+            },
+            loading: () => const SizedBox(
+              height: 280,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, __) => const SizedBox(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrendingSection(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<List<BookModel>> trendingAsync,
+  ) {
+    return SliverToBoxAdapter(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: trendingAsync.when(
+            data: (books) {
+              if (books.isEmpty) return const SizedBox();
+              return BookCarousel(
+                books: books,
+                title: 'Trending Now',
+                onSeeAll: () => context.go('/recommendations'),
+              );
+            },
+            loading: () => const SizedBox(
+              height: 280,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, __) => const SizedBox(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPersonalizedSection(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<List<BookModel>> personalizedAsync,
+  ) {
+    return SliverToBoxAdapter(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: personalizedAsync.when(
+            data: (books) {
+              if (books.isEmpty) return const SizedBox();
+              return BookCarousel(
+                books: books,
+                title: 'For You',
+                onSeeAll: () => context.go('/recommendations'),
+              );
+            },
+            loading: () => const SizedBox(
+              height: 280,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, __) => const SizedBox(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeaturedBooksSection(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<List<BookModel>> featuredAsync,
+  ) {
+    return SliverToBoxAdapter(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: featuredAsync.when(
+            data: (books) {
+              if (books.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: EmptyState(
+                    title: 'No featured books',
+                    message: 'Check back later',
+                    icon: Icons.book_outlined,
+                  ),
+                );
+              }
+              return BookCarousel(
+                books: books,
+                title: 'Featured Books',
+                onSeeAll: () => context.go('/categories'),
+              );
+            },
+            loading: () => const SizedBox(
+              height: 280,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (error, stack) => ErrorState(
+              message: error.toString(),
+              onRetry: () => ref.invalidate(featuredBooksProvider),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Section Header với emoji cho dark theme
+  Widget _buildSectionHeader(
+    BuildContext context, {
+    required String title,
+    String? emoji,
+    VoidCallback? onSeeAll,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Row(
+              children: [
+                if (emoji != null) ...[
+                  Text(emoji, style: const TextStyle(fontSize: 20)),
+                  const SizedBox(width: 8),
+                ],
+                Flexible(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      color: AppColors.darkTextPrimary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (onSeeAll != null)
+            TextButton(
+              onPressed: onSeeAll,
+              child: const Text(
+                'See All >',
+                style: TextStyle(
+                  color: AppColors.darkTextSecondary,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
-

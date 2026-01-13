@@ -8,20 +8,33 @@ final chapterRepositoryProvider = Provider<ChapterRepository>((ref) {
   return ChapterRepository();
 });
 
-
 /// Library repository provider
 final libraryRepositoryForReadingProvider = Provider<LibraryRepository>((ref) {
   return LibraryRepository();
 });
 
 /// Chapters by book ID provider
-final chaptersByBookIdProvider = FutureProvider.family<List<ChapterModel>, String>((ref, bookId) async {
-  final repository = ref.watch(chapterRepositoryProvider);
-  return repository.getChaptersByBookId(bookId);
-});
+final chaptersByBookIdProvider =
+    FutureProvider.family<List<ChapterModel>, String>((ref, bookId) async {
+      print('[DEBUG] Loading chapters for bookId: $bookId');
+      final repository = ref.watch(chapterRepositoryProvider);
+      try {
+        final chapters = await repository.getChaptersByBookId(bookId);
+        print('[DEBUG] Loaded ${chapters.length} chapters for bookId: $bookId');
+        return chapters;
+      } catch (e, stack) {
+        print('[ERROR] Failed to load chapters for bookId: $bookId');
+        print('[ERROR] Error: $e');
+        print('[ERROR] Stack: $stack');
+        rethrow;
+      }
+    });
 
 /// Chapter by ID provider
-final chapterByIdProvider = FutureProvider.family<ChapterModel?, String>((ref, chapterId) async {
+final chapterByIdProvider = FutureProvider.family<ChapterModel?, String>((
+  ref,
+  chapterId,
+) async {
   final repository = ref.watch(chapterRepositoryProvider);
   return repository.getChapterById(chapterId);
 });
@@ -37,9 +50,9 @@ final readingControllerProvider = Provider<ReadingController>((ref) {
 class ReadingController {
   final ChapterRepository _chapterRepository;
   final LibraryRepository _libraryRepository;
-  
+
   ReadingController(this._chapterRepository, this._libraryRepository);
-  
+
   Future<void> updateReadingProgress({
     required String bookId,
     required int currentPage,
@@ -47,10 +60,10 @@ class ReadingController {
     required int totalPages,
     required int totalChapters,
   }) async {
-    final progress = totalChapters > 0 
-        ? currentChapter / totalChapters 
+    final progress = totalChapters > 0
+        ? currentChapter / totalChapters
         : (totalPages > 0 ? currentPage / totalPages : 0.0);
-    
+
     await _libraryRepository.updateReadingProgress(
       bookId: bookId,
       currentPage: currentPage,
@@ -58,13 +71,18 @@ class ReadingController {
       progress: progress,
     );
   }
-  
-  Future<ChapterModel?> getNextChapter(String bookId, int currentChapterNumber) async {
+
+  Future<ChapterModel?> getNextChapter(
+    String bookId,
+    int currentChapterNumber,
+  ) async {
     return _chapterRepository.getNextChapter(bookId, currentChapterNumber);
   }
-  
-  Future<ChapterModel?> getPreviousChapter(String bookId, int currentChapterNumber) async {
+
+  Future<ChapterModel?> getPreviousChapter(
+    String bookId,
+    int currentChapterNumber,
+  ) async {
     return _chapterRepository.getPreviousChapter(bookId, currentChapterNumber);
   }
 }
-

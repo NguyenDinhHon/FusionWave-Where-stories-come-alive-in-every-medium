@@ -21,7 +21,7 @@ void main() async {
     
     // Initialize Firebase services
     await FirebaseService().initialize();
-    
+      
     // Initialize Preferences
     final prefsService = PreferencesService();
     await prefsService.init();

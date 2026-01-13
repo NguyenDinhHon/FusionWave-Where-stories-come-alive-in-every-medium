@@ -1,12 +1,5 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
-
 part of 'reading_preferences_provider.dart';
 
-// **************************************************************************
-// RiverpodGenerator
-// **************************************************************************
-
-// GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(ReadingPreferencesNotifier)
@@ -42,7 +35,7 @@ final class ReadingPreferencesNotifierProvider
 }
 
 String _$readingPreferencesNotifierHash() =>
-    r'998a2078d2d0987bbd865945c97d49de9b8fdb06';
+    r'c5579740b6fd275ab5a215c591efc7f53f170fb5';
 
 abstract class _$ReadingPreferencesNotifier
     extends $Notifier<ReadingPreferences> {

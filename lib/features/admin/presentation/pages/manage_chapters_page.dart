@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/top_navigation_bar.dart';
-import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/interactive_button.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
 import '../../../../core/widgets/empty_state.dart';
@@ -12,7 +12,10 @@ import '../../../../data/models/chapter_model.dart';
 import '../../../home/presentation/providers/book_provider.dart';
 
 /// Provider cho chapters của một book (admin - includes unpublished)
-final bookChaptersProvider = FutureProvider.family<List<ChapterModel>, String>((ref, bookId) async {
+final bookChaptersProvider = FutureProvider.family<List<ChapterModel>, String>((
+  ref,
+  bookId,
+) async {
   final repository = ChapterRepository();
   return repository.getAllChaptersByBookId(bookId);
 });
@@ -21,10 +24,7 @@ final bookChaptersProvider = FutureProvider.family<List<ChapterModel>, String>((
 class ManageChaptersPage extends ConsumerStatefulWidget {
   final String? bookId;
 
-  const ManageChaptersPage({
-    super.key,
-    this.bookId,
-  });
+  const ManageChaptersPage({super.key, this.bookId});
 
   @override
   ConsumerState<ManageChaptersPage> createState() => _ManageChaptersPageState();
@@ -47,7 +47,7 @@ class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800),
-          child: PremiumCard(
+          child: AppCard(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -72,7 +72,11 @@ class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
     );
   }
 
-  Widget _buildChaptersList(BuildContext context, WidgetRef ref, String bookId) {
+  Widget _buildChaptersList(
+    BuildContext context,
+    WidgetRef ref,
+    String bookId,
+  ) {
     final chaptersAsync = ref.watch(bookChaptersProvider(bookId));
     final bookAsync = ref.watch(bookByIdProvider(bookId));
 
@@ -99,10 +103,11 @@ class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
                       book != null
                           ? 'Chapters: ${book.title}'
                           : 'Quản Lý Chapters',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimaryLight,
-                      ),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimaryLight,
+                          ),
                     ),
                     loading: () => const Text('Loading...'),
                     error: (_, __) => const Text('Quản Lý Chapters'),
@@ -129,7 +134,10 @@ class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
                         },
                         isOutlined: true,
                         height: 40,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                       ),
                       const SizedBox(width: 8),
                       InteractiveButton(
@@ -139,7 +147,10 @@ class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
                           _showBulkDeleteConfirmation(context, ref, bookId);
                         },
                         height: 40,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         backgroundColor: Colors.red,
                         textColor: Colors.white,
                         iconColor: Colors.white,
@@ -169,7 +180,10 @@ class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
                         },
                         gradient: AppColors.primaryGradient,
                         height: 40,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                       ),
                     ],
                   ),
@@ -201,7 +215,7 @@ class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
                   itemCount: chapters.length,
                   itemBuilder: (context, index) {
                     final chapter = chapters[index];
-                    return PremiumCard(
+                    return AppCard(
                       margin: const EdgeInsets.only(bottom: 12),
                       child: ListTile(
                         leading: Row(
@@ -258,7 +272,9 @@ class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
                                   InteractiveButton(
                                     icon: Icons.edit,
                                     onPressed: () {
-                                      context.push('/admin/edit-chapter?bookId=$bookId&chapterId=${chapter.id}');
+                                      context.push(
+                                        '/admin/edit-chapter?bookId=$bookId&chapterId=${chapter.id}',
+                                      );
                                     },
                                     isIconButton: true,
                                     iconColor: AppColors.primary,
@@ -267,7 +283,12 @@ class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
                                   InteractiveButton(
                                     icon: Icons.delete,
                                     onPressed: () {
-                                      _showDeleteConfirmation(context, ref, chapter, bookId);
+                                      _showDeleteConfirmation(
+                                        context,
+                                        ref,
+                                        chapter,
+                                        bookId,
+                                      );
                                     },
                                     isIconButton: true,
                                     iconColor: Colors.red,
@@ -284,7 +305,9 @@ class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
                               }
                             });
                           } else {
-                            context.push('/admin/edit-chapter?bookId=$bookId&chapterId=${chapter.id}');
+                            context.push(
+                              '/admin/edit-chapter?bookId=$bookId&chapterId=${chapter.id}',
+                            );
                           }
                         },
                       ),
@@ -301,7 +324,11 @@ class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                    const Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.red,
+                    ),
                     const SizedBox(height: 16),
                     Text('Error: $error'),
                     const SizedBox(height: 16),
@@ -322,12 +349,18 @@ class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
     );
   }
 
-  void _showBulkDeleteConfirmation(BuildContext context, WidgetRef ref, String bookId) {
+  void _showBulkDeleteConfirmation(
+    BuildContext context,
+    WidgetRef ref,
+    String bookId,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Xác nhận xóa'),
-        content: Text('Bạn có chắc muốn xóa ${_selectedChapterIds.length} chapters?'),
+        content: Text(
+          'Bạn có chắc muốn xóa ${_selectedChapterIds.length} chapters?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -345,7 +378,11 @@ class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
     );
   }
 
-  Future<void> _bulkDelete(BuildContext context, WidgetRef ref, String bookId) async {
+  Future<void> _bulkDelete(
+    BuildContext context,
+    WidgetRef ref,
+    String bookId,
+  ) async {
     try {
       final repository = ChapterRepository();
       final futures = _selectedChapterIds.map((chapterId) {
@@ -358,7 +395,9 @@ class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Đã xóa ${_selectedChapterIds.length} chapters thành công'),
+            content: Text(
+              'Đã xóa ${_selectedChapterIds.length} chapters thành công',
+            ),
           ),
         );
         setState(() {
@@ -368,14 +407,19 @@ class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
       }
     }
   }
 
-  void _showDeleteConfirmation(BuildContext context, WidgetRef ref, ChapterModel chapter, String bookId) {
+  void _showDeleteConfirmation(
+    BuildContext context,
+    WidgetRef ref,
+    ChapterModel chapter,
+    String bookId,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -400,9 +444,9 @@ class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Lỗi: $e')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
                 }
               }
             },

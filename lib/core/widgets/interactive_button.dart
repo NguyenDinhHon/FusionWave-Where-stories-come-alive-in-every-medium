@@ -106,7 +106,7 @@ class _InteractiveButtonState extends State<InteractiveButton>
     final effectiveBackgroundColor = widget.isOutlined
         ? (widget.backgroundColor ?? Colors.transparent)
         : (widget.gradient != null
-            ? null
+        ? null
             : (widget.backgroundColor ?? (widget.isIconButton ? Colors.transparent : AppColors.primary)));
     final effectiveTextColor = widget.textColor ??
         (widget.isOutlined

@@ -22,7 +22,7 @@ class FooterWidget extends StatelessWidget {
               painter: WavePainter(),
             ),
           ),
-          
+
           // Footer content
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 50, 24, 50),
@@ -37,34 +37,34 @@ class FooterWidget extends StatelessWidget {
                     spacing: 24,
                     runSpacing: 16,
                     children: [
-                    _buildFooterLink(context, 'FusionWave độc quyền', () {}),
-                    _buildFooterLink(context, 'Thử dùng gói Cao cấp', () {
-                      // TODO: Navigate to premium page
-                    }),
-                    _buildFooterLink(context, 'Tải Ứng Dụng', () {
-                      // TODO: Show download options
-                    }),
-                    _buildFooterLink(context, 'Ngôn ngữ', () {
-                      _showLanguageDialog(context);
-                    }),
-                    _buildFooterLink(context, 'Các tác giả', () {
-                      context.go('/leaderboard');
-                    }),
-                    _buildFooterLink(context, 'Hợp tác thương hiệu', () {
-                      // TODO: Navigate to brand partnerships
-                    }),
-                    _buildFooterLink(context, 'Công việc', () {
-                      // TODO: Navigate to jobs page
-                    }),
-                    _buildFooterLink(context, 'Báo chí', () {
-                      // TODO: Navigate to press page
-                    }),
+                      _buildFooterLink(context, 'FusionWave độc quyền', () {}),
+                      _buildFooterLink(context, 'Thử dùng gói Cao cấp', () {
+                        // TODO: Navigate to page
+                      }),
+                      _buildFooterLink(context, 'Tải Ứng Dụng', () {
+                        // TODO: Show download options
+                      }),
+                      _buildFooterLink(context, 'Ngôn ngữ', () {
+                        _showLanguageDialog(context);
+                      }),
+                      _buildFooterLink(context, 'Các tác giả', () {
+                        context.go('/leaderboard');
+                      }),
+                      _buildFooterLink(context, 'Hợp tác thương hiệu', () {
+                        // TODO: Navigate to brand partnerships
+                      }),
+                      _buildFooterLink(context, 'Công việc', () {
+                        // TODO: Navigate to jobs page
+                      }),
+                      _buildFooterLink(context, 'Báo chí', () {
+                        // TODO: Navigate to press page
+                      }),
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // Second row - Legal and help links
                 Center(
                   child: Wrap(
@@ -72,28 +72,28 @@ class FooterWidget extends StatelessWidget {
                     spacing: 24,
                     runSpacing: 16,
                     children: [
-                    _buildFooterLink(context, 'Điều khoản', () {
-                      // TODO: Navigate to terms page
-                    }),
-                    _buildFooterLink(context, 'Riêng tư', () {
-                      // TODO: Navigate to privacy page
-                    }),
-                    _buildFooterLink(context, 'Chính sách thanh toán', () {
-                      // TODO: Navigate to payment policy
-                    }),
-                    _buildFooterLink(context, 'Thiết lập', () {
-                      context.go('/settings');
-                    }),
-                    _buildFooterLink(context, 'Trợ giúp', () {
-                      // TODO: Navigate to help page
-                    }),
-                    Text(
-                      '© ${DateTime.now().year} ${AppStrings.appName}',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
+                      _buildFooterLink(context, 'Điều khoản', () {
+                        // TODO: Navigate to terms page
+                      }),
+                      _buildFooterLink(context, 'Riêng tư', () {
+                        // TODO: Navigate to privacy page
+                      }),
+                      _buildFooterLink(context, 'Chính sách thanh toán', () {
+                        // TODO: Navigate to payment policy
+                      }),
+                      _buildFooterLink(context, 'Thiết lập', () {
+                        context.go('/settings');
+                      }),
+                      _buildFooterLink(context, 'Trợ giúp', () {
+                        // TODO: Navigate to help page
+                      }),
+                      Text(
+                        '© ${DateTime.now().year} ${AppStrings.appName}',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
                     ],
                   ),
                 ),
@@ -105,7 +105,11 @@ class FooterWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildFooterLink(BuildContext context, String text, VoidCallback onTap) {
+  Widget _buildFooterLink(
+    BuildContext context,
+    String text,
+    VoidCallback onTap,
+  ) {
     return InkWell(
       onTap: onTap,
       child: Text(
@@ -156,7 +160,8 @@ class WavePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF6B9BD2).withOpacity(0.3) // Light blue/lavender with opacity
+      ..color = const Color(0xFF6B9BD2)
+          .withOpacity(0.3) // Light blue/lavender with opacity
       ..style = PaintingStyle.fill;
 
     final path = Path();
@@ -175,12 +180,7 @@ class WavePainter extends CustomPainter {
       size.width * 0.2,
       size.height * 0.8,
     );
-    path.quadraticBezierTo(
-      size.width * 0.1,
-      size.height * 0.9,
-      0,
-      size.height,
-    );
+    path.quadraticBezierTo(size.width * 0.1, size.height * 0.9, 0, size.height);
     // Close the path
     path.lineTo(size.width, size.height);
     path.lineTo(size.width, 0);
@@ -192,4 +192,3 @@ class WavePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-

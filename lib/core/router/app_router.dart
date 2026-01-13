@@ -5,13 +5,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_guard_provider.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
-import '../../features/home/presentation/pages/premium_home_page.dart';
-import '../../features/library/presentation/pages/premium_library_page.dart';
-import '../../features/search/presentation/pages/premium_search_page.dart';
-import '../../features/profile/presentation/pages/premium_profile_page.dart';
-import '../../features/reading/presentation/pages/premium_reading_page.dart';
+import '../../features/home/presentation/pages/home_page.dart';
+import '../../features/library/presentation/pages/library_page.dart';
+import '../../features/search/presentation/pages/search_page.dart';
+import '../../features/profile/presentation/pages/profile_page.dart';
+import '../../features/profile/presentation/pages/edit_profile_page.dart';
+import '../../features/profile/presentation/pages/seed_user_data_page.dart';
+import '../../features/reading/presentation/pages/reading_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
-import '../../features/book/presentation/pages/premium_book_detail_page.dart';
+import '../../features/book/presentation/pages/book_detail_page.dart';
 import '../../features/social/presentation/pages/comments_page.dart';
 import '../../features/social/presentation/pages/leaderboard_page.dart';
 import '../../features/admin/presentation/pages/seed_data_page.dart';
@@ -38,6 +40,7 @@ import '../../features/social/presentation/pages/social_feed_page.dart';
 import '../../features/recommendations/presentation/pages/enhanced_recommendations_page.dart';
 import '../../features/offline/presentation/pages/offline_books_page.dart';
 import 'page_transitions.dart';
+import 'shell_scaffold.dart';
 
 /// Application routing configuration
 class AppRouter {
@@ -52,24 +55,21 @@ class AppRouter {
     '/reading',
     '/book',
   ];
-  
+
   // Auth routes that should redirect to home if already logged in
-  static const List<String> _authRoutes = [
-    '/login',
-    '/register',
-  ];
-  
+  static const List<String> _authRoutes = ['/login', '/register'];
+
   // Admin guard function
   static String? _adminGuard(BuildContext context, GoRouterState state) {
     try {
       final container = ProviderScope.containerOf(context);
       final isAdmin = container.read(isAdminProvider);
       final isAuthenticated = container.read(isAuthenticatedProvider);
-      
+
       if (!isAuthenticated) {
         return '/login?redirect=${Uri.encodeComponent(state.uri.toString())}';
       }
-      
+
       if (!isAdmin) {
         // Show error message and redirect to home
         ScaffoldMessenger.of(context).showSnackBar(
@@ -80,7 +80,7 @@ class AppRouter {
         );
         return '/home';
       }
-      
+
       return null; // Allow access
     } catch (e) {
       // If provider is not available, check Firebase Auth directly
@@ -92,18 +92,18 @@ class AppRouter {
       return null;
     }
   }
-  
+
   static String? _redirect(BuildContext context, GoRouterState state) {
     final isAuthenticated = FirebaseAuth.instance.currentUser != null;
     final isAuthRoute = _authRoutes.contains(state.uri.path);
     final isProtectedRoute = _protectedRoutes.any(
       (route) => state.uri.path.startsWith(route),
     );
-    
+
     // Admin routes are handled by _adminGuard (called in route redirect)
     // Exception: seed-data routes don't require admin (for development)
     if (state.uri.path.startsWith('/admin')) {
-      if (state.uri.path == '/admin/seed-data' || 
+      if (state.uri.path == '/admin/seed-data' ||
           state.uri.path == '/admin/comprehensive-seed-data') {
         // Allow seed routes if authenticated (no admin check)
         final isAuthenticated = FirebaseAuth.instance.currentUser != null;
@@ -114,26 +114,26 @@ class AppRouter {
       }
       return _adminGuard(context, state);
     }
-    
+
     // Allow email link verification route
     if (state.uri.path == '/verify-email-link') {
       return null;
     }
-    
+
     // If user is authenticated and trying to access auth routes, redirect to home
     if (isAuthenticated && isAuthRoute) {
       return '/home';
     }
-    
+
     // If user is not authenticated and trying to access protected routes, redirect to login
     if (!isAuthenticated && isProtectedRoute) {
       return '/login';
     }
-    
+
     // Allow access
     return null;
   }
-  
+
   static final GoRouter router = GoRouter(
     initialLocation: '/home',
     redirect: _redirect,
@@ -155,45 +155,105 @@ class AppRouter {
         builder: (context, state) {
           final email = state.uri.queryParameters['email'];
           final link = state.uri.toString();
-          return EmailLinkVerifyPage(
-            email: email,
-            link: link,
-          );
+          return EmailLinkVerifyPage(email: email, link: link);
         },
       ),
-      
-      // Main Routes
-      GoRoute(
-        path: '/home',
-        name: 'home',
-        pageBuilder: (context, state) => PageTransitions.fadeTransition(
-          child: const PremiumHomePage(),
-          name: state.name,
-        ),
+
+      // Main Shell Route - preserves navigation stack for main tabs
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return ShellScaffold(navigationShell: navigationShell);
+        },
+        branches: [
+          // Branch 0: Home (Masterpiece)
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                name: 'home',
+                pageBuilder: (context, state) => PageTransitions.fadeTransition(
+                  child: const HomePage(),
+                  name: state.name,
+                ),
+              ),
+            ],
+          ),
+
+          // Branch 1: Library
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/library',
+                name: 'library',
+                pageBuilder: (context, state) =>
+                    PageTransitions.slideFadeTransition(
+                      child: const LibraryPage(),
+                      name: state.name,
+                    ),
+              ),
+            ],
+          ),
+
+          // Branch 2: Discover (Categories)
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/categories',
+                name: 'categories',
+                pageBuilder: (context, state) {
+                  final category = state.uri.queryParameters['category'];
+                  return PageTransitions.slideTransition(
+                    child: CategoriesPage(initialCategory: category),
+                    name: state.name,
+                    begin: const Offset(0.0, -1.0),
+                  );
+                },
+              ),
+            ],
+          ),
+
+          // Branch 3: User (Profile)
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                name: 'profile',
+                pageBuilder: (context, state) =>
+                    PageTransitions.slideFadeTransition(
+                      child: const ProfilePage(),
+                      name: state.name,
+                    ),
+              ),
+            ],
+          ),
+        ],
       ),
+
+      // Other Routes (outside shell - full screen)
       GoRoute(
-        path: '/library',
-        name: 'library',
+        path: '/edit-profile',
+        name: 'edit-profile',
         pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
-          child: const PremiumLibraryPage(),
+          child: const EditProfilePage(),
           name: state.name,
         ),
       ),
+      GoRoute(
+        path: '/seed-user-data',
+        name: 'seed-user-data',
+        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+          child: const SeedUserDataPage(),
+          name: state.name,
+        ),
+      ),
+
       GoRoute(
         path: '/search',
         name: 'search',
         pageBuilder: (context, state) => PageTransitions.slideTransition(
-          child: const PremiumSearchPage(),
+          child: const SearchPage(),
           name: state.name,
           begin: const Offset(0.0, -1.0),
-        ),
-      ),
-      GoRoute(
-        path: '/profile',
-        name: 'profile',
-        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
-          child: const PremiumProfilePage(),
-          name: state.name,
         ),
       ),
       GoRoute(
@@ -229,7 +289,7 @@ class AppRouter {
           name: state.name,
         ),
       ),
-      
+
       // Social Feed Routes
       GoRoute(
         path: '/social-feed',
@@ -239,7 +299,7 @@ class AppRouter {
           name: state.name,
         ),
       ),
-      
+
       // Admin Routes (Protected)
       GoRoute(
         path: '/admin',
@@ -318,10 +378,7 @@ class AppRouter {
           final bookId = state.uri.queryParameters['bookId']!;
           final chapterId = state.uri.queryParameters['chapterId'];
           return PageTransitions.slideFadeTransition(
-            child: EditChapterPage(
-              bookId: bookId,
-              chapterId: chapterId,
-            ),
+            child: EditChapterPage(bookId: bookId, chapterId: chapterId),
             name: state.name,
           );
         },
@@ -335,7 +392,7 @@ class AppRouter {
           name: state.name,
         ),
       ),
-      
+
       // Bookmark Routes
       GoRoute(
         path: '/bookmarks',
@@ -348,7 +405,7 @@ class AppRouter {
           );
         },
       ),
-      
+
       // Notes Routes
       GoRoute(
         path: '/notes',
@@ -362,21 +419,7 @@ class AppRouter {
           );
         },
       ),
-      
-      // Categories Routes
-      GoRoute(
-        path: '/categories',
-        name: 'categories',
-        pageBuilder: (context, state) {
-          final category = state.uri.queryParameters['category'];
-          return PageTransitions.slideTransition(
-            child: CategoriesPage(initialCategory: category),
-            name: state.name,
-            begin: const Offset(0.0, -1.0),
-          );
-        },
-      ),
-      
+
       // Goals Routes
       GoRoute(
         path: '/goals',
@@ -386,7 +429,7 @@ class AppRouter {
           name: state.name,
         ),
       ),
-      
+
       // History Routes
       GoRoute(
         path: '/history',
@@ -396,7 +439,7 @@ class AppRouter {
           name: state.name,
         ),
       ),
-      
+
       // Collections Routes
       GoRoute(
         path: '/collections',
@@ -417,7 +460,7 @@ class AppRouter {
           );
         },
       ),
-      
+
       // Challenges Routes
       GoRoute(
         path: '/challenges',
@@ -427,7 +470,7 @@ class AppRouter {
           name: state.name,
         ),
       ),
-      
+
       // Notifications Routes
       GoRoute(
         path: '/notifications',
@@ -438,7 +481,7 @@ class AppRouter {
           begin: const Offset(1.0, 0.0),
         ),
       ),
-      
+
       // Offline Routes
       GoRoute(
         path: '/offline',
@@ -448,7 +491,7 @@ class AppRouter {
           name: state.name,
         ),
       ),
-      
+
       // Book Routes
       GoRoute(
         path: '/book/:bookId',
@@ -456,7 +499,7 @@ class AppRouter {
         pageBuilder: (context, state) {
           final bookId = state.pathParameters['bookId']!;
           return PageTransitions.slideFadeTransition(
-            child: PremiumBookDetailPage(bookId: bookId),
+            child: BookDetailPage(bookId: bookId),
             name: state.name,
           );
         },
@@ -471,7 +514,7 @@ class AppRouter {
           ),
         ],
       ),
-      
+
       // Reading Routes
       GoRoute(
         path: '/reading/:bookId',
@@ -480,10 +523,7 @@ class AppRouter {
           final bookId = state.pathParameters['bookId']!;
           final chapterId = state.uri.queryParameters['chapterId'];
           return PageTransitions.slideTransition(
-            child: PremiumReadingPage(
-              bookId: bookId,
-              chapterId: chapterId,
-            ),
+            child: ReadingPage(bookId: bookId, chapterId: chapterId),
             name: state.name,
           );
         },

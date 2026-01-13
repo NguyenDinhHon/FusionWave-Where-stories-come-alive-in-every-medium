@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/top_navigation_bar.dart';
-import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/interactive_button.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
 import '../../../../core/widgets/empty_state.dart';
@@ -10,7 +10,9 @@ import '../../../../core/services/firebase_service.dart';
 import '../../../../core/constants/app_constants.dart';
 
 /// Provider for all users
-final allUsersProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final allUsersProvider = FutureProvider<List<Map<String, dynamic>>>((
+  ref,
+) async {
   final firestore = FirebaseService().firestore;
   final snapshot = await firestore
       .collection(AppConstants.usersCollection)
@@ -63,9 +65,9 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                 Text(
                   'Quản Lý Users',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimaryLight,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimaryLight,
+                  ),
                 ),
                 Row(
                   children: [
@@ -79,7 +81,10 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                         ),
                         onChanged: (value) {
                           setState(() {
@@ -94,9 +99,18 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                       value: _roleFilter,
                       hint: const Text('Role'),
                       items: [
-                        const DropdownMenuItem(value: null, child: Text('All Roles')),
-                        DropdownMenuItem(value: AppConstants.roleUser, child: Text(AppConstants.roleUser)),
-                        DropdownMenuItem(value: AppConstants.roleAdmin, child: Text(AppConstants.roleAdmin)),
+                        const DropdownMenuItem(
+                          value: null,
+                          child: Text('All Roles'),
+                        ),
+                        DropdownMenuItem(
+                          value: AppConstants.roleUser,
+                          child: Text(AppConstants.roleUser),
+                        ),
+                        DropdownMenuItem(
+                          value: AppConstants.roleAdmin,
+                          child: Text(AppConstants.roleAdmin),
+                        ),
                       ],
                       onChanged: (value) {
                         setState(() {
@@ -131,12 +145,18 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                 if (_searchQuery.isNotEmpty) {
                   final query = _searchQuery.toLowerCase();
                   filteredUsers = filteredUsers.where((user) {
-                    return (user['email'] as String).toLowerCase().contains(query) ||
-                        (user['displayName'] as String).toLowerCase().contains(query);
+                    return (user['email'] as String).toLowerCase().contains(
+                          query,
+                        ) ||
+                        (user['displayName'] as String).toLowerCase().contains(
+                          query,
+                        );
                   }).toList();
                 }
                 if (_roleFilter != null) {
-                  filteredUsers = filteredUsers.where((user) => user['role'] == _roleFilter).toList();
+                  filteredUsers = filteredUsers
+                      .where((user) => user['role'] == _roleFilter)
+                      .toList();
                 }
 
                 if (filteredUsers.isEmpty) {
@@ -149,7 +169,9 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                   );
                 }
 
-                return _isGridView ? _buildGridView(filteredUsers) : _buildListView(filteredUsers);
+                return _isGridView
+                    ? _buildGridView(filteredUsers)
+                    : _buildListView(filteredUsers);
               },
               loading: () => ListView.builder(
                 padding: const EdgeInsets.all(16),
@@ -160,7 +182,11 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                    const Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.red,
+                    ),
                     const SizedBox(height: 16),
                     Text('Error: $error'),
                     const SizedBox(height: 16),
@@ -185,7 +211,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
       itemCount: users.length,
       itemBuilder: (context, index) {
         final user = users[index];
-        return PremiumCard(
+        return AppCard(
           margin: const EdgeInsets.only(bottom: 12),
           child: ListTile(
             leading: CircleAvatar(
@@ -213,7 +239,10 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: user['role'] == AppConstants.roleAdmin
                             ? Colors.red.withOpacity(0.1)
@@ -275,7 +304,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
       itemCount: users.length,
       itemBuilder: (context, index) {
         final user = users[index];
-        return PremiumCard(
+        return AppCard(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -340,8 +369,14 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
     );
   }
 
-  void _showEditUserDialog(BuildContext context, WidgetRef ref, Map<String, dynamic> user) {
-    final roleController = TextEditingController(text: user['role'] ?? AppConstants.roleUser);
+  void _showEditUserDialog(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, dynamic> user,
+  ) {
+    final roleController = TextEditingController(
+      text: user['role'] ?? AppConstants.roleUser,
+    );
 
     showDialog(
       context: context,
@@ -359,8 +394,14 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                 border: OutlineInputBorder(),
               ),
               items: [
-                DropdownMenuItem(value: AppConstants.roleUser, child: Text(AppConstants.roleUser)),
-                DropdownMenuItem(value: AppConstants.roleAdmin, child: Text(AppConstants.roleAdmin)),
+                DropdownMenuItem(
+                  value: AppConstants.roleUser,
+                  child: Text(AppConstants.roleUser),
+                ),
+                DropdownMenuItem(
+                  value: AppConstants.roleAdmin,
+                  child: Text(AppConstants.roleAdmin),
+                ),
               ],
               onChanged: (value) {
                 if (value != null) {
@@ -387,14 +428,16 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                 if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đã cập nhật role thành công')),
+                    const SnackBar(
+                      content: Text('Đã cập nhật role thành công'),
+                    ),
                   );
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Lỗi: $e')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
                 }
               }
             },
@@ -405,7 +448,11 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context, WidgetRef ref, Map<String, dynamic> user) {
+  void _showDeleteConfirmation(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, dynamic> user,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -433,9 +480,9 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Lỗi: $e')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
                 }
               }
             },
@@ -446,4 +493,3 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
     );
   }
 }
-

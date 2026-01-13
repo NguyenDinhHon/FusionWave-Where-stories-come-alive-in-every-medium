@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/top_navigation_bar.dart';
-import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/interactive_button.dart';
 import '../../../../core/services/book_upload_service.dart';
 
@@ -22,7 +22,7 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
   final _titleController = TextEditingController();
   final _authorController = TextEditingController();
   final _descriptionController = TextEditingController();
-  
+
   String? _selectedCategory;
   double? _rating;
   File? _coverImage;
@@ -81,9 +81,9 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
   Future<void> _uploadBook() async {
     if (!_formKey.currentState!.validate()) return;
     if (_bookFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn file sách')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Vui lòng chọn file sách')));
       return;
     }
 
@@ -94,7 +94,7 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
 
     try {
       final uploadService = BookUploadService();
-      
+
       setState(() {
         _uploadStatus = 'Đang parse file...';
       });
@@ -105,7 +105,9 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
           .where((a) => a.isNotEmpty)
           .toList();
 
-      final categories = _selectedCategory != null ? [_selectedCategory!] : <String>[];
+      final categories = _selectedCategory != null
+          ? [_selectedCategory!]
+          : <String>[];
 
       final book = await uploadService.uploadBook(
         title: _titleController.text.trim(),
@@ -123,7 +125,9 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Upload thành công! Sách "${book.title}" đã được tạo.'),
+            content: Text(
+              'Upload thành công! Sách "${book.title}" đã được tạo.',
+            ),
             duration: const Duration(seconds: 3),
           ),
         );
@@ -132,10 +136,7 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -173,27 +174,29 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
                       const SizedBox(width: 16),
                       Text(
                         'Upload Sách Mới',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimaryLight,
-                        ),
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimaryLight,
+                            ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 32),
-                  
+
                   // Form
-                  PremiumCard(
+                  AppCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Cover Image
                         Text(
                           'Ảnh Bìa',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimaryLight,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimaryLight,
+                              ),
                         ),
                         const SizedBox(height: 12),
                         GestureDetector(
@@ -217,18 +220,24 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
                                 : Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.add_photo_alternate, size: 48, color: Colors.grey[400]),
+                                      Icon(
+                                        Icons.add_photo_alternate,
+                                        size: 48,
+                                        color: Colors.grey[400],
+                                      ),
                                       const SizedBox(height: 8),
                                       Text(
                                         'Chọn ảnh bìa',
-                                        style: TextStyle(color: Colors.grey[600]),
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                        ),
                                       ),
                                     ],
                                   ),
                           ),
                         ),
                         const SizedBox(height: 32),
-                        
+
                         // Title
                         TextFormField(
                           controller: _titleController,
@@ -244,14 +253,15 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
                           },
                         ),
                         const SizedBox(height: 16),
-                        
+
                         // Author
                         TextFormField(
                           controller: _authorController,
                           decoration: const InputDecoration(
                             labelText: 'Tác giả *',
                             border: OutlineInputBorder(),
-                            hintText: 'Nhập tên tác giả, cách nhau bởi dấu phẩy',
+                            hintText:
+                                'Nhập tên tác giả, cách nhau bởi dấu phẩy',
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -261,7 +271,7 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
                           },
                         ),
                         const SizedBox(height: 16),
-                        
+
                         // Description
                         TextFormField(
                           controller: _descriptionController,
@@ -273,7 +283,7 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
                           maxLines: 5,
                         ),
                         const SizedBox(height: 16),
-                        
+
                         // Category
                         DropdownButtonFormField<String>(
                           initialValue: _selectedCategory,
@@ -294,7 +304,7 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
                           },
                         ),
                         const SizedBox(height: 16),
-                        
+
                         // Rating
                         TextFormField(
                           decoration: const InputDecoration(
@@ -309,14 +319,15 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
                           },
                         ),
                         const SizedBox(height: 32),
-                        
+
                         // Book File
                         Text(
                           'File Sách',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimaryLight,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimaryLight,
+                              ),
                         ),
                         const SizedBox(height: 12),
                         GestureDetector(
@@ -327,7 +338,9 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
                               color: Colors.grey[100],
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: _bookFile != null ? AppColors.primary : Colors.grey[300]!,
+                                color: _bookFile != null
+                                    ? AppColors.primary
+                                    : Colors.grey[300]!,
                                 width: 2,
                               ),
                             ),
@@ -336,12 +349,15 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
                                 Icon(
                                   Icons.upload_file,
                                   size: 32,
-                                  color: _bookFile != null ? AppColors.primary : Colors.grey[600],
+                                  color: _bookFile != null
+                                      ? AppColors.primary
+                                      : Colors.grey[600],
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         _bookFile != null
@@ -381,27 +397,37 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
                           ),
                         ),
                         const SizedBox(height: 32),
-                        
+
                         // Upload Button
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             InteractiveButton(
                               label: 'Hủy',
-                              onPressed: _isUploading ? null : () => context.pop(),
+                              onPressed: _isUploading
+                                  ? null
+                                  : () => context.pop(),
                               isOutlined: true,
                               height: 48,
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
                             ),
                             const SizedBox(width: 12),
                             InteractiveButton(
-                              label: _isUploading ? 'Đang upload...' : 'Upload Sách',
+                              label: _isUploading
+                                  ? 'Đang upload...'
+                                  : 'Upload Sách',
                               icon: _isUploading ? null : Icons.upload,
                               onPressed: _isUploading ? null : _uploadBook,
                               isLoading: _isUploading,
                               gradient: AppColors.primaryGradient,
                               height: 48,
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
                             ),
                           ],
                         ),
@@ -426,4 +452,3 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
     );
   }
 }
-

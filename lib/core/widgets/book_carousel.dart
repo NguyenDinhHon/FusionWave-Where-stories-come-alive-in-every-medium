@@ -58,12 +58,15 @@ class _BookCarouselState extends State<BookCarousel> {
   // Trang 2: card 4-10 (giữ lại card 4-8, thêm card 9-10)
   List<BookModel> _getPageBooks(int pageIndex) {
     final startIndex = pageIndex * 2; // Mỗi trang mới bắt đầu từ index + 2
-    final endIndex = (startIndex + widget.itemsPerPage).clamp(0, widget.books.length);
-    
+    final endIndex = (startIndex + widget.itemsPerPage).clamp(
+      0,
+      widget.books.length,
+    );
+
     if (startIndex >= widget.books.length) {
       return [];
     }
-    
+
     return widget.books.sublist(startIndex, endIndex);
   }
 
@@ -108,11 +111,14 @@ class _BookCarouselState extends State<BookCarousel> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  widget.title!,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                Expanded(
+                  child: Text(
+                    widget.title!,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 if (widget.onSeeAll != null)
                   TextButton(
@@ -128,138 +134,150 @@ class _BookCarouselState extends State<BookCarousel> {
         SizedBox(
           height: 300, // Height cố định
           child: Stack(
-                children: [
-                  // Books grid
-                  PageView.builder(
-                    controller: _pageController,
-                    onPageChanged: (index) {
-                      setState(() {
-                        _currentPage = index;
-                      });
-                    },
-                    itemCount: _totalPages,
-                    itemBuilder: (context, pageIndex) {
-                      final pageBooks = _getPageBooks(pageIndex);
-                      
-                      return LayoutBuilder(
-                        builder: (context, constraints) {
-                          // Tính toán cardWidth động dựa trên constraints
-                          // Đảm bảo 7 card + spacing vừa với màn hình
-                          final spacing = 12.0;
-                          final maxCards = widget.itemsPerPage;
-                          // Trừ padding horizontal (16px mỗi bên)
-                          final availableWidth = constraints.maxWidth - 32;
-                          // Tính width cho mỗi card: (availableWidth - spacing giữa các card) / số card
-                          final calculatedCardWidth = (availableWidth - (spacing * (maxCards - 1))) / maxCards;
-                          // Giới hạn width trong khoảng 140-160 để đảm bảo không quá nhỏ hoặc quá lớn
-                          final effectiveCardWidth = calculatedCardWidth.clamp(140.0, widget.cardWidth);
-                          
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 0,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min, // Không mở rộng quá mức cần thiết
-                              children: List.generate(pageBooks.length, (index) {
-                                return Padding(
-                                  padding: EdgeInsets.only(
-                                    right: index < pageBooks.length - 1 ? spacing : 0,
-                                  ),
-                                  child: AnimationConfiguration.staggeredList(
-                                    position: index,
-                                    duration: const Duration(milliseconds: 375),
-                                    child: SlideAnimation(
-                                      horizontalOffset: 50.0,
-                                      child: FadeInAnimation(
-                                        child: SizedBox(
-                                          width: effectiveCardWidth, // Width động nhưng không nhỏ hơn 140
-                                          child: AnimatedBookCard(
-                                            book: pageBooks[index],
-                                            width: effectiveCardWidth,
-                                            height: 240, // Height cố định
-                                            onTap: () => context.push('/book/${pageBooks[index].id}'),
+            children: [
+              // Books grid
+              PageView.builder(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentPage = index;
+                  });
+                },
+                itemCount: _totalPages,
+                itemBuilder: (context, pageIndex) {
+                  final pageBooks = _getPageBooks(pageIndex);
+
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Tính toán cardWidth động dựa trên constraints
+                      // Đảm bảo 7 card + spacing vừa với màn hình
+                      final spacing = 12.0;
+                      final maxCards = widget.itemsPerPage;
+                      // Trừ padding horizontal (16px mỗi bên)
+                      final availableWidth = constraints.maxWidth - 32;
+                      // Tính width cho mỗi card: (availableWidth - spacing giữa các card) / số card
+                      final calculatedCardWidth =
+                          (availableWidth - (spacing * (maxCards - 1))) /
+                          maxCards;
+                      // Giới hạn width trong khoảng 140-160 để đảm bảo không quá nhỏ hoặc quá lớn
+                      final effectiveCardWidth = calculatedCardWidth.clamp(
+                        140.0,
+                        widget.cardWidth,
+                      );
+
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 0,
+                        ),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: List.generate(pageBooks.length, (index) {
+                              return Padding(
+                                padding: EdgeInsets.only(
+                                  right: index < pageBooks.length - 1
+                                      ? spacing
+                                      : 0,
+                                ),
+                                child: AnimationConfiguration.staggeredList(
+                                  position: index,
+                                  duration: const Duration(milliseconds: 375),
+                                  child: SlideAnimation(
+                                    horizontalOffset: 50.0,
+                                    child: FadeInAnimation(
+                                      child: SizedBox(
+                                        width: effectiveCardWidth,
+                                        child: AnimatedBookCard(
+                                          book: pageBooks[index],
+                                          width: effectiveCardWidth,
+                                          height: 240,
+                                          onTap: () => context.push(
+                                            '/book/${pageBooks[index].id}',
                                           ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                );
-                              }),
-                            ),
-                          );
-                        },
+                                ),
+                              );
+                            }),
+                          ),
+                        ),
                       );
                     },
+                  );
+                },
+              ),
+              // Navigation buttons - căn giữa với card (240px height)
+              if (_totalPages > 1) ...[
+                // Previous button
+                if (_currentPage > 0)
+                  Positioned(
+                    left: 8,
+                    top: 30, // (300 - 240) / 2 = 30px để căn giữa với card
+                    height: 240, // Chiều cao của card
+                    child: Center(
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: InteractiveIconButton(
+                          icon: Icons.chevron_left,
+                          iconColor: AppColors.iconLight,
+                          size: 40,
+                          onPressed: _previousPage,
+                          tooltip: 'Previous',
+                        ),
+                      ),
+                    ),
                   ),
-                  // Navigation buttons - căn giữa với card (240px height)
-                  if (_totalPages > 1) ...[
-                    // Previous button
-                    if (_currentPage > 0)
-                      Positioned(
-                        left: 8,
-                        top: 30, // (300 - 240) / 2 = 30px để căn giữa với card
-                        height: 240, // Chiều cao của card
-                        child: Center(
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
+                // Next button - căn giữa với card (240px height)
+                if (_currentPage < _totalPages - 1)
+                  Positioned(
+                    right: 8,
+                    top: 30, // (300 - 240) / 2 = 30px để căn giữa với card
+                    height: 240, // Chiều cao của card
+                    child: Center(
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
                             ),
-                            child: InteractiveIconButton(
-                              icon: Icons.chevron_left,
-                              iconColor: AppColors.iconLight,
-                              size: 40,
-                              onPressed: _previousPage,
-                              tooltip: 'Previous',
-                            ),
-                          ),
+                          ],
+                        ),
+                        child: InteractiveIconButton(
+                          icon: Icons.chevron_right,
+                          iconColor: AppColors.iconLight,
+                          size: 40,
+                          onPressed: _nextPage,
+                          tooltip: 'Next',
                         ),
                       ),
-                    // Next button - căn giữa với card (240px height)
-                    if (_currentPage < _totalPages - 1)
-                      Positioned(
-                        right: 8,
-                        top: 30, // (300 - 240) / 2 = 30px để căn giữa với card
-                        height: 240, // Chiều cao của card
-                        child: Center(
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: InteractiveIconButton(
-                              icon: Icons.chevron_right,
-                              iconColor: AppColors.iconLight,
-                              size: 40,
-                              onPressed: _nextPage,
-                              tooltip: 'Next',
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ],
+                    ),
+                  ),
+              ],
+            ],
           ),
         ),
       ],
