@@ -2,6 +2,8 @@
 import '../../../../data/repositories/auth_repository.dart';
 import '../../../../data/models/user_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../core/services/firebase_service.dart';
+import '../../../../core/constants/app_constants.dart';
 
 /// Auth repository provider
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
@@ -14,7 +16,7 @@ final authStateChangesProvider = StreamProvider<User?>((ref) {
   return authRepository.authStateChanges;
 });
 
-/// Current user model provider
+/// Current user model provider - uses real-time stream from Firestore
 final currentUserModelProvider = StreamProvider<UserModel?>((ref) {
   final authState = ref.watch(authStateChangesProvider);
   
@@ -22,13 +24,27 @@ final currentUserModelProvider = StreamProvider<UserModel?>((ref) {
     data: (user) {
       if (user == null) return Stream.value(null);
       
-      final authRepository = ref.read(authRepositoryProvider);
-      return Stream.fromFuture(
-        authRepository.getUserData(user.uid),
-      ).handleError((error) {
-        // Return null if error (user not found, etc.)
-        return null;
-      });
+      // Use FirebaseService directly to access Firestore
+      final firebaseService = FirebaseService();
+      final firestore = firebaseService.firestore;
+      final usersCollection = AppConstants.usersCollection;
+      
+      // Return real-time stream from Firestore
+      return firestore
+          .collection(usersCollection)
+          .doc(user.uid)
+          .snapshots()
+          .map((doc) {
+            if (!doc.exists) return null;
+            try {
+              return UserModel.fromFirestore(doc);
+            } catch (e) {
+              return null;
+            }
+          }).handleError((error) {
+            // Return null if error (user not found, etc.)
+            return null;
+          });
     },
     loading: () => Stream.value(null),
     error: (_, _) => Stream.value(null),

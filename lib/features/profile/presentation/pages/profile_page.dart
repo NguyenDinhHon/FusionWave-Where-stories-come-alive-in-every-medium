@@ -10,6 +10,7 @@ import '../../../../core/widgets/top_navigation_bar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../stats/presentation/providers/stats_provider.dart';
 import '../../../goals/presentation/providers/goals_provider.dart';
+import '../../../../core/constants/app_constants.dart';
 
 /// Profile Page với design giống Wattpad & Waka
 class ProfilePage extends ConsumerWidget {
@@ -125,14 +126,34 @@ class ProfilePage extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          AppButton(
-                            label: 'Edit Profile',
-                            icon: Icons.edit,
-                            isOutlined: false,
-                            color: AppColors.primary,
-                            textColor: Colors.white,
-                            iconColor: Colors.white,
-                            onPressed: () => context.push('/edit-profile'),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: AppButton(
+                                  label: 'Edit Profile',
+                                  icon: Icons.edit,
+                                  isOutlined: false,
+                                  color: AppColors.primary,
+                                  textColor: Colors.white,
+                                  iconColor: Colors.white,
+                                  onPressed: () => context.push('/edit-profile'),
+                                ),
+                              ),
+                              if (user?.role == AppConstants.roleAdmin) ...[
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: AppButton(
+                                    label: 'Admin',
+                                    icon: Icons.admin_panel_settings,
+                                    isOutlined: false,
+                                    color: Colors.red,
+                                    textColor: Colors.white,
+                                    iconColor: Colors.white,
+                                    onPressed: () => context.push('/admin'),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ],
                       ),
