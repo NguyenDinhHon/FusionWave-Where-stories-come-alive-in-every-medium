@@ -75,152 +75,156 @@ class _ManageCollectionsPageState extends ConsumerState<ManageCollectionsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isMobile = ResponsiveUtils.isMobile(context);
-        final padding = ResponsiveUtils.pagePadding(context);
-        final collectionsAsync = ref.watch(allCollectionsProvider);
+    final isMobile = ResponsiveUtils.isMobile(context);
+    final padding = ResponsiveUtils.pagePadding(context);
+    final collectionsAsync = ref.watch(allCollectionsProvider);
 
-        return Column(
-          children: [
-            // Header
-            Container(
-              color: Theme.of(context).cardColor,
-              padding: EdgeInsets.all(padding),
-              child: isMobile
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Quản Lý Collections',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          decoration: InputDecoration(
-                            hintText: 'Tìm kiếm...',
-                            prefixIcon: const Icon(Icons.search),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            filled: true,
-                            fillColor: Colors.grey[100],
+    return Column(
+      children: [
+        // Header
+        Container(
+          color: Theme.of(context).cardColor,
+          padding: EdgeInsets.all(padding),
+          child: isMobile
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Quản Lý Collections',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
-                          onChanged: (value) {
-                            setState(() {
-                              _searchQuery = value;
-                            });
-                          },
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Tìm kiếm...',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        const SizedBox(height: 12),
-                        CheckboxListTile(
-                          title: const Text('Chỉ hiển thị public'),
-                          value: _filterPublicOnly,
-                          onChanged: (value) {
-                            setState(() {
-                              _filterPublicOnly = value ?? false;
-                            });
-                          },
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                      ],
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        filled: true,
+                        fillColor: Colors.grey[100],
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          _searchQuery = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: CheckboxListTile(
+                        title: const Text('Chỉ hiển thị public'),
+                        value: _filterPublicOnly,
+                        onChanged: (value) {
+                          setState(() {
+                            _filterPublicOnly = value ?? false;
+                          });
+                        },
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                      ),
+                    ),
+                  ],
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Quản Lý Collections',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                    ),
+                    Row(
                       children: [
-                        Text(
-                          'Quản Lý Collections',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                        SizedBox(
+                          width: 250,
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText: 'Tìm kiếm...',
+                              prefixIcon: const Icon(Icons.search),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
+                              filled: true,
+                              fillColor: Colors.grey[100],
+                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                _searchQuery = value;
+                              });
+                            },
+                          ),
                         ),
-                        Row(
-                          children: [
-                            SizedBox(
-                              width: 250,
-                              child: TextField(
-                                decoration: InputDecoration(
-                                  hintText: 'Tìm kiếm...',
-                                  prefixIcon: const Icon(Icons.search),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  filled: true,
-                                  fillColor: Colors.grey[100],
-                                ),
-                                onChanged: (value) {
-                                  setState(() {
-                                    _searchQuery = value;
-                                  });
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            CheckboxListTile(
-                              title: const Text('Chỉ public'),
-                              value: _filterPublicOnly,
-                              onChanged: (value) {
-                                setState(() {
-                                  _filterPublicOnly = value ?? false;
-                                });
-                              },
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                          ],
+                        const SizedBox(width: 12),
+                        SizedBox(
+                          width: 150,
+                          child: CheckboxListTile(
+                            title: const Text('Chỉ public'),
+                            value: _filterPublicOnly,
+                            onChanged: (value) {
+                              setState(() {
+                                _filterPublicOnly = value ?? false;
+                              });
+                            },
+                            contentPadding: EdgeInsets.zero,
+                            dense: true,
+                          ),
                         ),
                       ],
                     ),
-            ),
-            // Content
-            Expanded(
-              child: collectionsAsync.when(
-                data: (collections) {
-                  // Filter collections
-                  var filteredCollections = collections.where((collection) {
-                    if (_searchQuery.isNotEmpty) {
-                      final query = _searchQuery.toLowerCase();
-                      final nameMatch = collection.name.toLowerCase().contains(query);
-                      final descMatch = collection.description?.toLowerCase().contains(query) ?? false;
-                      if (!nameMatch && !descMatch) return false;
-                    }
-                    if (_filterPublicOnly && !collection.isPublic) {
-                      return false;
-                    }
-                    return true;
-                  }).toList();
-
-                  if (filteredCollections.isEmpty) {
-                    return const EmptyState(
-                      title: 'Không có dữ liệu',
-                      message: 'Không có collection nào',
-                      icon: Icons.collections,
-                    );
-                  }
-
-                  return isMobile
-                      ? _buildMobileGrid(filteredCollections)
-                      : _buildDesktopGrid(filteredCollections);
-                },
-                loading: () => const Center(
-                  child: ShimmerLoading(
-                    width: double.infinity,
-                    height: 200,
-                  ),
+                  ],
                 ),
-                error: (error, stack) => ErrorState(
-                  title: 'Lỗi',
-                  message: 'Lỗi khi tải collections: $error',
-                  onRetry: () => ref.invalidate(allCollectionsProvider),
-                ),
+        ),
+        // Content
+        Expanded(
+          child: collectionsAsync.when(
+            data: (collections) {
+              // Filter collections
+              var filteredCollections = collections.where((collection) {
+                if (_searchQuery.isNotEmpty) {
+                  final query = _searchQuery.toLowerCase();
+                  final nameMatch = collection.name.toLowerCase().contains(query);
+                  final descMatch = collection.description?.toLowerCase().contains(query) ?? false;
+                  if (!nameMatch && !descMatch) return false;
+                }
+                if (_filterPublicOnly && !collection.isPublic) {
+                  return false;
+                }
+                return true;
+              }).toList();
+
+              if (filteredCollections.isEmpty) {
+                return const EmptyState(
+                  title: 'Không có dữ liệu',
+                  message: 'Không có collection nào',
+                  icon: Icons.collections,
+                );
+              }
+
+              return isMobile
+                  ? _buildMobileGrid(filteredCollections)
+                  : _buildDesktopGrid(filteredCollections);
+            },
+            loading: () => const Center(
+              child: ShimmerLoading(
+                width: double.infinity,
+                height: 200,
               ),
             ),
-          ],
-        );
-      },
+            error: (error, stack) => ErrorState(
+              title: 'Lỗi',
+              message: 'Lỗi khi tải collections: $error',
+              onRetry: () => ref.invalidate(allCollectionsProvider),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

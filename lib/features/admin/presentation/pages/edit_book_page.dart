@@ -161,10 +161,12 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
             labelText: 'Thể loại',
             border: OutlineInputBorder(),
           ),
+          style: const TextStyle(color: Colors.black87),
+          dropdownColor: Colors.white,
           items: allCategories.map((category) {
             return DropdownMenuItem<String>(
               value: category,
-              child: Text(category),
+              child: Text(category, style: const TextStyle(color: Colors.black87)),
             );
           }).toList(),
           onChanged: (value) {

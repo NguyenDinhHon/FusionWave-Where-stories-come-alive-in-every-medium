@@ -103,18 +103,20 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                         filled: true,
                         fillColor: Colors.grey[100],
                       ),
+                      style: const TextStyle(color: Colors.black87),
+                      dropdownColor: Colors.white,
                       items: const [
                         DropdownMenuItem(
                           value: null,
-                          child: Text('Tất cả'),
+                          child: Text('Tất cả', style: TextStyle(color: Colors.black87)),
                         ),
                         DropdownMenuItem(
                           value: AppConstants.roleUser,
-                          child: Text(AppConstants.roleUser),
+                          child: Text(AppConstants.roleUser, style: TextStyle(color: Colors.black87)),
                         ),
                         DropdownMenuItem(
                           value: AppConstants.roleAdmin,
-                          child: Text(AppConstants.roleAdmin),
+                          child: Text(AppConstants.roleAdmin, style: TextStyle(color: Colors.black87)),
                         ),
                       ],
                       onChanged: (value) {
@@ -170,19 +172,21 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                         const SizedBox(width: 12),
                         DropdownButton<String>(
                           value: _roleFilter,
-                          hint: const Text('Role'),
+                          hint: const Text('Role', style: TextStyle(color: Colors.black87)),
+                          style: const TextStyle(color: Colors.black87),
+                          dropdownColor: Colors.white,
                           items: const [
                             DropdownMenuItem(
                               value: null,
-                              child: Text('All Roles'),
+                              child: Text('All Roles', style: TextStyle(color: Colors.black87)),
                             ),
                             DropdownMenuItem(
                               value: AppConstants.roleUser,
-                              child: Text(AppConstants.roleUser),
+                              child: Text(AppConstants.roleUser, style: TextStyle(color: Colors.black87)),
                             ),
                             DropdownMenuItem(
                               value: AppConstants.roleAdmin,
-                              child: Text(AppConstants.roleAdmin),
+                              child: Text(AppConstants.roleAdmin, style: TextStyle(color: Colors.black87)),
                             ),
                           ],
                           onChanged: (value) {
@@ -586,14 +590,16 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                   labelText: 'Role',
                   border: OutlineInputBorder(),
                 ),
+                style: const TextStyle(color: Colors.black87),
+                dropdownColor: Colors.white,
                 items: const [
                   DropdownMenuItem(
                     value: AppConstants.roleUser,
-                    child: Text(AppConstants.roleUser),
+                    child: Text(AppConstants.roleUser, style: TextStyle(color: Colors.black87)),
                   ),
                   DropdownMenuItem(
                     value: AppConstants.roleAdmin,
-                    child: Text(AppConstants.roleAdmin),
+                    child: Text(AppConstants.roleAdmin, style: TextStyle(color: Colors.black87)),
                   ),
                 ],
                 onChanged: (value) {

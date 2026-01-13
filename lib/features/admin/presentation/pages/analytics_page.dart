@@ -177,14 +177,21 @@ class AnalyticsPage extends ConsumerWidget {
   Widget _buildStatsGrid(BuildContext context, ExtendedAdminStats stats, bool isMobile) {
     final crossAxisCount = isMobile ? 2 : 4;
     
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: crossAxisCount,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: isMobile ? 1.2 : 1.5,
-      children: [
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cardWidth = (constraints.maxWidth - (crossAxisCount - 1) * 16) / crossAxisCount;
+        final cardHeight = isMobile ? cardWidth * 1.2 : cardWidth * 1.5;
+        
+        return SizedBox(
+          height: cardHeight * ((4 / crossAxisCount).ceil()),
+          child: GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            childAspectRatio: isMobile ? 1.2 : 1.5,
+            children: [
         _buildStatCard(
           context,
           title: 'Tổng Sách',
@@ -217,24 +224,37 @@ class AnalyticsPage extends ConsumerWidget {
           color: Colors.purple,
           subtitle: 'Chapters trong hệ thống',
         ),
-      ],
+            ],
+          ),
+        );
+      },
     );
   }
 
   Widget _buildLoadingGrid(bool isMobile) {
     final crossAxisCount = isMobile ? 2 : 4;
     
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: crossAxisCount,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: isMobile ? 1.2 : 1.5,
-      children: List.generate(4, (index) => const ShimmerLoading(
-        width: double.infinity,
-        height: 120,
-      )),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cardWidth = (constraints.maxWidth - (crossAxisCount - 1) * 16) / crossAxisCount;
+        final cardHeight = isMobile ? cardWidth * 1.2 : cardWidth * 1.5;
+        
+        return SizedBox(
+          height: cardHeight * ((4 / crossAxisCount).ceil()),
+          child: GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            childAspectRatio: isMobile ? 1.2 : 1.5,
+            children: List.generate(4, (index) => const ShimmerLoading(
+              width: double.infinity,
+              height: 120,
+            )),
+          ),
+        );
+      },
     );
   }
 
@@ -324,14 +344,22 @@ class AnalyticsPage extends ConsumerWidget {
               ),
         ),
         const SizedBox(height: 16),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: crossAxisCount,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: isMobile ? 1.5 : 2.0,
-          children: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final cardWidth = (constraints.maxWidth - (crossAxisCount - 1) * 16) / crossAxisCount;
+            final cardHeight = isMobile ? cardWidth * 1.5 : cardWidth * 2.0;
+            final itemCount = 6;
+            
+            return SizedBox(
+              height: cardHeight * ((itemCount / crossAxisCount).ceil()),
+              child: GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: crossAxisCount,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: isMobile ? 1.5 : 2.0,
+                children: [
             _buildDetailCard(
               context,
               title: 'Comments',
@@ -374,7 +402,10 @@ class AnalyticsPage extends ConsumerWidget {
               icon: Icons.edit_note,
               color: Colors.grey,
             ),
-          ],
+                ],
+              ),
+            );
+          },
         ),
       ],
     );

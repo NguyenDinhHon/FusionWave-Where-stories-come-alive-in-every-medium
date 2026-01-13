@@ -308,11 +308,13 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
         
         final dropdown = DropdownButton<String>(
           value: validSelectedCategory == 'All' ? null : validSelectedCategory,
-          hint: const Text('Thể loại'),
+          hint: const Text('Thể loại', style: TextStyle(color: Colors.black87)),
+          style: const TextStyle(color: Colors.black87),
+          dropdownColor: Colors.white,
           items: allCategories.map((category) {
             return DropdownMenuItem<String>(
               value: category == 'All' ? null : category,
-              child: Text(category),
+              child: Text(category, style: const TextStyle(color: Colors.black87)),
             );
           }).toList(),
           onChanged: (value) {
@@ -366,18 +368,21 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
 
     final dropdown = DropdownButton<String>(
       value: _sortBy,
-      hint: const Text('Sắp xếp'),
+      hint: const Text('Sắp xếp', style: TextStyle(color: Colors.black87)),
+      style: const TextStyle(color: Colors.black87),
+      dropdownColor: Colors.white,
       items: sortOptions.entries.map((entry) {
         return DropdownMenuItem(
           value: entry.key,
           child: Row(
             children: [
-              Text(entry.value),
+              Text(entry.value, style: const TextStyle(color: Colors.black87)),
               const SizedBox(width: 8),
               if (_sortBy == entry.key)
                 Icon(
                   _sortDescending ? Icons.arrow_downward : Icons.arrow_upward,
                   size: 16,
+                  color: Colors.black87,
                 ),
             ],
           ),

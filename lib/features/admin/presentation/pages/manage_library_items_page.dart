@@ -107,12 +107,14 @@ class _ManageLibraryItemsPageState extends ConsumerState<ManageLibraryItemsPage>
                             filled: true,
                             fillColor: Colors.white,
                           ),
+                          style: const TextStyle(color: Colors.black87),
+                          dropdownColor: Colors.white,
                           items: const [
-                            DropdownMenuItem(value: null, child: Text('Tất cả')),
-                            DropdownMenuItem(value: AppConstants.bookStatusReading, child: Text('Đang đọc')),
-                            DropdownMenuItem(value: AppConstants.bookStatusCompleted, child: Text('Đã hoàn thành')),
-                            DropdownMenuItem(value: AppConstants.bookStatusWantToRead, child: Text('Muốn đọc')),
-                            DropdownMenuItem(value: AppConstants.bookStatusDropped, child: Text('Đã bỏ')),
+                            DropdownMenuItem(value: null, child: Text('Tất cả', style: TextStyle(color: Colors.black87))),
+                            DropdownMenuItem(value: AppConstants.bookStatusReading, child: Text('Đang đọc', style: TextStyle(color: Colors.black87))),
+                            DropdownMenuItem(value: AppConstants.bookStatusCompleted, child: Text('Đã hoàn thành', style: TextStyle(color: Colors.black87))),
+                            DropdownMenuItem(value: AppConstants.bookStatusWantToRead, child: Text('Muốn đọc', style: TextStyle(color: Colors.black87))),
+                            DropdownMenuItem(value: AppConstants.bookStatusDropped, child: Text('Đã bỏ', style: TextStyle(color: Colors.black87))),
                           ],
                           onChanged: (value) {
                             setState(() {
@@ -142,12 +144,14 @@ class _ManageLibraryItemsPageState extends ConsumerState<ManageLibraryItemsPage>
                               filled: true,
                               fillColor: Colors.white,
                             ),
+                            style: const TextStyle(color: Colors.black87),
+                            dropdownColor: Colors.white,
                             items: const [
-                              DropdownMenuItem(value: null, child: Text('Tất cả')),
-                              DropdownMenuItem(value: AppConstants.bookStatusReading, child: Text('Đang đọc')),
-                              DropdownMenuItem(value: AppConstants.bookStatusCompleted, child: Text('Đã hoàn thành')),
-                              DropdownMenuItem(value: AppConstants.bookStatusWantToRead, child: Text('Muốn đọc')),
-                              DropdownMenuItem(value: AppConstants.bookStatusDropped, child: Text('Đã bỏ')),
+                              DropdownMenuItem(value: null, child: Text('Tất cả', style: TextStyle(color: Colors.black87))),
+                              DropdownMenuItem(value: AppConstants.bookStatusReading, child: Text('Đang đọc', style: TextStyle(color: Colors.black87))),
+                              DropdownMenuItem(value: AppConstants.bookStatusCompleted, child: Text('Đã hoàn thành', style: TextStyle(color: Colors.black87))),
+                              DropdownMenuItem(value: AppConstants.bookStatusWantToRead, child: Text('Muốn đọc', style: TextStyle(color: Colors.black87))),
+                              DropdownMenuItem(value: AppConstants.bookStatusDropped, child: Text('Đã bỏ', style: TextStyle(color: Colors.black87))),
                             ],
                             onChanged: (value) {
                               setState(() {

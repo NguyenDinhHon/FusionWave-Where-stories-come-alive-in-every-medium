@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/utils/responsive_utils.dart';
@@ -8,13 +9,21 @@ import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/interactive_button.dart';
 import '../providers/admin_stats_provider.dart';
 import '../providers/recent_data_provider.dart';
+import '../providers/time_series_stats_provider.dart';
 
 /// Admin Dashboard với thống kê và navigation
-class AdminDashboardPage extends ConsumerWidget {
+class AdminDashboardPage extends ConsumerStatefulWidget {
   const AdminDashboardPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AdminDashboardPage> createState() => _AdminDashboardPageState();
+}
+
+class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
+  TimePeriod _selectedPeriod = TimePeriod.last30Days;
+
+  @override
+  Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isMobile = constraints.maxWidth < 900;
@@ -55,15 +64,28 @@ class AdminDashboardPage extends ConsumerWidget {
                     constraints.maxWidth,
                   ),
                   const SizedBox(height: 32),
+                  _buildTimeSeriesChartSection(
+                    context,
+                    isMobile,
+                  ),
+                  const SizedBox(height: 32),
+                  _buildDistributionChartsSection(
+                    context,
+                    isMobile,
+                  ),
+                  const SizedBox(height: 32),
+                  _buildTopBooksSection(
+                    context,
+                    isMobile,
+                  ),
+                  const SizedBox(height: 32),
                   _buildManagementSection(
                     context,
-                    ref,
                     isMobile,
                   ),
                   const SizedBox(height: 32),
                   _buildRecentActivitySection(
                     context,
-                    ref,
                     isMobile,
                   ),
                 ],
@@ -241,7 +263,6 @@ class AdminDashboardPage extends ConsumerWidget {
 
   Widget _buildManagementSection(
     BuildContext context,
-    WidgetRef ref,
     bool isMobile,
   ) {
     final recentBooksAsync = ref.watch(recentBooksProvider);
@@ -449,7 +470,6 @@ class AdminDashboardPage extends ConsumerWidget {
 
   Widget _buildRecentActivitySection(
     BuildContext context,
-    WidgetRef ref,
     bool isMobile,
   ) {
     return Column(
@@ -609,6 +629,837 @@ class AdminDashboardPage extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildTimePeriodFilter(bool isMobile) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: DropdownButton<TimePeriod>(
+        value: _selectedPeriod,
+        underline: const SizedBox.shrink(),
+        dropdownColor: Colors.grey[900],
+        style: const TextStyle(color: Colors.white),
+        items: TimePeriod.values.map((period) {
+          return DropdownMenuItem<TimePeriod>(
+            value: period,
+            child: Text(
+              period.label,
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.87)),
+            ),
+          );
+        }).toList(),
+        onChanged: (value) {
+          if (value != null) {
+            setState(() {
+              _selectedPeriod = value;
+            });
+          }
+        },
+        icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildTimeSeriesChartSection(
+    BuildContext context,
+    bool isMobile,
+  ) {
+    final timeSeriesStatsAsync = ref.watch(timeSeriesStatsProvider(_selectedPeriod));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Thống Kê Theo Thời Gian',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+            ),
+            _buildTimePeriodFilter(isMobile),
+          ],
+        ),
+        const SizedBox(height: 16),
+        timeSeriesStatsAsync.when(
+          data: (data) {
+            if (data.isEmpty) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(32.0),
+                  child: Text('Chưa có dữ liệu', style: TextStyle(color: Colors.white70)),
+                ),
+              );
+            }
+            return AppCard(
+              child: SizedBox(
+                height: isMobile ? 300 : 400,
+                child: _buildTimeSeriesChart(data, isMobile),
+              ),
+            );
+          },
+          loading: () => AppCard(
+            child: SizedBox(
+              height: isMobile ? 300 : 400,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+          ),
+          error: (error, stack) => AppCard(
+            child: SizedBox(
+              height: isMobile ? 300 : 400,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                    const SizedBox(height: 8),
+                    Text('Error: $error', style: const TextStyle(color: Colors.red)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTimeSeriesChart(List<TimeSeriesData> data, bool isMobile) {
+    final maxBooks = data.map((e) => e.books).reduce((a, b) => a > b ? a : b);
+    final maxUsers = data.map((e) => e.users).reduce((a, b) => a > b ? a : b);
+    final maxViews = data.map((e) => e.views).reduce((a, b) => a > b ? a : b);
+    final maxComments = data.map((e) => e.comments).reduce((a, b) => a > b ? a : b);
+    final maxRatings = data.map((e) => e.ratings).reduce((a, b) => a > b ? a : b);
+    
+    final maxY = [
+      maxBooks,
+      maxUsers,
+      maxViews,
+      maxComments,
+      maxRatings,
+    ].reduce((a, b) => a > b ? a : b) * 1.2;
+
+    return LineChart(
+      LineChartData(
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: maxY > 0 ? (maxY / 5).clamp(1.0, double.infinity) : 1.0,
+          getDrawingHorizontalLine: (value) {
+            return FlLine(
+              color: Colors.white.withValues(alpha: 0.1),
+              strokeWidth: 1,
+            );
+          },
+        ),
+        titlesData: FlTitlesData(
+          show: true,
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 30,
+              interval: isMobile ? 5 : 3,
+              getTitlesWidget: (value, meta) {
+                if (value.toInt() >= 0 && value.toInt() < data.length) {
+                  final date = data[value.toInt()].date;
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      '${date.day}/${date.month}',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 10,
+                      ),
+                    ),
+                  );
+                }
+                return const Text('');
+              },
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 50,
+              interval: maxY / 5,
+              getTitlesWidget: (value, meta) {
+                return Text(
+                  value.toInt().toString(),
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 10,
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        borderData: FlBorderData(
+          show: true,
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+        ),
+        minX: 0,
+        maxX: (data.length - 1).toDouble(),
+        minY: 0,
+        maxY: maxY,
+        lineBarsData: [
+          LineChartBarData(
+            spots: data.asMap().entries.map((e) {
+              return FlSpot(e.key.toDouble(), e.value.books.toDouble());
+            }).toList(),
+            isCurved: true,
+            color: AppColors.primary,
+            barWidth: 3,
+            isStrokeCapRound: true,
+            dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              color: AppColors.primary.withValues(alpha: 0.1),
+            ),
+          ),
+          LineChartBarData(
+            spots: data.asMap().entries.map((e) {
+              return FlSpot(e.key.toDouble(), e.value.users.toDouble());
+            }).toList(),
+            isCurved: true,
+            color: Colors.blue,
+            barWidth: 3,
+            isStrokeCapRound: true,
+            dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              color: Colors.blue.withValues(alpha: 0.1),
+            ),
+          ),
+          LineChartBarData(
+            spots: data.asMap().entries.map((e) {
+              return FlSpot(e.key.toDouble(), e.value.views.toDouble());
+            }).toList(),
+            isCurved: true,
+            color: Colors.green,
+            barWidth: 3,
+            isStrokeCapRound: true,
+            dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              color: Colors.green.withValues(alpha: 0.1),
+            ),
+          ),
+        ],
+        lineTouchData: LineTouchData(
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipColor: (touchedSpot) => Colors.black87,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDistributionChartsSection(
+    BuildContext context,
+    bool isMobile,
+  ) {
+    final categoryDistAsync = ref.watch(categoryDistributionProvider);
+    final bookStatusAsync = ref.watch(bookStatusDistributionProvider);
+    final userActivityAsync = ref.watch(userActivityStatsProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Phân Phối Dữ Liệu',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+        ),
+        const SizedBox(height: 16),
+        if (isMobile)
+          Column(
+            children: [
+              _buildCategoryPieChart(context, ref, categoryDistAsync),
+              const SizedBox(height: 16),
+              _buildBookStatusBarChart(context, ref, bookStatusAsync),
+              const SizedBox(height: 16),
+              _buildUserActivityBarChart(context, ref, userActivityAsync),
+            ],
+          )
+        else
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 2,
+                child: _buildCategoryPieChart(context, ref, categoryDistAsync),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  children: [
+                    _buildBookStatusBarChart(context, ref, bookStatusAsync),
+                    const SizedBox(height: 16),
+                    _buildUserActivityBarChart(context, ref, userActivityAsync),
+                  ],
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Widget _buildCategoryPieChart(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<List<CategoryDistribution>> categoryDistAsync,
+  ) {
+    return AppCard(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Phân Phối Thể Loại',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 300,
+              child: categoryDistAsync.when(
+                data: (categories) {
+                  if (categories.isEmpty) {
+                    return const Center(
+                      child: Text('Chưa có dữ liệu', style: TextStyle(color: Colors.white70)),
+                    );
+                  }
+                  final topCategories = categories.take(5).toList();
+                  final othersCount = categories.skip(5).fold<int>(
+                    0,
+                    (sum, item) => sum + item.count,
+                  );
+
+                  final colors = [
+                    AppColors.primary,
+                    Colors.blue,
+                    Colors.green,
+                    Colors.orange,
+                    Colors.purple,
+                  ];
+
+                  return PieChart(
+                    PieChartData(
+                      sectionsSpace: 2,
+                      centerSpaceRadius: 60,
+                      sections: [
+                        ...topCategories.asMap().entries.map((e) {
+                          return PieChartSectionData(
+                            value: e.value.count.toDouble(),
+                            title: '${e.value.count}',
+                            color: colors[e.key % colors.length],
+                            radius: 80,
+                            titleStyle: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          );
+                        }),
+                        if (othersCount > 0)
+                          PieChartSectionData(
+                            value: othersCount.toDouble(),
+                            title: '$othersCount',
+                            color: Colors.grey,
+                            radius: 80,
+                            titleStyle: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(
+                  child: Text('Error: $error', style: const TextStyle(color: Colors.red)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            categoryDistAsync.when(
+              data: (categories) {
+                if (categories.isEmpty) return const SizedBox.shrink();
+                final topCategories = categories.take(5).toList();
+                final colors = [
+                  AppColors.primary,
+                  Colors.blue,
+                  Colors.green,
+                  Colors.orange,
+                  Colors.purple,
+                ];
+                return Wrap(
+                  spacing: 16,
+                  runSpacing: 8,
+                  children: topCategories.asMap().entries.map((e) {
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: colors[e.key % colors.length],
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${e.value.category}: ${e.value.count}',
+                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                );
+              },
+              loading: () => const SizedBox.shrink(),
+              error: (_, _) => const SizedBox.shrink(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBookStatusBarChart(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<BookStatusDistribution> bookStatusAsync,
+  ) {
+    return AppCard(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Trạng Thái Sách',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 200,
+              child: bookStatusAsync.when(
+                data: (status) {
+                  final maxValue = (status.published + status.draft) * 1.2;
+                  return BarChart(
+                    BarChartData(
+                      alignment: BarChartAlignment.spaceAround,
+                      maxY: maxValue > 0 ? maxValue : 10,
+                      barTouchData: const BarTouchData(enabled: false),
+                      titlesData: FlTitlesData(
+                        show: true,
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            getTitlesWidget: (value, meta) {
+                              if (value.toInt() == 0) {
+                                return const Text(
+                                  'Published',
+                                  style: TextStyle(color: Colors.white70, fontSize: 10),
+                                );
+                              } else if (value.toInt() == 1) {
+                                return const Text(
+                                  'Draft',
+                                  style: TextStyle(color: Colors.white70, fontSize: 10),
+                                );
+                              }
+                              return const Text('');
+                            },
+                          ),
+                        ),
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 40,
+                            getTitlesWidget: (value, meta) {
+                              return Text(
+                                value.toInt().toString(),
+                                style: const TextStyle(color: Colors.white70, fontSize: 10),
+                              );
+                            },
+                          ),
+                        ),
+                        topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                      ),
+                      gridData: FlGridData(
+                        show: true,
+                        drawVerticalLine: false,
+                        horizontalInterval: maxValue > 0 ? (maxValue / 5).clamp(1.0, double.infinity) : 1.0,
+                        getDrawingHorizontalLine: (value) {
+                          return FlLine(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            strokeWidth: 1,
+                          );
+                        },
+                      ),
+                      borderData: FlBorderData(
+                        show: true,
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                      ),
+                      barGroups: [
+                        BarChartGroupData(
+                          x: 0,
+                          barRods: [
+                            BarChartRodData(
+                              toY: status.published.toDouble(),
+                              color: Colors.green,
+                              width: 40,
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                            ),
+                          ],
+                        ),
+                        BarChartGroupData(
+                          x: 1,
+                          barRods: [
+                            BarChartRodData(
+                              toY: status.draft.toDouble(),
+                              color: Colors.orange,
+                              width: 40,
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(
+                  child: Text('Error: $error', style: const TextStyle(color: Colors.red)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUserActivityBarChart(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<UserActivityStats> userActivityAsync,
+  ) {
+    return AppCard(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Hoạt Động Người Dùng',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 200,
+              child: userActivityAsync.when(
+                data: (activity) {
+                  final maxValue = [
+                    activity.activeLast7Days,
+                    activity.activeLast30Days,
+                    activity.totalActive,
+                  ].reduce((a, b) => a > b ? a : b) * 1.2;
+                  return BarChart(
+                    BarChartData(
+                      alignment: BarChartAlignment.spaceAround,
+                      maxY: maxValue > 0 ? maxValue : 10,
+                      barTouchData: const BarTouchData(enabled: false),
+                      titlesData: FlTitlesData(
+                        show: true,
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            getTitlesWidget: (value, meta) {
+                              if (value.toInt() == 0) {
+                                return const Text(
+                                  '7d',
+                                  style: TextStyle(color: Colors.white70, fontSize: 10),
+                                );
+                              } else if (value.toInt() == 1) {
+                                return const Text(
+                                  '30d',
+                                  style: TextStyle(color: Colors.white70, fontSize: 10),
+                                );
+                              } else if (value.toInt() == 2) {
+                                return const Text(
+                                  '90d',
+                                  style: TextStyle(color: Colors.white70, fontSize: 10),
+                                );
+                              }
+                              return const Text('');
+                            },
+                          ),
+                        ),
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 40,
+                            getTitlesWidget: (value, meta) {
+                              return Text(
+                                value.toInt().toString(),
+                                style: const TextStyle(color: Colors.white70, fontSize: 10),
+                              );
+                            },
+                          ),
+                        ),
+                        topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                      ),
+                      gridData: FlGridData(
+                        show: true,
+                        drawVerticalLine: false,
+                        horizontalInterval: maxValue > 0 ? (maxValue / 5).clamp(1.0, double.infinity) : 1.0,
+                        getDrawingHorizontalLine: (value) {
+                          return FlLine(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            strokeWidth: 1,
+                          );
+                        },
+                      ),
+                      borderData: FlBorderData(
+                        show: true,
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                      ),
+                      barGroups: [
+                        BarChartGroupData(
+                          x: 0,
+                          barRods: [
+                            BarChartRodData(
+                              toY: activity.activeLast7Days.toDouble(),
+                              color: Colors.blue,
+                              width: 40,
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                            ),
+                          ],
+                        ),
+                        BarChartGroupData(
+                          x: 1,
+                          barRods: [
+                            BarChartRodData(
+                              toY: activity.activeLast30Days.toDouble(),
+                              color: Colors.purple,
+                              width: 40,
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                            ),
+                          ],
+                        ),
+                        BarChartGroupData(
+                          x: 2,
+                          barRods: [
+                            BarChartRodData(
+                              toY: activity.totalActive.toDouble(),
+                              color: AppColors.primary,
+                              width: 40,
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(
+                  child: Text('Error: $error', style: const TextStyle(color: Colors.red)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopBooksSection(
+    BuildContext context,
+    bool isMobile,
+  ) {
+    final topByViewsAsync = ref.watch(topBooksByViewsProvider);
+    final topByRatingAsync = ref.watch(topBooksByRatingProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Top Sách',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+        ),
+        const SizedBox(height: 16),
+        if (isMobile)
+          Column(
+            children: [
+              _buildTopBooksTable(
+                context,
+                'Top Sách Theo Lượt Xem',
+                topByViewsAsync,
+                (book) => '${book['views']} views',
+              ),
+              const SizedBox(height: 16),
+              _buildTopBooksTable(
+                context,
+                'Top Sách Theo Đánh Giá',
+                topByRatingAsync,
+                (book) => '⭐ ${book['rating']?.toStringAsFixed(1)} (${book['totalRatings']} đánh giá)',
+              ),
+            ],
+          )
+        else
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _buildTopBooksTable(
+                  context,
+                  'Top Sách Theo Lượt Xem',
+                  topByViewsAsync,
+                  (book) => '${book['views']} views',
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildTopBooksTable(
+                  context,
+                  'Top Sách Theo Đánh Giá',
+                  topByRatingAsync,
+                  (book) => '⭐ ${book['rating']?.toStringAsFixed(1)} (${book['totalRatings']} đánh giá)',
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Widget _buildTopBooksTable(
+    BuildContext context,
+    String title,
+    AsyncValue<List<Map<String, dynamic>>> booksAsync,
+    String Function(Map<String, dynamic>) getSubtitle,
+  ) {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+            ),
+          ),
+          booksAsync.when(
+            data: (books) {
+              if (books.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.all(32.0),
+                  child: Center(
+                    child: Text('Chưa có dữ liệu', style: TextStyle(color: Colors.white70)),
+                  ),
+                );
+              }
+              return ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: books.length,
+                separatorBuilder: (context, index) => Divider(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  height: 1,
+                ),
+                itemBuilder: (context, index) {
+                  final book = books[index];
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                      child: Text(
+                        '${index + 1}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    title: Text(
+                      book['title'] ?? 'Unknown',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      getSubtitle(book),
+                      style: const TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                    onTap: () => context.push('/admin/edit-book/${book['id']}'),
+                  );
+                },
+              );
+            },
+            loading: () => const Padding(
+              padding: EdgeInsets.all(32.0),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (error, stack) => Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Center(
+                child: Text('Error: $error', style: const TextStyle(color: Colors.red)),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

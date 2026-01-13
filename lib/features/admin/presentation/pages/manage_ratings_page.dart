@@ -124,13 +124,15 @@ class _ManageRatingsPageState extends ConsumerState<ManageRatingsPage> {
                             filled: true,
                             fillColor: Colors.white,
                           ),
+                          style: const TextStyle(color: Colors.black87),
+                          dropdownColor: Colors.white,
                           items: const [
-                            DropdownMenuItem(value: null, child: Text('Tất cả')),
-                            DropdownMenuItem(value: 5, child: Text('5 sao')),
-                            DropdownMenuItem(value: 4, child: Text('4 sao')),
-                            DropdownMenuItem(value: 3, child: Text('3 sao')),
-                            DropdownMenuItem(value: 2, child: Text('2 sao')),
-                            DropdownMenuItem(value: 1, child: Text('1 sao')),
+                            DropdownMenuItem(value: null, child: Text('Tất cả', style: TextStyle(color: Colors.black87))),
+                            DropdownMenuItem(value: 5, child: Text('5 sao', style: TextStyle(color: Colors.black87))),
+                            DropdownMenuItem(value: 4, child: Text('4 sao', style: TextStyle(color: Colors.black87))),
+                            DropdownMenuItem(value: 3, child: Text('3 sao', style: TextStyle(color: Colors.black87))),
+                            DropdownMenuItem(value: 2, child: Text('2 sao', style: TextStyle(color: Colors.black87))),
+                            DropdownMenuItem(value: 1, child: Text('1 sao', style: TextStyle(color: Colors.black87))),
                           ],
                           onChanged: (value) {
                             setState(() {
@@ -182,13 +184,15 @@ class _ManageRatingsPageState extends ConsumerState<ManageRatingsPage> {
                                   filled: true,
                                   fillColor: Colors.white,
                                 ),
+                                style: const TextStyle(color: Colors.black87),
+                                dropdownColor: Colors.white,
                                 items: const [
-                                  DropdownMenuItem(value: null, child: Text('Tất cả')),
-                                  DropdownMenuItem(value: 5, child: Text('5 sao')),
-                                  DropdownMenuItem(value: 4, child: Text('4 sao')),
-                                  DropdownMenuItem(value: 3, child: Text('3 sao')),
-                                  DropdownMenuItem(value: 2, child: Text('2 sao')),
-                                  DropdownMenuItem(value: 1, child: Text('1 sao')),
+                                  DropdownMenuItem(value: null, child: Text('Tất cả', style: TextStyle(color: Colors.black87))),
+                                  DropdownMenuItem(value: 5, child: Text('5 sao', style: TextStyle(color: Colors.black87))),
+                                  DropdownMenuItem(value: 4, child: Text('4 sao', style: TextStyle(color: Colors.black87))),
+                                  DropdownMenuItem(value: 3, child: Text('3 sao', style: TextStyle(color: Colors.black87))),
+                                  DropdownMenuItem(value: 2, child: Text('2 sao', style: TextStyle(color: Colors.black87))),
+                                  DropdownMenuItem(value: 1, child: Text('1 sao', style: TextStyle(color: Colors.black87))),
                                 ],
                                 onChanged: (value) {
                                   setState(() {
