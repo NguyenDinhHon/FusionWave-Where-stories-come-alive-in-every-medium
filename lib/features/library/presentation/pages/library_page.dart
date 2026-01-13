@@ -18,6 +18,7 @@ import '../widgets/library_sort_dialog.dart';
 import '../../../../data/models/library_item_model.dart';
 import '../../../../data/models/book_model.dart';
 import '../../../home/presentation/providers/book_provider.dart';
+import '../../../reading/presentation/providers/reading_provider.dart';
 
 /// Library Page với design giống Wattpad & Waka
 class LibraryPage extends ConsumerStatefulWidget {
@@ -611,13 +612,48 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                   ],
                 ),
               ),
-              InteractiveIconButton(
-                icon: Icons.more_vert,
-                onPressed: () {
-                  // TODO: Implement menu
-                },
-                tooltip: 'More options',
-                size: 40,
+              Container(
+                constraints: const BoxConstraints(maxWidth: 120),
+                child: Consumer(
+                  builder: (context, ref, _) {
+                    final chaptersAsync = ref.watch(
+                      chaptersByBookIdProvider(book.id),
+                    );
+                    return chaptersAsync.maybeWhen(
+                      data: (chapters) {
+                        if (chapters.isEmpty) return const SizedBox();
+
+                        final chapter = chapters.firstWhere(
+                          (c) => c.chapterNumber == item.currentChapter,
+                          orElse: () => chapters.first,
+                        );
+
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            chapter.title,
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
+                        );
+                      },
+                      orElse: () => const SizedBox(),
+                    );
+                  },
+                ),
               ),
             ],
           ),
