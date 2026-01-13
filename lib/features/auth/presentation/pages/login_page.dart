@@ -35,7 +35,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
-      // Use auth controller which will update state and providers
+      // Sign in using auth controller
       await ref.read(authControllerProvider.notifier).signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
@@ -43,31 +43,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       
       if (!mounted) return;
       
-      // Wait a moment for providers to update
-      await Future.delayed(const Duration(milliseconds: 200));
+      // Get user model directly from authController state (already updated)
+      final authState = ref.read(authControllerProvider);
+      final user = authState.value;
       
       if (!mounted) return;
       
-      // Check user role from provider
-      final userAsync = ref.read(currentUserModelProvider);
-      final user = await userAsync.when(
-        data: (user) => Future.value(user),
-        loading: () async {
-          // Wait a bit more if still loading
-          await Future.delayed(const Duration(milliseconds: 300));
-          final retry = ref.read(currentUserModelProvider);
-          return await retry.when(
-            data: (user) => Future.value(user),
-            loading: () => Future.value(null),
-            error: (_, __) => Future.value(null),
-          );
-        },
-        error: (_, __) => Future.value(null),
-      );
-      
-      if (!mounted) return;
-      
-      // Redirect based on role
+      // Redirect immediately based on role
       if (user?.role == AppConstants.roleAdmin) {
         context.go('/admin');
       } else {
@@ -125,36 +107,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     setState(() => _isLoading = true);
     
     try {
-      // Use auth controller which will update state and providers
+      // Sign in using auth controller
       await ref.read(authControllerProvider.notifier).signInWithGoogle();
       
       if (!mounted) return;
       
-      // Wait a moment for providers to update
-      await Future.delayed(const Duration(milliseconds: 200));
+      // Get user model directly from authController state (already updated)
+      final authState = ref.read(authControllerProvider);
+      final user = authState.value;
       
       if (!mounted) return;
       
-      // Check user role from provider
-      final userAsync = ref.read(currentUserModelProvider);
-      final user = await userAsync.when(
-        data: (user) => Future.value(user),
-        loading: () async {
-          // Wait a bit more if still loading
-          await Future.delayed(const Duration(milliseconds: 300));
-          final retry = ref.read(currentUserModelProvider);
-          return await retry.when(
-            data: (user) => Future.value(user),
-            loading: () => Future.value(null),
-            error: (_, __) => Future.value(null),
-          );
-        },
-        error: (_, __) => Future.value(null),
-      );
-      
-      if (!mounted) return;
-      
-      // Redirect based on role
+      // Redirect immediately based on role
       if (user?.role == AppConstants.roleAdmin) {
         context.go('/admin');
       } else {
