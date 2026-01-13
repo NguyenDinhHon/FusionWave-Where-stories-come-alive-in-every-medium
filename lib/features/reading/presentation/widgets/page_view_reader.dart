@@ -50,7 +50,7 @@ class _PageViewReaderState extends ConsumerState<PageViewReader>
   
   Future<void> _loadSettings() async {
     final prefsAsync = ref.read(preferencesServiceProvider);
-    await prefsAsync.whenData((prefs) {
+    prefsAsync.whenData((prefs) {
       setState(() {
         _fontSize = prefs.getFontSize();
         _lineHeight = prefs.getLineHeight();

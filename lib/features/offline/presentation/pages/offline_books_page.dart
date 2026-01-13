@@ -152,7 +152,7 @@ class OfflineBooksPage extends ConsumerWidget {
           TextButton(
             onPressed: () async {
               final offlineServiceAsync = ref.read(offlineServiceProvider);
-              await offlineServiceAsync.whenData((service) async {
+              offlineServiceAsync.whenData((service) async {
                 await service.removeDownloadedBook(bookId);
               });
               if (context.mounted) {
@@ -183,7 +183,7 @@ class OfflineBooksPage extends ConsumerWidget {
           TextButton(
             onPressed: () async {
               final offlineServiceAsync = ref.read(offlineServiceProvider);
-              await offlineServiceAsync.whenData((service) async {
+              offlineServiceAsync.whenData((service) async {
                 await service.clearAllOfflineContent();
               });
               if (context.mounted) {

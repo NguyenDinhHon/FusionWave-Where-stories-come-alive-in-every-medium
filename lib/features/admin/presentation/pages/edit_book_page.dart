@@ -338,7 +338,7 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
                             
                             // Category
                             DropdownButtonFormField<String>(
-                              value: _selectedCategory,
+                              initialValue: _selectedCategory,
                               decoration: const InputDecoration(
                                 labelText: 'Thể loại',
                                 border: OutlineInputBorder(),

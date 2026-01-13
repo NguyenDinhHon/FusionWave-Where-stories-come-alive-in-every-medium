@@ -85,7 +85,7 @@ class ReadingProgressInfo extends StatelessWidget {
                     Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
                     const SizedBox(width: 4),
                     Text(
-                      '${timeRemainingMinutes} min left',
+                      '$timeRemainingMinutes min left',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],

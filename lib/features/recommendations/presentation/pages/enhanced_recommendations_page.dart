@@ -446,7 +446,7 @@ class EnhancedRecommendationsPage extends ConsumerWidget {
                                           const Icon(Icons.star, size: 14, color: Colors.amber),
                                           const SizedBox(width: 4),
                                           Text(
-                                            '${books[index].averageRating!.toStringAsFixed(1)}',
+                                            books[index].averageRating!.toStringAsFixed(1),
                                             style: const TextStyle(fontSize: 12),
                                           ),
                                         ],

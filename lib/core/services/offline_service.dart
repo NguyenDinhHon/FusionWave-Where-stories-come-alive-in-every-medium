@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/utils/logger.dart';
@@ -119,11 +120,48 @@ class OfflineService {
     required String bookId,
     required String imageUrl,
   }) async {
+    HttpClient client = HttpClient();
     try {
-      // TODO: Download và cache image từ URL
-      AppLogger.info('Book cover cached: $bookId');
+      final bookDir = Directory('${offlineDir.path}/$bookId');
+      if (!await bookDir.exists()) {
+        await bookDir.create(recursive: true);
+      }
+
+      final uri = Uri.parse(imageUrl);
+      final request = await client.getUrl(uri);
+      final response = await request.close();
+
+      if (response.statusCode != 200) {
+        AppLogger.error('Failed to download cover: HTTP ${response.statusCode}');
+        return;
+      }
+
+      // Collect bytes
+      final bytes = <int>[];
+      await for (var chunk in response) {
+        bytes.addAll(chunk);
+      }
+
+      // Determine extension from content-type
+      String ext = 'jpg';
+      final contentType = response.headers.contentType?.mimeType;
+      if (contentType != null) {
+        if (contentType.contains('png')) {
+          ext = 'png';
+        } else if (contentType.contains('webp')) ext = 'webp';
+        else if (contentType.contains('jpeg') || contentType.contains('jpg')) ext = 'jpg';
+      }
+
+      final file = File('${bookDir.path}/cover.$ext');
+      await file.writeAsBytes(Uint8List.fromList(bytes));
+
+      AppLogger.info('Book cover cached: $bookId -> ${file.path}');
     } catch (e) {
       AppLogger.error('Cache book cover error', error: e);
+    } finally {
+      try {
+        client.close(force: true);
+      } catch (_) {}
     }
   }
   

@@ -118,7 +118,7 @@ class _AdvancedSearchDialogState extends State<AdvancedSearchDialog> {
 
             // Category Filter
             DropdownButtonFormField<String>(
-              value: _selectedCategory,
+              initialValue: _selectedCategory,
               decoration: const InputDecoration(
                 labelText: 'Thể loại',
                 border: OutlineInputBorder(),

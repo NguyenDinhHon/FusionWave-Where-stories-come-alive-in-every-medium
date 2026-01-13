@@ -26,8 +26,8 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
   DateTime? _dateFrom;
   DateTime? _dateTo;
   bool _isGridView = false;
-  Set<String> _selectedBookIds = {};
-  bool _isSelectionMode = false;
+  final Set<String> _selectedBookIds = {};
+  final bool _isSelectionMode = false;
 
   @override
   Widget build(BuildContext context) {

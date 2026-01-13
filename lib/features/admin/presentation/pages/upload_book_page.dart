@@ -276,7 +276,7 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
                         
                         // Category
                         DropdownButtonFormField<String>(
-                          value: _selectedCategory,
+                          initialValue: _selectedCategory,
                           decoration: const InputDecoration(
                             labelText: 'Thể loại',
                             border: OutlineInputBorder(),

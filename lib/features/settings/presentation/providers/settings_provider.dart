@@ -27,7 +27,7 @@ class ThemeNotifier extends Notifier<String> {
   Future<void> setTheme(String theme) async {
     state = theme;
     final prefsAsync = ref.read(preferencesServiceProvider);
-    await prefsAsync.whenData((service) async {
+    prefsAsync.whenData((service) async {
       await service.setTheme(theme);
     });
   }
@@ -51,7 +51,7 @@ class ReadingModeNotifier extends Notifier<String> {
   Future<void> setReadingMode(String mode) async {
     state = mode;
     final prefsAsync = ref.read(preferencesServiceProvider);
-    await prefsAsync.whenData((service) async {
+    prefsAsync.whenData((service) async {
       await service.setReadingMode(mode);
     });
   }
@@ -68,55 +68,55 @@ class SettingsController {
   SettingsController(this._prefsService);
   
   Future<void> setTheme(String theme) async {
-    await _prefsService.whenData((service) async {
+    _prefsService.whenData((service) async {
       await service.setTheme(theme);
     });
   }
   
   Future<void> setReadingMode(String mode) async {
-    await _prefsService.whenData((service) async {
+    _prefsService.whenData((service) async {
       await service.setReadingMode(mode);
     });
   }
   
   Future<void> setFontSize(double size) async {
-    await _prefsService.whenData((service) async {
+    _prefsService.whenData((service) async {
       await service.setFontSize(size);
     });
   }
   
   Future<void> setLineHeight(double height) async {
-    await _prefsService.whenData((service) async {
+    _prefsService.whenData((service) async {
       await service.setLineHeight(height);
     });
   }
   
   Future<void> setOfflineMode(bool enabled) async {
-    await _prefsService.whenData((service) async {
+    _prefsService.whenData((service) async {
       await service.setOfflineMode(enabled);
     });
   }
   
   Future<void> setNotificationsEnabled(bool enabled) async {
-    await _prefsService.whenData((service) async {
+    _prefsService.whenData((service) async {
       await service.setNotificationsEnabled(enabled);
     });
   }
   
   Future<void> setDailyReminder(bool enabled) async {
-    await _prefsService.whenData((service) async {
+    _prefsService.whenData((service) async {
       await service.setDailyReminder(enabled);
     });
   }
   
   Future<void> setChildMode(bool enabled) async {
-    await _prefsService.whenData((service) async {
+    _prefsService.whenData((service) async {
       await service.setChildMode(enabled);
     });
   }
   
   Future<void> setReadingGoal(int minutes) async {
-    await _prefsService.whenData((service) async {
+    _prefsService.whenData((service) async {
       await service.setReadingGoal(minutes);
     });
   }

@@ -72,7 +72,7 @@ class ReadingGoalsNotifier extends Notifier<ReadingGoalsState> {
   
   Future<void> setDailyGoal(int minutes) async {
     final prefsAsync = ref.read(preferencesServiceProvider);
-    await prefsAsync.whenData((prefs) async {
+    prefsAsync.whenData((prefs) async {
       await prefs.setReadingGoal(minutes);
       state = state.copyWith(dailyGoalMinutes: minutes);
       AppLogger.info('Daily reading goal set to: $minutes minutes');

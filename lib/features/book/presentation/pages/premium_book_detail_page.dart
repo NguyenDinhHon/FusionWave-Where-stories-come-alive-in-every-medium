@@ -154,9 +154,61 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
                   size: 32,
                   onPressed: () async {
                     if (isDownloaded) {
-                      await offlineService.removeDownloadedBook(book.id);
+                      try {
+                        await offlineService.removeDownloadedBook(book.id);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Removed from offline')),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Remove failed: $e')),
+                          );
+                        }
+                      }
                     } else {
-                      await offlineService.downloadBook(book.id);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Starting download...')),
+                        );
+                      }
+
+                      try {
+                        // Fetch chapters and cache them
+                        final chapters = await ref.read(chaptersByBookIdProvider(book.id).future);
+                        for (final chapter in chapters) {
+                          await offlineService.cacheChapter(
+                            bookId: book.id,
+                            chapterId: chapter.id,
+                            content: chapter.content,
+                          );
+                        }
+
+                        // Cache cover if available
+                        if (book.coverImageUrl != null && book.coverImageUrl!.isNotEmpty) {
+                          await offlineService.cacheBookCover(
+                            bookId: book.id,
+                            imageUrl: book.coverImageUrl!,
+                          );
+                        }
+
+                        // Mark metadata
+                        await offlineService.downloadBook(book.id);
+
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Book downloaded for offline')),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Download failed: $e')),
+                          );
+                        }
+                      }
                     }
                   },
                   tooltip: isDownloaded ? 'Remove from offline' : 'Download for offline',
@@ -316,6 +368,7 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
         PremiumButton(
           label: 'Read Now',
           icon: Icons.book,
+
           isOutlined: true,
           color: AppColors.primary,
           onPressed: () => context.push('/reading/${book.id}'),
@@ -464,8 +517,9 @@ class _PremiumBookDetailPageState extends ConsumerState<PremiumBookDetailPage> {
                 return PremiumButton(
                   label: 'Rate this book',
                   icon: Icons.star_outline,
-                  isOutlined: true,
-                  color: AppColors.primary,
+                  gradient: LinearGradient(
+                    colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
+                  ),
                   onPressed: () {
                     _showRatingDialog(context, ref, book);
                   },

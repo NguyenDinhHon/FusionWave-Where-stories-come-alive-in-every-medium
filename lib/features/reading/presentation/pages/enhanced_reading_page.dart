@@ -36,10 +36,10 @@ class _EnhancedReadingPageState extends ConsumerState<EnhancedReadingPage> {
   BookModel? _book;
   double _fontSize = 16.0;
   double _lineHeight = 1.6;
-  double _margin = 16.0;
+  final double _margin = 16.0;
   String _theme = AppConstants.themeLight;
   String _readingMode = AppConstants.readingModeScroll;
-  bool _showProgress = true;
+  final bool _showProgress = true;
   bool _showAudioPlayer = false;
   final ScrollController _scrollController = ScrollController();
   
@@ -62,7 +62,7 @@ class _EnhancedReadingPageState extends ConsumerState<EnhancedReadingPage> {
   
   Future<void> _loadSettings() async {
     final prefsAsync = ref.read(preferencesServiceProvider);
-    await prefsAsync.whenData((prefs) {
+    prefsAsync.whenData((prefs) {
       setState(() {
         _fontSize = prefs.getFontSize();
         _lineHeight = prefs.getLineHeight();
@@ -244,7 +244,7 @@ class _EnhancedReadingPageState extends ConsumerState<EnhancedReadingPage> {
             ),
             if (_book != null)
               Text(
-                '${_currentChapterNumber} / ${_book!.totalChapters}',
+                '$_currentChapterNumber / ${_book!.totalChapters}',
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey[400],

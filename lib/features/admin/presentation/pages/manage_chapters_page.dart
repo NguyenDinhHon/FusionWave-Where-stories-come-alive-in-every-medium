@@ -31,7 +31,7 @@ class ManageChaptersPage extends ConsumerStatefulWidget {
 }
 
 class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
-  Set<String> _selectedChapterIds = {};
+  final Set<String> _selectedChapterIds = {};
   bool _isSelectionMode = false;
 
   @override

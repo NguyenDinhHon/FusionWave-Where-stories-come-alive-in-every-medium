@@ -44,11 +44,11 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> {
   BookModel? _book;
   double _fontSize = 16.0;
   double _lineHeight = 1.6;
-  double _margin = 16.0;
+  final double _margin = 16.0;
   String _theme = AppConstants.themeLight;
   String _readingMode = AppConstants.readingModeScroll;
   bool _showControls = false;
-  bool _showAudioPlayer = false;
+  final bool _showAudioPlayer = false;
   final ScrollController _scrollController = ScrollController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int? _timeRemainingMinutes;
@@ -205,7 +205,7 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> {
   
   Future<void> _loadSettings() async {
     final prefsAsync = ref.read(preferencesServiceProvider);
-    await prefsAsync.whenData((prefs) {
+    prefsAsync.whenData((prefs) {
       setState(() {
         _fontSize = prefs.getFontSize();
         _lineHeight = prefs.getLineHeight();
@@ -373,6 +373,9 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> {
   @override
   Widget build(BuildContext context) {
     final bookAsync = ref.watch(bookByIdProvider(widget.bookId));
+    // Ensure scroll content has enough bottom padding so in-content
+    // navigation buttons are not obscured by bottom overlays/controls.
+    final double contentBottomPadding = MediaQuery.of(context).padding.bottom + 120.0;
     
     return Scaffold(
       key: _scaffoldKey,
@@ -410,7 +413,7 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> {
             ),
             if (_book != null)
               Text(
-                'Chapter ${_currentChapterNumber} of ${_book!.totalChapters}',
+                'Chapter $_currentChapterNumber of ${_book!.totalChapters}',
                 style: TextStyle(
                   fontSize: 12,
                   color: _getTextColor().withOpacity(0.7),
@@ -473,10 +476,27 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> {
             : null,
       ),
       body: GestureDetector(
+        // Keep tap as a quick toggle, but prefer swipe gestures:
         onTap: () {
           setState(() {
             _showControls = !_showControls;
           });
+        },
+        // Swipe up to show controls, swipe down to hide them.
+        onVerticalDragEnd: (details) {
+          final velocity = details.primaryVelocity ?? 0.0;
+          const threshold = 300.0; // tune as needed
+          if (velocity < -threshold) {
+            // swiped up
+            setState(() {
+              _showControls = true;
+            });
+          } else if (velocity > threshold) {
+            // swiped down
+            setState(() {
+              _showControls = false;
+            });
+          }
         },
         child: Stack(
           children: [
@@ -515,7 +535,7 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> {
                           },
                           child: SingleChildScrollView(
                             controller: _scrollController,
-                            padding: EdgeInsets.all(_margin),
+                            padding: EdgeInsets.fromLTRB(_margin, _margin, _margin, contentBottomPadding),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -553,7 +573,7 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> {
                                   ],
                                 ),
                               ),
-                              const SizedBox(height: 32),
+                              SizedBox(height: MediaQuery.of(context).padding.bottom + 64),
                               
                               // Chapter content với premium typography và inline comments
                               Builder(
@@ -618,29 +638,35 @@ class _PremiumReadingPageState extends ConsumerState<PremiumReadingPage> {
                               
                               const SizedBox(height: 48),
                               
-                              // Chapter navigation buttons
+                              // Chapter navigation buttons (equal size, white text)
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  PremiumButton(
-                                    label: 'Previous',
-                                    icon: Icons.arrow_back,
-                                    isOutlined: true,
-                                    color: _getTextColor().withOpacity(0.1) == Colors.white
-                                        ? Colors.blue
-                                        : _getTextColor(),
-                                    onPressed: _currentChapterNumber > 1 ? _loadPreviousChapter : null,
-                                  ),
-                                  PremiumButton(
-                                    label: 'Next',
-                                    icon: Icons.arrow_forward,
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.blue,
-                                        Colors.blue.withOpacity(0.8),
-                                      ],
+                                  Expanded(
+                                    child: PremiumButton(
+                                      label: 'Previous',
+                                      icon: Icons.arrow_back,
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Colors.blue,
+                                          Colors.blue.withOpacity(0.8),
+                                        ],
+                                      ),
+                                      onPressed: _currentChapterNumber > 1 ? _loadPreviousChapter : null,
                                     ),
-                                    onPressed: _loadNextChapter,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: PremiumButton(
+                                      label: 'Next',
+                                      icon: Icons.arrow_forward,
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Colors.blue,
+                                          Colors.blue.withOpacity(0.8),
+                                        ],
+                                      ),
+                                      onPressed: _loadNextChapter,
+                                    ),
                                   ),
                                 ],
                               ),

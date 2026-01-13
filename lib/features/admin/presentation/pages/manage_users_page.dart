@@ -353,7 +353,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
             Text('Email: ${user['email']}'),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: user['role'] ?? AppConstants.roleUser,
+              initialValue: user['role'] ?? AppConstants.roleUser,
               decoration: const InputDecoration(
                 labelText: 'Role',
                 border: OutlineInputBorder(),

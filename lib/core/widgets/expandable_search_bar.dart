@@ -118,7 +118,7 @@ class _ExpandableSearchBarState extends ConsumerState<ExpandableSearchBar>
 
   Future<void> _loadSearchHistory() async {
     final prefsAsync = ref.read(preferencesServiceProvider);
-    await prefsAsync.whenData((prefs) async {
+    prefsAsync.whenData((prefs) async {
       final history = await prefs.getSearchHistory();
       if (mounted) {
         setState(() {
@@ -191,7 +191,7 @@ class _ExpandableSearchBarState extends ConsumerState<ExpandableSearchBar>
     try {
       // Lưu vào lịch sử
       final prefsAsync = ref.read(preferencesServiceProvider);
-      await prefsAsync.whenData((prefs) async {
+      prefsAsync.whenData((prefs) async {
         await prefs.addToSearchHistory(searchQuery);
       });
 

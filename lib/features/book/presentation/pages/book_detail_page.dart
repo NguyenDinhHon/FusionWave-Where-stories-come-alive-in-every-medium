@@ -235,12 +235,17 @@ class BookDetailPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+                Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Rate this book',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(160, 40),
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Rate this book', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
                 averageRatingAsync.when(
                   data: (rating) => rating != null
