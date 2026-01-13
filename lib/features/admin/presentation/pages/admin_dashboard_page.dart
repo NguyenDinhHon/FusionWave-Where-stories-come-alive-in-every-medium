@@ -235,6 +235,24 @@ class AdminDashboardPage extends ConsumerWidget {
               ),
               _buildActionButton(
                 context,
+                label: 'Quản Lý Comments',
+                icon: Icons.comment,
+                onPressed: () => context.push('/admin/manage-comments'),
+              ),
+              _buildActionButton(
+                context,
+                label: 'Quản Lý Categories',
+                icon: Icons.category,
+                onPressed: () => context.push('/admin/manage-categories'),
+              ),
+              _buildActionButton(
+                context,
+                label: 'System Settings',
+                icon: Icons.settings,
+                onPressed: () => context.push('/admin/system-settings'),
+              ),
+              _buildActionButton(
+                context,
                 label: 'Seed Data',
                 icon: Icons.storage,
                 onPressed: () => context.push('/admin/seed-data'),

@@ -25,6 +25,9 @@ import '../../features/admin/presentation/pages/manage_chapters_page.dart';
 import '../../features/admin/presentation/pages/edit_book_page.dart';
 import '../../features/admin/presentation/pages/edit_chapter_page.dart';
 import '../../features/admin/presentation/pages/manage_users_page.dart';
+import '../../features/admin/presentation/pages/manage_comments_page.dart';
+import '../../features/admin/presentation/pages/manage_categories_page.dart';
+import '../../features/admin/presentation/pages/system_settings_page.dart';
 import '../../features/auth/presentation/pages/email_link_verify_page.dart';
 import '../../features/bookmark/presentation/pages/bookmarks_page.dart';
 import '../../features/notes/presentation/pages/notes_page.dart';
@@ -397,6 +400,33 @@ class AppRouter {
         redirect: (context, state) => _adminGuard(context, state),
         pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
           child: const ManageUsersPage(),
+          name: state.name,
+        ),
+      ),
+      GoRoute(
+        path: '/admin/manage-comments',
+        name: 'manage-comments',
+        redirect: (context, state) => _adminGuard(context, state),
+        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+          child: const ManageCommentsPage(),
+          name: state.name,
+        ),
+      ),
+      GoRoute(
+        path: '/admin/manage-categories',
+        name: 'manage-categories',
+        redirect: (context, state) => _adminGuard(context, state),
+        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+          child: const ManageCategoriesPage(),
+          name: state.name,
+        ),
+      ),
+      GoRoute(
+        path: '/admin/system-settings',
+        name: 'system-settings',
+        redirect: (context, state) => _adminGuard(context, state),
+        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+          child: const SystemSettingsPage(),
           name: state.name,
         ),
       ),
