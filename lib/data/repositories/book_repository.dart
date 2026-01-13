@@ -391,20 +391,46 @@ class BookRepository {
     DateTime? dateTo,
   }) async {
     try {
-      Query query = _firestore
-          .collection(AppConstants.booksCollection)
-          .orderBy('createdAt', descending: true)
-          .limit(limit);
+      // For admin, we need to get all books (published and unpublished)
+      // Try with orderBy first, fallback to without orderBy if index is missing
+      Query query;
+      try {
+        query = _firestore
+            .collection(AppConstants.booksCollection)
+            .orderBy('createdAt', descending: true)
+            .limit(limit * 3); // Get more to sort and filter in memory
 
-      if (startAfter != null) {
-        query = query.startAfterDocument(startAfter);
+        if (startAfter != null) {
+          query = query.startAfterDocument(startAfter);
+        }
+      } catch (e) {
+        // If orderBy fails (missing index), get all and sort in memory
+        AppLogger.warning('OrderBy failed, fetching without orderBy', e);
+        query = _firestore
+            .collection(AppConstants.booksCollection)
+            .limit(limit * 3); // Get more to sort and filter in memory
       }
 
       final snapshot = await query.get();
+      AppLogger.info('Fetched ${snapshot.docs.length} documents from Firestore');
 
       List<BookModel> books = snapshot.docs
-          .map((doc) => BookModel.fromFirestore(doc))
+          .map((doc) {
+            try {
+              return BookModel.fromFirestore(doc);
+            } catch (e, stackTrace) {
+              AppLogger.error('Error parsing book ${doc.id}', error: e, stackTrace: stackTrace);
+              return null;
+            }
+          })
+          .where((book) => book != null)
+          .cast<BookModel>()
           .toList();
+
+      AppLogger.info('Parsed ${books.length} books from ${snapshot.docs.length} documents');
+
+      // Sort by createdAt descending if not already sorted
+      books.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
       // Filter by search query if provided
       if (searchQuery != null && searchQuery.isNotEmpty) {
@@ -446,6 +472,10 @@ class BookRepository {
         }).toList();
       }
 
+      // Limit after all filtering
+      books = books.take(limit).toList();
+      
+      AppLogger.info('Returning ${books.length} books after filtering');
       return books;
     } catch (e) {
       AppLogger.error('Get all books error', error: e);

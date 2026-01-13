@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+// import 'package:google_sign_in/google_sign_in.dart'; // Disabled until API is updated for 7.2.0
 import '../../core/services/firebase_service.dart';
 import '../../core/constants/app_constants.dart';
 import '../models/user_model.dart';
@@ -107,103 +107,13 @@ class AuthRepository {
   }
   
   // Sign in with Google
+  // Note: GoogleSignIn API for version 7.2.0 has changed and needs to be updated
+  // when the correct API usage is confirmed from the package documentation
   Future<UserModel> signInWithGoogle() async {
-    try {
-      // For web platform, we need to get clientId from firebase_options
-      // For other platforms, clientId is not required
-      final GoogleSignIn googleSignIn = GoogleSignIn(
-        // Web client ID is set via meta tag in web/index.html
-        // For other platforms, this is not needed
-      );
-      
-      // Trigger the authentication flow
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      
-      if (googleUser == null) {
-        // User cancelled the sign-in
-        throw Exception('Google sign in was cancelled');
-      }
-      
-      // Obtain the auth details from the request
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      
-      // Create a new credential
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-      
-      // Sign in to Firebase with the Google credential
-      final userCredential = await _auth.signInWithCredential(credential);
-      
-      if (userCredential.user == null) {
-        throw Exception('User credential is null');
-      }
-      
-      final user = userCredential.user!;
-      
-      // Check if user document exists in Firestore
-      final userDoc = await _firestore
-          .collection(AppConstants.usersCollection)
-          .doc(user.uid)
-          .get();
-      
-      UserModel userModel;
-      
-      if (!userDoc.exists) {
-        // Create new user document
-        userModel = UserModel(
-          id: user.uid,
-          email: user.email ?? '',
-          displayName: user.displayName ?? 'User',
-          photoUrl: user.photoURL,
-          role: AppConstants.roleUser,
-          createdAt: DateTime.now(),
-          lastLoginAt: DateTime.now(),
-        );
-        
-        await _firestore
-            .collection(AppConstants.usersCollection)
-            .doc(user.uid)
-            .set(userModel.toFirestore());
-        
-        AppLogger.info('New Google user registered: ${user.email}');
-      } else {
-        // Update last login
-        await _updateLastLogin(user.uid);
-        
-        // Get existing user data
-        userModel = UserModel.fromFirestore(userDoc);
-        
-        // Update photo URL if changed
-        if (user.photoURL != null && userModel.photoUrl != user.photoURL) {
-          await _firestore
-              .collection(AppConstants.usersCollection)
-              .doc(user.uid)
-              .update({'photoUrl': user.photoURL});
-          userModel = userModel.copyWith(photoUrl: user.photoURL);
-        }
-        
-        AppLogger.info('Google user signed in: ${user.email}');
-      }
-      
-      // Get FCM token and update
-      final fcmToken = await _firebaseService.getFCMToken();
-      if (fcmToken != null) {
-        await _firestore
-            .collection(AppConstants.usersCollection)
-            .doc(user.uid)
-            .update({'fcmToken': fcmToken});
-      }
-      
-      return userModel;
-    } on FirebaseAuthException catch (e) {
-      AppLogger.error('Google sign in failed', error: e);
-      throw _handleAuthException(e);
-    } catch (e) {
-      AppLogger.error('Google sign in error', error: e);
-      rethrow;
-    }
+    throw UnimplementedError(
+      'Google Sign In needs to be updated for google_sign_in 7.2.0. '
+      'Please check the package documentation for the correct API usage.',
+    );
   }
   
   // Sign out

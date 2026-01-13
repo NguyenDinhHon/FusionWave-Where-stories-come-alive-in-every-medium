@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/interactive_button.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
 import '../../../../core/widgets/empty_state.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/services/firebase_service.dart';
+import '../../../../core/services/export_service.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../data/models/user_model.dart';
 
 /// Provider for all users
 final allUsersProvider = FutureProvider<List<Map<String, dynamic>>>((
@@ -37,7 +40,7 @@ final allUsersProvider = FutureProvider<List<Map<String, dynamic>>>((
   }).toList();
 });
 
-/// Trang quản lý users
+/// Trang quản lý users - Mobile optimized
 class ManageUsersPage extends ConsumerStatefulWidget {
   const ManageUsersPage({super.key});
 
@@ -48,69 +51,72 @@ class ManageUsersPage extends ConsumerStatefulWidget {
 class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
   String _searchQuery = '';
   String? _roleFilter;
-  bool _isGridView = false;
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = ResponsiveUtils.isMobile(context);
+    final padding = ResponsiveUtils.pagePadding(context);
     final usersAsync = ref.watch(allUsersProvider);
 
     return Column(
-        children: [
-          // Header with search, filter, view toggle
-          Container(
-            color: Theme.of(context).cardColor,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Quản Lý Users',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimaryLight,
-                  ),
-                ),
-                Row(
+      children: [
+        // Header - Responsive
+        Container(
+          color: Theme.of(context).cardColor,
+          padding: EdgeInsets.all(padding),
+          child: isMobile
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Search
-                    SizedBox(
-                      width: 200,
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: 'Tìm kiếm...',
-                          prefixIcon: const Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                    Text(
+                      'Quản Lý Users',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white, // White text
                           ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _searchQuery = value;
-                          });
-                        },
-                      ),
                     ),
-                    const SizedBox(width: 8),
-                    // Role Filter
-                    DropdownButton<String>(
-                      value: _roleFilter,
-                      hint: const Text('Role'),
+                    const SizedBox(height: 12),
+                    TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Tìm kiếm email, tên...',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[100],
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          _searchQuery = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: _roleFilter,
+                      decoration: InputDecoration(
+                        labelText: 'Lọc theo Role',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[100],
+                      ),
+                      style: const TextStyle(color: Colors.black87),
+                      dropdownColor: Colors.white,
                       items: const [
                         DropdownMenuItem(
                           value: null,
-                          child: Text('All Roles'),
+                          child: Text('Tất cả', style: TextStyle(color: Colors.black87)),
                         ),
                         DropdownMenuItem(
                           value: AppConstants.roleUser,
-                          child: Text(AppConstants.roleUser),
+                          child: Text(AppConstants.roleUser, style: TextStyle(color: Colors.black87)),
                         ),
                         DropdownMenuItem(
                           value: AppConstants.roleAdmin,
-                          child: Text(AppConstants.roleAdmin),
+                          child: Text(AppConstants.roleAdmin, style: TextStyle(color: Colors.black87)),
                         ),
                       ],
                       onChanged: (value) {
@@ -119,103 +125,175 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                         });
                       },
                     ),
-                    const SizedBox(width: 8),
-                    // View toggle
-                    InteractiveButton(
-                      icon: _isGridView ? Icons.view_list : Icons.grid_view,
-                      onPressed: () {
-                        setState(() {
-                          _isGridView = !_isGridView;
-                        });
-                      },
-                      tooltip: _isGridView ? 'List view' : 'Grid view',
-                      isIconButton: true,
-                      iconColor: AppColors.iconLight,
-                    ),
                   ],
-                ),
-              ],
-            ),
-          ),
-          // Users list
-          Expanded(
-            child: usersAsync.when(
-              data: (users) {
-                // Filter users
-                var filteredUsers = users;
-                if (_searchQuery.isNotEmpty) {
-                  final query = _searchQuery.toLowerCase();
-                  filteredUsers = filteredUsers.where((user) {
-                    return (user['email'] as String).toLowerCase().contains(
-                          query,
-                        ) ||
-                        (user['displayName'] as String).toLowerCase().contains(
-                          query,
-                        );
-                  }).toList();
-                }
-                if (_roleFilter != null) {
-                  filteredUsers = filteredUsers
-                      .where((user) => user['role'] == _roleFilter)
-                      .toList();
-                }
-
-                if (filteredUsers.isEmpty) {
-                  return EmptyState(
-                    title: 'Không tìm thấy users',
-                    message: _searchQuery.isNotEmpty || _roleFilter != null
-                        ? 'Thử thay đổi bộ lọc'
-                        : 'Chưa có users nào',
-                    icon: Icons.people_outline,
-                  );
-                }
-
-                return _isGridView
-                    ? _buildGridView(filteredUsers)
-                    : _buildListView(filteredUsers);
-              },
-              loading: () => ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: 5,
-                itemBuilder: (context, index) => const ShimmerListItem(),
-              ),
-              error: (error, stack) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.red,
+                    Text(
+                      'Quản Lý Users',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white, // White text
+                          ),
                     ),
-                    const SizedBox(height: 16),
-                    Text('Error: $error'),
-                    const SizedBox(height: 16),
-                    InteractiveButton(
-                      label: 'Retry',
-                      icon: Icons.refresh,
-                      onPressed: () => ref.invalidate(allUsersProvider),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 250,
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText: 'Tìm kiếm...',
+                              prefixIcon: const Icon(Icons.search),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                _searchQuery = value;
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        PopupMenuButton<String>(
+                          icon: const Icon(Icons.file_download, color: Colors.white),
+                          color: Colors.white,
+                          onSelected: (value) => _exportUsers(value, usersAsync.value ?? []),
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(value: 'csv', child: Text('Export CSV')),
+                          ],
+                        ),
+                        const SizedBox(width: 12),
+                        DropdownButton<String>(
+                          value: _roleFilter,
+                          hint: const Text('Role', style: TextStyle(color: Colors.black87)),
+                          style: const TextStyle(color: Colors.black87),
+                          dropdownColor: Colors.white,
+                          items: const [
+                            DropdownMenuItem(
+                              value: null,
+                              child: Text('All Roles', style: TextStyle(color: Colors.black87)),
+                            ),
+                            DropdownMenuItem(
+                              value: AppConstants.roleUser,
+                              child: Text(AppConstants.roleUser, style: TextStyle(color: Colors.black87)),
+                            ),
+                            DropdownMenuItem(
+                              value: AppConstants.roleAdmin,
+                              child: Text(AppConstants.roleAdmin, style: TextStyle(color: Colors.black87)),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              _roleFilter = value;
+                            });
+                          },
+                        ),
+                      ],
                     ),
                   ],
                 ),
+        ),
+        // Users list
+        Expanded(
+          child: usersAsync.when(
+            data: (users) {
+              // Filter users
+              var filteredUsers = users;
+              if (_searchQuery.isNotEmpty) {
+                final query = _searchQuery.toLowerCase();
+                filteredUsers = filteredUsers.where((user) {
+                  return (user['email'] as String).toLowerCase().contains(
+                        query,
+                      ) ||
+                      (user['displayName'] as String).toLowerCase().contains(
+                        query,
+                      );
+                }).toList();
+              }
+              if (_roleFilter != null) {
+                filteredUsers = filteredUsers
+                    .where((user) => user['role'] == _roleFilter)
+                    .toList();
+              }
+
+              if (filteredUsers.isEmpty) {
+                return EmptyState(
+                  title: 'Không tìm thấy users',
+                  message: _searchQuery.isNotEmpty || _roleFilter != null
+                      ? 'Thử thay đổi bộ lọc'
+                      : 'Chưa có users nào',
+                  icon: Icons.people_outline,
+                );
+              }
+
+              return _buildListView(filteredUsers, isMobile);
+            },
+            loading: () => ListView.builder(
+              padding: EdgeInsets.all(padding),
+              itemCount: 5,
+              itemBuilder: (context, index) => const ShimmerListItem(),
+            ),
+            error: (error, stack) => Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.red,
+                  ),
+                  const SizedBox(height: 16),
+                  Text('Error: $error'),
+                  const SizedBox(height: 16),
+                  InteractiveButton(
+                    label: 'Retry',
+                    icon: Icons.refresh,
+                    onPressed: () => ref.invalidate(allUsersProvider),
+                  ),
+                ],
               ),
             ),
           ),
-        ],
-      );
+        ),
+      ],
+    );
   }
 
-  Widget _buildListView(List<Map<String, dynamic>> users) {
+  Widget _buildListView(
+    List<Map<String, dynamic>> users,
+    bool isMobile,
+  ) {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(ResponsiveUtils.pagePadding(context)),
       itemCount: users.length,
       itemBuilder: (context, index) {
         final user = users[index];
         return AppCard(
           margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            leading: CircleAvatar(
-              radius: 24,
+          child: isMobile
+              ? _buildMobileUserCard(user)
+              : _buildDesktopUserCard(user),
+        );
+      },
+    );
+  }
+
+  Widget _buildMobileUserCard(Map<String, dynamic> user) {
+    return InkWell(
+      onTap: () => _showUserActionsBottomSheet(context, ref, user),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 28,
               backgroundImage: user['photoUrl'] != null
                   ? NetworkImage(user['photoUrl'])
                   : null,
@@ -224,190 +302,267 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                       (user['displayName'] as String).isNotEmpty
                           ? (user['displayName'] as String)[0].toUpperCase()
                           : 'U',
+                      style: const TextStyle(fontSize: 20),
                     )
                   : null,
             ),
-            title: Text(
-              user['displayName'] ?? 'Unknown',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(user['email'] ?? ''),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: user['role'] == AppConstants.roleAdmin
-                            ? Colors.red.withValues(alpha: 0.1)
-                            : Colors.blue.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        user['role'] ?? AppConstants.roleUser,
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: user['role'] == AppConstants.roleAdmin
-                              ? Colors.red
-                              : Colors.blue,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    user['displayName'] ?? 'Unknown',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
-                    if (user['isBanned'] == true) ...[
-                      const SizedBox(width: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: const Text(
-                          'BANNED',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    user['email'] ?? '',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.white70, // White text
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    children: [
+                      _buildRoleBadge(user['role']),
+                      if (user['isBanned'] == true)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'BANNED',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
                     ],
-                  ],
-                ),
-              ],
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (user['isBanned'] == true)
-                  InteractiveButton(
-                    icon: Icons.check_circle,
-                    onPressed: () {
-                      _unbanUser(context, ref, user);
-                    },
-                    isIconButton: true,
-                    iconColor: Colors.green,
-                    tooltip: 'Unban User',
                   ),
-                if (user['isBanned'] != true)
-                  InteractiveButton(
-                    icon: Icons.block,
-                    onPressed: () {
-                      _showBanDialog(context, ref, user);
-                    },
-                    isIconButton: true,
-                    iconColor: Colors.orange,
-                    tooltip: 'Ban User',
-                  ),
-                const SizedBox(width: 8),
-                InteractiveButton(
-                  icon: Icons.edit,
-                  onPressed: () {
-                    _showEditUserDialog(context, ref, user);
-                  },
-                  isIconButton: true,
-                  iconColor: AppColors.primary,
-                ),
-                const SizedBox(width: 8),
-                InteractiveButton(
-                  icon: Icons.delete,
-                  onPressed: () {
-                    _showDeleteConfirmation(context, ref, user);
-                  },
-                  isIconButton: true,
-                  iconColor: Colors.red,
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        );
-      },
+            const Icon(Icons.chevron_right, color: Colors.white70), // White icon
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildGridView(List<Map<String, dynamic>> users) {
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 0.8,
+  Widget _buildDesktopUserCard(Map<String, dynamic> user) {
+    return ListTile(
+      leading: CircleAvatar(
+        radius: 24,
+        backgroundImage: user['photoUrl'] != null
+            ? NetworkImage(user['photoUrl'])
+            : null,
+        child: user['photoUrl'] == null
+            ? Text(
+                (user['displayName'] as String).isNotEmpty
+                    ? (user['displayName'] as String)[0].toUpperCase()
+                    : 'U',
+              )
+            : null,
       ),
-      itemCount: users.length,
-      itemBuilder: (context, index) {
-        final user = users[index];
-        return AppCard(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+      title: Text(
+        user['displayName'] ?? 'Unknown',
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(user['email'] ?? ''),
+          const SizedBox(height: 4),
+          Row(
             children: [
-              CircleAvatar(
-                radius: 40,
-                backgroundImage: user['photoUrl'] != null
-                    ? NetworkImage(user['photoUrl'])
-                    : null,
-                child: user['photoUrl'] == null
-                    ? Text(
-                        (user['displayName'] as String).isNotEmpty
-                            ? (user['displayName'] as String)[0].toUpperCase()
-                            : 'U',
-                        style: const TextStyle(fontSize: 32),
-                      )
-                    : null,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                user['displayName'] ?? 'Unknown',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                user['email'] ?? '',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondaryLight,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: user['role'] == AppConstants.roleAdmin
-                      ? Colors.red.withValues(alpha: 0.1)
-                      : Colors.blue.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  user['role'] ?? AppConstants.roleUser,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: user['role'] == AppConstants.roleAdmin
-                        ? Colors.red
-                        : Colors.blue,
-                    fontWeight: FontWeight.bold,
+              _buildRoleBadge(user['role']),
+              if (user['isBanned'] == true) ...[
+                const SizedBox(width: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text(
+                    'BANNED',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              ),
+              ],
             ],
           ),
-        );
-      },
+        ],
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (user['isBanned'] == true)
+            IconButton(
+              icon: const Icon(Icons.check_circle, color: Colors.green),
+              onPressed: () => _unbanUser(context, ref, user),
+              tooltip: 'Unban User',
+            ),
+          if (user['isBanned'] != true)
+            IconButton(
+              icon: const Icon(Icons.block, color: Colors.orange),
+              onPressed: () => _showBanDialog(context, ref, user),
+              tooltip: 'Ban User',
+            ),
+          IconButton(
+            icon: const Icon(Icons.edit, color: AppColors.primary),
+            onPressed: () => _showEditUserDialog(context, ref, user),
+            tooltip: 'Edit User',
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            onPressed: () => _showDeleteConfirmation(context, ref, user),
+            tooltip: 'Delete User',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRoleBadge(String? role) {
+    final isAdmin = role == AppConstants.roleAdmin;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: isAdmin
+            ? Colors.red.withValues(alpha: 0.1)
+            : Colors.blue.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        role ?? AppConstants.roleUser,
+        style: TextStyle(
+          fontSize: 10,
+          color: isAdmin ? Colors.red : Colors.blue,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  void _showUserActionsBottomSheet(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, dynamic> user,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundImage: user['photoUrl'] != null
+                        ? NetworkImage(user['photoUrl'])
+                        : null,
+                    child: user['photoUrl'] == null
+                        ? Text(
+                            (user['displayName'] as String).isNotEmpty
+                                ? (user['displayName'] as String)[0]
+                                    .toUpperCase()
+                                : 'U',
+                            style: const TextStyle(fontSize: 24),
+                          )
+                        : null,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user['displayName'] ?? 'Unknown',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text(
+                          user['email'] ?? '',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.white70, // White text
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.edit, color: AppColors.primary),
+              title: const Text('Chỉnh sửa Role'),
+              onTap: () {
+                Navigator.pop(context);
+                _showEditUserDialog(context, ref, user);
+              },
+            ),
+            if (user['isBanned'] == true)
+              ListTile(
+                leading: const Icon(Icons.check_circle, color: Colors.green),
+                title: const Text('Gỡ Ban'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _unbanUser(context, ref, user);
+                },
+              ),
+            if (user['isBanned'] != true)
+              ListTile(
+                leading: const Icon(Icons.block, color: Colors.orange),
+                title: const Text('Ban User'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showBanDialog(context, ref, user);
+                },
+              ),
+            ListTile(
+              leading: const Icon(Icons.delete, color: Colors.red),
+              title: const Text('Xóa User'),
+              onTap: () {
+                Navigator.pop(context);
+                _showDeleteConfirmation(context, ref, user);
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
     );
   }
 
@@ -416,77 +571,83 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
     WidgetRef ref,
     Map<String, dynamic> user,
   ) {
-    final roleController = TextEditingController(
-      text: user['role'] ?? AppConstants.roleUser,
-    );
+    String? selectedRole = user['role'] ?? AppConstants.roleUser;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Chỉnh Sửa User'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Email: ${user['email']}'),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              // ignore: deprecated_member_use
-              value: user['role'] ?? AppConstants.roleUser,
-              decoration: const InputDecoration(
-                labelText: 'Role',
-                border: OutlineInputBorder(),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Chỉnh Sửa User'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Email: ${user['email']}'),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                initialValue: selectedRole,
+                decoration: const InputDecoration(
+                  labelText: 'Role',
+                  border: OutlineInputBorder(),
+                ),
+                style: const TextStyle(color: Colors.black87),
+                dropdownColor: Colors.white,
+                items: const [
+                  DropdownMenuItem(
+                    value: AppConstants.roleUser,
+                    child: Text(AppConstants.roleUser, style: TextStyle(color: Colors.black87)),
+                  ),
+                  DropdownMenuItem(
+                    value: AppConstants.roleAdmin,
+                    child: Text(AppConstants.roleAdmin, style: TextStyle(color: Colors.black87)),
+                  ),
+                ],
+                onChanged: (value) {
+                  setDialogState(() {
+                    selectedRole = value;
+                  });
+                },
               ),
-              items: const [
-                DropdownMenuItem(
-                  value: AppConstants.roleUser,
-                  child: Text(AppConstants.roleUser),
-                ),
-                DropdownMenuItem(
-                  value: AppConstants.roleAdmin,
-                  child: Text(AppConstants.roleAdmin),
-                ),
-              ],
-              onChanged: (value) {
-                if (value != null) {
-                  roleController.text = value;
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Hủy'),
+            ),
+            TextButton(
+              onPressed: () async {
+                try {
+                  final firestore = FirebaseService().firestore;
+                  await firestore
+                      .collection(AppConstants.usersCollection)
+                      .doc(user['id'])
+                      .update({'role': selectedRole});
+                  ref.invalidate(allUsersProvider);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Đã cập nhật role thành công'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Lỗi: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
                 }
               },
+              child: const Text('Lưu'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy'),
-          ),
-          TextButton(
-            onPressed: () async {
-              try {
-                final firestore = FirebaseService().firestore;
-                await firestore
-                    .collection(AppConstants.usersCollection)
-                    .doc(user['id'])
-                    .update({'role': roleController.text});
-                ref.invalidate(allUsersProvider);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Đã cập nhật role thành công'),
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
-                }
-              }
-            },
-            child: const Text('Lưu'),
-          ),
-        ],
       ),
     );
   }
@@ -518,14 +679,20 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                 if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đã xóa user thành công')),
+                    const SnackBar(
+                      content: Text('Đã xóa user thành công'),
+                      backgroundColor: Colors.green,
+                    ),
                   );
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Lỗi: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
                 }
               }
             },
@@ -558,7 +725,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                 Text('Ban user: ${user['email']}'),
                 const SizedBox(height: 16),
                 CheckboxListTile(
-                  title: const Text('Permanent Ban'),
+                  title: const Text('Ban Vĩnh Viễn'),
                   value: isPermanent,
                   onChanged: (value) {
                     setDialogState(() {
@@ -587,8 +754,8 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                     },
                     child: Text(
                       bannedUntil == null
-                          ? 'Select Ban End Date'
-                          : 'Until: ${bannedUntil!.toString().split(' ')[0]}',
+                          ? 'Chọn ngày hết hạn ban'
+                          : 'Đến: ${bannedUntil!.toString().split(' ')[0]}',
                     ),
                   ),
                 ],
@@ -596,9 +763,8 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                 TextField(
                   controller: reasonController,
                   decoration: const InputDecoration(
-                    labelText: 'Ban Reason',
+                    labelText: 'Lý do ban',
                     border: OutlineInputBorder(),
-                    hintText: 'Enter reason for ban...',
                   ),
                   maxLines: 3,
                 ),
@@ -608,29 +774,10 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: const Text('Hủy'),
             ),
             TextButton(
               onPressed: () async {
-                if (reasonController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please enter a ban reason'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                  return;
-                }
-                if (!isPermanent && bannedUntil == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please select ban end date'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                  return;
-                }
-
                 try {
                   final firestore = FirebaseService().firestore;
                   await firestore
@@ -638,20 +785,15 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                       .doc(user['id'])
                       .update({
                     'isBanned': true,
-                    'bannedUntil': isPermanent
-                        ? null
-                        : (bannedUntil != null
-                            ? Timestamp.fromDate(bannedUntil!)
-                            : null),
                     'banReason': reasonController.text,
-                    'bannedAt': Timestamp.now(),
+                    'bannedUntil': bannedUntil?.toIso8601String(),
                   });
                   ref.invalidate(allUsersProvider);
                   if (context.mounted) {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('User banned successfully'),
+                        content: Text('Đã ban user thành công'),
                         backgroundColor: Colors.green,
                       ),
                     );
@@ -660,7 +802,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Error: $e'),
+                        content: Text('Lỗi: $e'),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -675,27 +817,23 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
     );
   }
 
-  Future<void> _unbanUser(
+  void _unbanUser(
     BuildContext context,
     WidgetRef ref,
     Map<String, dynamic> user,
   ) async {
     try {
       final firestore = FirebaseService().firestore;
-      await firestore
-          .collection(AppConstants.usersCollection)
-          .doc(user['id'])
-          .update({
+      await firestore.collection(AppConstants.usersCollection).doc(user['id']).update({
         'isBanned': false,
-        'bannedUntil': null,
         'banReason': null,
-        'bannedAt': null,
+        'bannedUntil': null,
       });
       ref.invalidate(allUsersProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('User unbanned successfully'),
+            content: Text('Đã gỡ ban user thành công'),
             backgroundColor: Colors.green,
           ),
         );
@@ -704,9 +842,44 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text('Lỗi: $e'),
             backgroundColor: Colors.red,
           ),
+        );
+      }
+    }
+  }
+
+  Future<void> _exportUsers(String format, List<Map<String, dynamic>> usersData) async {
+    try {
+      final exportService = ExportService();
+      
+      // Convert Map to UserModel list
+      final users = usersData.map((userData) {
+        return UserModel(
+          id: userData['id'] ?? '',
+          email: userData['email'] ?? '',
+          displayName: userData['displayName'],
+          photoUrl: userData['photoUrl'],
+          role: userData['role'] ?? AppConstants.roleUser,
+          createdAt: (userData['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          lastLoginAt: (userData['lastLoginAt'] as Timestamp?)?.toDate(),
+          readingStreak: 0, // Not available in userData
+        );
+      }).toList();
+
+      if (format == 'csv') {
+        await exportService.exportUsersToCSV(users);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Đã export users thành công')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi khi export: $e')),
         );
       }
     }

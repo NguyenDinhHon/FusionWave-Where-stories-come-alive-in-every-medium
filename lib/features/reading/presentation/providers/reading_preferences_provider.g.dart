@@ -1,13 +1,20 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
 part of 'reading_preferences_provider.dart';
 
+// **************************************************************************
+// RiverpodGenerator
+// **************************************************************************
+
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(ReadingPreferencesNotifier)
-const readingPreferencesProvider = ReadingPreferencesNotifierProvider._();
+final readingPreferencesProvider = ReadingPreferencesNotifierProvider._();
 
 final class ReadingPreferencesNotifierProvider
     extends $NotifierProvider<ReadingPreferencesNotifier, ReadingPreferences> {
-  const ReadingPreferencesNotifierProvider._()
+  ReadingPreferencesNotifierProvider._()
     : super(
         from: null,
         argument: null,
@@ -43,7 +50,6 @@ abstract class _$ReadingPreferencesNotifier
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<ReadingPreferences, ReadingPreferences>;
     final element =
         ref.element
@@ -53,6 +59,6 @@ abstract class _$ReadingPreferencesNotifier
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }

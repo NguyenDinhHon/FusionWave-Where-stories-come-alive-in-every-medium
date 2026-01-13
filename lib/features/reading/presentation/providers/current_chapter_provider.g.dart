@@ -10,11 +10,11 @@ part of 'current_chapter_provider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(ChaptersList)
-const chaptersListProvider = ChaptersListProvider._();
+final chaptersListProvider = ChaptersListProvider._();
 
 final class ChaptersListProvider
     extends $NotifierProvider<ChaptersList, List<Chapter>> {
-  const ChaptersListProvider._()
+  ChaptersListProvider._()
     : super(
         from: null,
         argument: null,
@@ -48,7 +48,6 @@ abstract class _$ChaptersList extends $Notifier<List<Chapter>> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<List<Chapter>, List<Chapter>>;
     final element =
         ref.element
@@ -58,16 +57,16 @@ abstract class _$ChaptersList extends $Notifier<List<Chapter>> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(CurrentChapter)
-const currentChapterProvider = CurrentChapterProvider._();
+final currentChapterProvider = CurrentChapterProvider._();
 
 final class CurrentChapterProvider
     extends $NotifierProvider<CurrentChapter, Chapter?> {
-  const CurrentChapterProvider._()
+  CurrentChapterProvider._()
     : super(
         from: null,
         argument: null,
@@ -101,7 +100,6 @@ abstract class _$CurrentChapter extends $Notifier<Chapter?> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<Chapter?, Chapter?>;
     final element =
         ref.element
@@ -111,16 +109,16 @@ abstract class _$CurrentChapter extends $Notifier<Chapter?> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(ChapterNavigation)
-const chapterNavigationProvider = ChapterNavigationProvider._();
+final chapterNavigationProvider = ChapterNavigationProvider._();
 
 final class ChapterNavigationProvider
     extends $NotifierProvider<ChapterNavigation, int> {
-  const ChapterNavigationProvider._()
+  ChapterNavigationProvider._()
     : super(
         from: null,
         argument: null,
@@ -154,7 +152,6 @@ abstract class _$ChapterNavigation extends $Notifier<int> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<int, int>;
     final element =
         ref.element
@@ -164,6 +161,6 @@ abstract class _$ChapterNavigation extends $Notifier<int> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }

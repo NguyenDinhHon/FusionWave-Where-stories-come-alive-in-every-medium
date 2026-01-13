@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +10,7 @@ import '../../../../core/widgets/interactive_button.dart';
 import '../../../../data/models/book_model.dart';
 import '../../../home/presentation/providers/book_provider.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'manage_categories_page.dart'; // For categoriesProvider
 
 /// Trang chỉnh sửa sách
 class EditBookPage extends ConsumerStatefulWidget {
@@ -24,8 +25,12 @@ class EditBookPage extends ConsumerStatefulWidget {
 class _EditBookPageState extends ConsumerState<EditBookPage> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
+  late TextEditingController _subtitleController;
   late TextEditingController _authorController;
   late TextEditingController _descriptionController;
+  late TextEditingController _tagsController;
+  late TextEditingController _audioUrlController;
+  late TextEditingController _videoUrlController;
 
   String? _selectedCategory;
   double? _rating;
@@ -33,58 +38,83 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
   bool _isPublished = false;
   bool _isSaving = false;
   String? _currentCoverUrl;
-
-  final List<String> _categories = [
-    'Fiction',
-    'Non-Fiction',
-    'Science',
-    'History',
-    'Romance',
-    'Mystery',
-    'Fantasy',
-    'Biography',
-    'Thriller',
-    'Horror',
-  ];
+  List<String> _tags = [];
+  bool _dataLoaded = false;
 
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController();
+    _subtitleController = TextEditingController();
     _authorController = TextEditingController();
     _descriptionController = TextEditingController();
+    _tagsController = TextEditingController();
+    _audioUrlController = TextEditingController();
+    _videoUrlController = TextEditingController();
     _loadBookData();
   }
 
   Future<void> _loadBookData() async {
-    final bookAsync = ref.read(bookByIdProvider(widget.bookId));
-    final book = await bookAsync.when(
-      data: (book) => Future.value(book),
-      loading: () => Future.value(null),
-      error: (_, _) => Future.value(null),
-    );
-
-    if (book != null && mounted) {
-      setState(() {
-        _titleController.text = book.title;
-        _authorController.text = book.authors.join(', ');
-        _descriptionController.text = book.description ?? '';
-        _selectedCategory = book.categories.isNotEmpty
-            ? book.categories.first
-            : null;
-        _rating = book.averageRating;
-        _isPublished = book.isPublished;
-        _currentCoverUrl = book.coverImageUrl;
-      });
+    try {
+      final book = await ref.read(bookByIdProvider(widget.bookId).future);
+      
+      if (book != null && mounted) {
+        setState(() {
+          _titleController.text = book.title;
+          _subtitleController.text = book.subtitle ?? '';
+          _authorController.text = book.authors.join(', ');
+          _descriptionController.text = book.description ?? '';
+          _tags = List<String>.from(book.tags);
+          _tagsController.text = _tags.join(', ');
+          _audioUrlController.text = book.audioUrl ?? '';
+          _videoUrlController.text = book.videoUrl ?? '';
+          _selectedCategory = book.categories.isNotEmpty
+              ? book.categories.first
+              : null;
+          _rating = book.averageRating;
+          _isPublished = book.isPublished;
+          _currentCoverUrl = book.coverImageUrl;
+        });
+      }
+    } catch (e) {
+      // Handle error silently, will show in UI via AsyncValue
+      debugPrint('Error loading book data: $e');
     }
   }
 
   @override
   void dispose() {
     _titleController.dispose();
+    _subtitleController.dispose();
     _authorController.dispose();
     _descriptionController.dispose();
+    _tagsController.dispose();
+    _audioUrlController.dispose();
+    _videoUrlController.dispose();
     super.dispose();
+  }
+
+  // Validate URL format
+  String? _validateUrl(String? value, String fieldName) {
+    if (value == null || value.isEmpty) return null;
+    final uri = Uri.tryParse(value);
+    if (uri == null || !uri.hasScheme || (!uri.hasScheme || (uri.scheme != 'http' && uri.scheme != 'https'))) {
+      return 'Vui lòng nhập URL hợp lệ (bắt đầu với http:// hoặc https://)';
+    }
+    return null;
+  }
+
+  // Validate rating
+  String? _validateRating(String? value) {
+    if (value == null || value.isEmpty) return null;
+    final rating = double.tryParse(value);
+    if (rating == null) {
+      return 'Vui lòng nhập số hợp lệ';
+    }
+    if (rating < 0 || rating > 5) {
+      return 'Đánh giá phải từ 0 đến 5';
+    }
+    return null;
   }
 
   Future<void> _pickCoverImage() async {
@@ -109,6 +139,52 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
     } catch (e) {
       return null;
     }
+  }
+
+  Widget _buildCategoryDropdown() {
+    final categoriesAsync = ref.watch(categoriesProvider);
+    
+    return categoriesAsync.when(
+      data: (categories) {
+        // Ensure no duplicates and sort
+        final allCategories = categories.toSet().toList()..sort();
+        
+        // Ensure selected category exists in items, otherwise set to null
+        final validSelectedCategory = _selectedCategory != null && 
+            allCategories.contains(_selectedCategory) 
+            ? _selectedCategory 
+            : null;
+        
+        return DropdownButtonFormField<String>(
+          initialValue: validSelectedCategory,
+          decoration: const InputDecoration(
+            labelText: 'Thể loại',
+            border: OutlineInputBorder(),
+          ),
+          style: const TextStyle(color: Colors.black87),
+          dropdownColor: Colors.white,
+          items: allCategories.map((category) {
+            return DropdownMenuItem<String>(
+              value: category,
+              child: Text(category, style: const TextStyle(color: Colors.black87)),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedCategory = value;
+            });
+          },
+        );
+      },
+      loading: () => const SizedBox(
+        height: 56,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, _) => const SizedBox(
+        height: 56,
+        child: Center(child: Icon(Icons.error)),
+      ),
+    );
   }
 
   Future<void> _saveBook() async {
@@ -147,17 +223,35 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
           ? [_selectedCategory!]
           : <String>[];
 
+      // Parse tags
+      final tags = _tagsController.text
+          .split(',')
+          .map((t) => t.trim())
+          .where((t) => t.isNotEmpty)
+          .toSet() // Remove duplicates
+          .toList();
+
       final updatedBook = BookModel(
         id: currentBook.id,
         title: _titleController.text.trim(),
+        subtitle: _subtitleController.text.trim().isEmpty
+            ? null
+            : _subtitleController.text.trim(),
         authors: authors,
         description: _descriptionController.text.trim().isEmpty
             ? null
             : _descriptionController.text.trim(),
         coverImageUrl: coverImageUrl,
         categories: categories,
+        tags: tags,
         totalPages: currentBook.totalPages,
         totalChapters: currentBook.totalChapters,
+        audioUrl: _audioUrlController.text.trim().isEmpty
+            ? null
+            : _audioUrlController.text.trim(),
+        videoUrl: _videoUrlController.text.trim().isEmpty
+            ? null
+            : _videoUrlController.text.trim(),
         averageRating: _rating ?? currentBook.averageRating,
         totalRatings: currentBook.totalRatings,
         totalReads: currentBook.totalReads,
@@ -165,6 +259,7 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
         updatedAt: DateTime.now(),
         isPublished: _isPublished,
         language: currentBook.language,
+        editorId: currentBook.editorId,
         estimatedReadingTimeMinutes: currentBook.estimatedReadingTimeMinutes,
       );
 
@@ -203,6 +298,31 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
         data: (book) {
           if (book == null) {
             return const Center(child: Text('Book not found'));
+          }
+
+          // Populate controllers when data is available (only once)
+          if (!_dataLoaded) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                setState(() {
+                  _titleController.text = book.title;
+                  _subtitleController.text = book.subtitle ?? '';
+                  _authorController.text = book.authors.join(', ');
+                  _descriptionController.text = book.description ?? '';
+                  _tags = List<String>.from(book.tags);
+                  _tagsController.text = _tags.join(', ');
+                  _audioUrlController.text = book.audioUrl ?? '';
+                  _videoUrlController.text = book.videoUrl ?? '';
+                  _selectedCategory = book.categories.isNotEmpty
+                      ? book.categories.first
+                      : null;
+                  _rating = book.averageRating;
+                  _isPublished = book.isPublished;
+                  _currentCoverUrl = book.coverImageUrl;
+                  _dataLoaded = true;
+                });
+              }
+            });
           }
 
           return SingleChildScrollView(
@@ -318,6 +438,17 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
                             ),
                             const SizedBox(height: 16),
 
+                            // Subtitle
+                            TextFormField(
+                              controller: _subtitleController,
+                              decoration: const InputDecoration(
+                                labelText: 'Phụ đề',
+                                border: OutlineInputBorder(),
+                                hintText: 'Nhập phụ đề của sách (tùy chọn)',
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
                             // Author
                             TextFormField(
                               controller: _authorController,
@@ -349,25 +480,46 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
                             const SizedBox(height: 16),
 
                             // Category
-                            DropdownButtonFormField<String>(
-                              // ignore: deprecated_member_use
-                              value: _selectedCategory,
+                            _buildCategoryDropdown(),
+                            const SizedBox(height: 16),
+
+                            // Tags
+                            TextFormField(
+                              controller: _tagsController,
                               decoration: const InputDecoration(
-                                labelText: 'Thể loại',
+                                labelText: 'Tags',
                                 border: OutlineInputBorder(),
+                                hintText: 'Nhập tags, cách nhau bởi dấu phẩy',
+                                helperText: 'Ví dụ: fiction, adventure, romance',
                               ),
-                              items: _categories.map((category) {
-                                return DropdownMenuItem(
-                                  value: category,
-                                  child: Text(category),
-                                );
-                              }).toList(),
                               onChanged: (value) {
                                 setState(() {
-                                  _selectedCategory = value;
+                                  _tags = value
+                                      .split(',')
+                                      .map((t) => t.trim())
+                                      .where((t) => t.isNotEmpty)
+                                      .toList();
                                 });
                               },
                             ),
+                            if (_tags.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: _tags.map((tag) {
+                                  return Chip(
+                                    label: Text(tag),
+                                    onDeleted: () {
+                                      setState(() {
+                                        _tags.remove(tag);
+                                        _tagsController.text = _tags.join(', ');
+                                      });
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+                            ],
                             const SizedBox(height: 16),
 
                             // Rating
@@ -378,11 +530,40 @@ class _EditBookPageState extends ConsumerState<EditBookPage> {
                                 border: OutlineInputBorder(),
                               ),
                               keyboardType: TextInputType.number,
+                              validator: _validateRating,
                               onChanged: (value) {
                                 setState(() {
                                   _rating = double.tryParse(value);
                                 });
                               },
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Audio URL
+                            TextFormField(
+                              controller: _audioUrlController,
+                              decoration: const InputDecoration(
+                                labelText: 'Audio URL',
+                                border: OutlineInputBorder(),
+                                hintText: 'https://example.com/audio.mp3',
+                                prefixIcon: Icon(Icons.audiotrack),
+                              ),
+                              keyboardType: TextInputType.url,
+                              validator: (value) => _validateUrl(value, 'Audio URL'),
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Video URL
+                            TextFormField(
+                              controller: _videoUrlController,
+                              decoration: const InputDecoration(
+                                labelText: 'Video URL',
+                                border: OutlineInputBorder(),
+                                hintText: 'https://example.com/video.mp4',
+                                prefixIcon: Icon(Icons.video_library),
+                              ),
+                              keyboardType: TextInputType.url,
+                              validator: (value) => _validateUrl(value, 'Video URL'),
                             ),
                             const SizedBox(height: 16),
 

@@ -20,8 +20,13 @@ class UploadBookPage extends ConsumerStatefulWidget {
 class _UploadBookPageState extends ConsumerState<UploadBookPage> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
+  final _subtitleController = TextEditingController();
   final _authorController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _tagsController = TextEditingController();
+  final _coverImageUrlController = TextEditingController();
+  final _audioUrlController = TextEditingController();
+  final _videoUrlController = TextEditingController();
 
   String? _selectedCategory;
   double? _rating;
@@ -29,6 +34,8 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
   File? _bookFile;
   bool _isUploading = false;
   String _uploadStatus = '';
+  bool _useImageUrl = false; // Toggle between URL and file upload
+  List<String> _tags = [];
 
   final List<String> _categories = [
     'Fiction',
@@ -46,9 +53,37 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
   @override
   void dispose() {
     _titleController.dispose();
+    _subtitleController.dispose();
     _authorController.dispose();
     _descriptionController.dispose();
+    _tagsController.dispose();
+    _coverImageUrlController.dispose();
+    _audioUrlController.dispose();
+    _videoUrlController.dispose();
     super.dispose();
+  }
+
+  // Validate URL format
+  String? _validateUrl(String? value, String fieldName) {
+    if (value == null || value.isEmpty) return null;
+    final uri = Uri.tryParse(value);
+    if (uri == null || !uri.hasScheme || (uri.scheme != 'http' && uri.scheme != 'https')) {
+      return 'Vui lòng nhập URL hợp lệ (bắt đầu với http:// hoặc https://)';
+    }
+    return null;
+  }
+
+  // Validate rating
+  String? _validateRating(String? value) {
+    if (value == null || value.isEmpty) return null;
+    final rating = double.tryParse(value);
+    if (rating == null) {
+      return 'Vui lòng nhập số hợp lệ';
+    }
+    if (rating < 0 || rating > 5) {
+      return 'Đánh giá phải từ 0 đến 5';
+    }
+    return null;
   }
 
   Future<void> _pickCoverImage() async {
@@ -109,15 +144,30 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
           ? [_selectedCategory!]
           : <String>[];
 
+      // Parse tags
+      final tags = _tagsController.text
+          .split(',')
+          .map((t) => t.trim())
+          .where((t) => t.isNotEmpty)
+          .toSet() // Remove duplicates
+          .toList();
+
       final book = await uploadService.uploadBook(
         title: _titleController.text.trim(),
+        subtitle: _subtitleController.text.trim().isEmpty
+            ? null
+            : _subtitleController.text.trim(),
         authors: authors,
         description: _descriptionController.text.trim().isEmpty
             ? null
             : _descriptionController.text.trim(),
-        coverImage: _coverImage,
+        coverImage: _useImageUrl ? null : _coverImage,
+        coverImageUrl: _useImageUrl && _coverImageUrlController.text.trim().isNotEmpty
+            ? _coverImageUrlController.text.trim()
+            : null,
         bookFile: _bookFile,
         categories: categories,
+        tags: tags,
         rating: _rating,
         language: 'vi',
       );
@@ -166,9 +216,10 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
                   // Header
                   Row(
                     children: [
-                      InteractiveIconButton(
+                      InteractiveButton(
                         icon: Icons.arrow_back,
                         onPressed: () => context.pop(),
+                        isIconButton: true,
                         iconColor: AppColors.iconLight,
                       ),
                       const SizedBox(width: 16),
@@ -199,43 +250,94 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
                               ),
                         ),
                         const SizedBox(height: 12),
-                        GestureDetector(
-                          onTap: _pickCoverImage,
-                          child: Container(
-                            width: 200,
-                            height: 300,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.grey[300]!),
+                        // Toggle between URL and file upload
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ChoiceChip(
+                                label: const Text('Nhập URL'),
+                                selected: _useImageUrl,
+                                onSelected: (selected) {
+                                  setState(() {
+                                    _useImageUrl = selected;
+                                    if (selected) {
+                                      _coverImage = null;
+                                    } else {
+                                      _coverImageUrlController.clear();
+                                    }
+                                  });
+                                },
+                              ),
                             ),
-                            child: _coverImage != null
-                                ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.file(
-                                      _coverImage!,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  )
-                                : Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.add_photo_alternate,
-                                        size: 48,
-                                        color: Colors.grey[400],
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        'Chọn ảnh bìa',
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                          ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: ChoiceChip(
+                                label: const Text('Upload File'),
+                                selected: !_useImageUrl,
+                                onSelected: (selected) {
+                                  setState(() {
+                                    _useImageUrl = !selected;
+                                    if (selected) {
+                                      _coverImageUrlController.clear();
+                                    } else {
+                                      _coverImage = null;
+                                    }
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
                         ),
+                        const SizedBox(height: 12),
+                        if (_useImageUrl)
+                          TextFormField(
+                            controller: _coverImageUrlController,
+                            decoration: const InputDecoration(
+                              labelText: 'URL ảnh bìa',
+                              hintText: 'https://example.com/image.jpg',
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.link),
+                            ),
+                            keyboardType: TextInputType.url,
+                          )
+                        else
+                          GestureDetector(
+                            onTap: _pickCoverImage,
+                            child: Container(
+                              width: 200,
+                              height: 300,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey[300]!),
+                              ),
+                              child: _coverImage != null
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Image.file(
+                                        _coverImage!,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    )
+                                  : Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.add_photo_alternate,
+                                          size: 48,
+                                          color: Colors.grey[400],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Chọn ảnh bìa',
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                            ),
+                          ),
                         const SizedBox(height: 32),
 
                         // Title
@@ -251,6 +353,17 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
                             }
                             return null;
                           },
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Subtitle
+                        TextFormField(
+                          controller: _subtitleController,
+                          decoration: const InputDecoration(
+                            labelText: 'Phụ đề',
+                            border: OutlineInputBorder(),
+                            hintText: 'Nhập phụ đề của sách (tùy chọn)',
+                          ),
                         ),
                         const SizedBox(height: 16),
 
@@ -306,6 +419,45 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
                         ),
                         const SizedBox(height: 16),
 
+                        // Tags
+                        TextFormField(
+                          controller: _tagsController,
+                          decoration: const InputDecoration(
+                            labelText: 'Tags',
+                            border: OutlineInputBorder(),
+                            hintText: 'Nhập tags, cách nhau bởi dấu phẩy',
+                            helperText: 'Ví dụ: fiction, adventure, romance',
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _tags = value
+                                  .split(',')
+                                  .map((t) => t.trim())
+                                  .where((t) => t.isNotEmpty)
+                                  .toList();
+                            });
+                          },
+                        ),
+                        if (_tags.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: _tags.map((tag) {
+                              return Chip(
+                                label: Text(tag),
+                                onDeleted: () {
+                                  setState(() {
+                                    _tags.remove(tag);
+                                    _tagsController.text = _tags.join(', ');
+                                  });
+                                },
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+
                         // Rating
                         TextFormField(
                           decoration: const InputDecoration(
@@ -313,11 +465,40 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
                             border: OutlineInputBorder(),
                           ),
                           keyboardType: TextInputType.number,
+                          validator: _validateRating,
                           onChanged: (value) {
                             setState(() {
                               _rating = double.tryParse(value);
                             });
                           },
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Audio URL
+                        TextFormField(
+                          controller: _audioUrlController,
+                          decoration: const InputDecoration(
+                            labelText: 'Audio URL',
+                            border: OutlineInputBorder(),
+                            hintText: 'https://example.com/audio.mp3',
+                            prefixIcon: Icon(Icons.audiotrack),
+                          ),
+                          keyboardType: TextInputType.url,
+                          validator: (value) => _validateUrl(value, 'Audio URL'),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Video URL
+                        TextFormField(
+                          controller: _videoUrlController,
+                          decoration: const InputDecoration(
+                            labelText: 'Video URL',
+                            border: OutlineInputBorder(),
+                            hintText: 'https://example.com/video.mp4',
+                            prefixIcon: Icon(Icons.video_library),
+                          ),
+                          keyboardType: TextInputType.url,
+                          validator: (value) => _validateUrl(value, 'Video URL'),
                         ),
                         const SizedBox(height: 32),
 

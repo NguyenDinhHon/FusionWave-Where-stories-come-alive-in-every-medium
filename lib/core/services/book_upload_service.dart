@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../data/models/book_model.dart';
 import '../../data/models/chapter_model.dart';
 import '../constants/app_constants.dart';
@@ -10,15 +11,21 @@ import '../utils/logger.dart';
 class BookUploadService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  
+  // Get current user ID for editorId
+  String? get _currentUserId => FirebaseAuth.instance.currentUser?.uid;
 
   /// Upload book với file và metadata
   Future<BookModel> uploadBook({
     required String title,
+    String? subtitle,
     required List<String> authors,
     String? description,
     File? coverImage,
+    String? coverImageUrl,
     File? bookFile,
     List<String>? categories,
+    List<String>? tags,
     double? rating,
     String? language,
   }) async {
@@ -26,10 +33,10 @@ class BookUploadService {
       final bookId = _firestore.collection(AppConstants.booksCollection).doc().id;
       final now = DateTime.now();
 
-      // Upload cover image
-      String? coverImageUrl;
-      if (coverImage != null) {
-        coverImageUrl = await _uploadCoverImage(bookId, coverImage);
+      // Get cover image URL - either from upload or from URL parameter
+      String? finalCoverImageUrl = coverImageUrl;
+      if (finalCoverImageUrl == null && coverImage != null) {
+        finalCoverImageUrl = await _uploadCoverImage(bookId, coverImage);
       }
 
       // Parse book file và tạo chapters
@@ -41,27 +48,39 @@ class BookUploadService {
         totalPages = result['totalPages'] as int;
       }
 
-      // Tạo book document
+      // Tạo book document với tất cả các field cần thiết, khớp với database
       final book = BookModel(
         id: bookId,
         title: title,
+        subtitle: subtitle, // Optional subtitle
         authors: authors,
         description: description,
-        coverImageUrl: coverImageUrl,
+        coverImageUrl: finalCoverImageUrl,
         categories: categories ?? [],
+        tags: tags ?? [], // Tags from parameter or empty
         totalPages: totalPages,
         totalChapters: chapters.length,
+        audioUrl: null, // Optional, not set during upload
+        videoUrl: null, // Optional, not set during upload
         averageRating: rating,
+        totalRatings: 0, // Initialize to 0
+        totalReads: 0, // Initialize to 0
         createdAt: now,
         updatedAt: now,
+        editorId: _currentUserId, // Set current user as editor
         isPublished: false, // Draft by default
         language: language ?? 'vi',
+        estimatedReadingTimeMinutes: totalPages > 0 
+            ? (totalPages * 2).round() // Estimate 2 minutes per page
+            : null,
       );
 
+      // Save book to Firestore using toFirestore() to ensure correct format
+      final bookData = book.toFirestore();
       await _firestore
           .collection(AppConstants.booksCollection)
           .doc(bookId)
-          .set(book.toFirestore());
+          .set(bookData);
 
       // Upload chapters
       for (final chapter in chapters) {

@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_guard_provider.dart';
+import '../../features/auth/presentation/providers/auth_provider.dart';
+import '../constants/app_constants.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
@@ -21,11 +23,15 @@ import '../../features/admin/presentation/pages/comprehensive_seed_data_page.dar
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 import '../../features/admin/presentation/pages/upload_book_page.dart';
 import '../../features/admin/presentation/pages/manage_books_page.dart';
-import '../../features/admin/presentation/pages/manage_chapters_page.dart';
 import '../../features/admin/presentation/pages/edit_book_page.dart';
 import '../../features/admin/presentation/pages/edit_chapter_page.dart';
 import '../../features/admin/presentation/pages/manage_users_page.dart';
 import '../../features/admin/presentation/pages/manage_comments_page.dart';
+import '../../features/admin/presentation/pages/manage_ratings_page.dart';
+import '../../features/admin/presentation/pages/manage_bookmarks_page.dart';
+import '../../features/admin/presentation/pages/manage_library_items_page.dart';
+import '../../features/admin/presentation/pages/manage_collections_page.dart';
+import '../../features/admin/presentation/pages/analytics_page.dart';
 import '../../features/admin/presentation/pages/manage_categories_page.dart';
 import '../../features/admin/presentation/pages/system_settings_page.dart';
 import '../../features/auth/presentation/pages/email_link_verify_page.dart';
@@ -73,13 +79,35 @@ class AppRouter {
 
   // Admin guard function
   static String? _adminGuard(BuildContext context, GoRouterState state) {
+    // First check Firebase Auth directly (fastest)
+    final isAuthenticated = FirebaseAuth.instance.currentUser != null;
+    
+    if (!isAuthenticated) {
+      return '/login?redirect=${Uri.encodeComponent(state.uri.toString())}';
+    }
+
     try {
       final container = ProviderScope.containerOf(context);
-      final isAdmin = container.read(isAdminProvider);
-      final isAuthenticated = container.read(isAuthenticatedProvider);
-
-      if (!isAuthenticated) {
-        return '/login?redirect=${Uri.encodeComponent(state.uri.toString())}';
+      
+      // First try to get from authController (faster, already updated after sign in)
+      bool isAdmin = false;
+      try {
+        final authState = container.read(authControllerProvider);
+        final userFromAuth = authState.value;
+        if (userFromAuth != null) {
+          isAdmin = userFromAuth.role == AppConstants.roleAdmin;
+        } else {
+          // Fallback to isAdminProvider
+          isAdmin = container.read(isAdminProvider);
+        }
+      } catch (e) {
+        // If authController not available, try isAdminProvider
+        try {
+          isAdmin = container.read(isAdminProvider);
+        } catch (e2) {
+          // If both providers not available, allow access (will be checked in AdminShellScaffold)
+          return null;
+        }
       }
 
       if (!isAdmin) {
@@ -95,12 +123,7 @@ class AppRouter {
 
       return null; // Allow access
     } catch (e) {
-      // If provider is not available, check Firebase Auth directly
-      final isAuthenticated = FirebaseAuth.instance.currentUser != null;
-      if (!isAuthenticated) {
-        return '/login?redirect=${Uri.encodeComponent(state.uri.toString())}';
-      }
-      // For now, allow access if authenticated (will be checked in page)
+      // If provider is not available, allow access if authenticated (will be checked in AdminShellScaffold)
       return null;
     }
   }
@@ -117,7 +140,19 @@ class AppRouter {
     if (isAuthenticated) {
       try {
         final container = ProviderScope.containerOf(context);
-        isAdmin = container.read(isAdminProvider);
+        // First try to get from authController (faster, already updated after sign in)
+        final authState = container.read(authControllerProvider);
+        final userFromAuth = authState.value;
+        if (userFromAuth != null) {
+          isAdmin = userFromAuth.role == AppConstants.roleAdmin;
+        } else {
+          // Fallback to isAdminProvider
+          try {
+            isAdmin = container.read(isAdminProvider);
+          } catch (e) {
+            // Provider not available yet, will be checked in route
+          }
+        }
       } catch (e) {
         // Provider not available yet, will be checked in route
       }
@@ -167,7 +202,31 @@ class AppRouter {
 
   static final GoRouter router = GoRouter(
     initialLocation: '/home',
-    redirect: _redirect,
+    redirect: (context, state) {
+      // Check if user is authenticated and admin, redirect to admin panel
+      final isAuthenticated = FirebaseAuth.instance.currentUser != null;
+      if (isAuthenticated && (state.uri.path == '/home' || state.uri.path == '/')) {
+        try {
+          final container = ProviderScope.containerOf(context);
+          // First try to get from authController (faster, already updated after sign in)
+          final authState = container.read(authControllerProvider);
+          final userFromAuth = authState.value;
+          bool isAdmin = false;
+          if (userFromAuth != null) {
+            isAdmin = userFromAuth.role == AppConstants.roleAdmin;
+          } else {
+            // Fallback to isAdminProvider
+            isAdmin = container.read(isAdminProvider);
+          }
+          if (isAdmin) {
+            return '/admin';
+          }
+        } catch (e) {
+          // Provider not ready yet, continue with normal redirect
+        }
+      }
+      return _redirect(context, state);
+    },
     routes: [
       // Auth Routes
       GoRoute(
@@ -365,24 +424,7 @@ class AppRouter {
               ),
             ],
           ),
-          // Branch 2: Manage Chapters
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/admin/manage-chapters',
-                name: 'manage-chapters',
-                redirect: (context, state) => _adminGuard(context, state),
-                pageBuilder: (context, state) {
-                  final bookId = state.uri.queryParameters['bookId'];
-                  return PageTransitions.slideFadeTransition(
-                    child: ManageChaptersPage(bookId: bookId),
-                    name: state.name,
-                  );
-                },
-              ),
-            ],
-          ),
-          // Branch 3: Manage Users
+          // Branch 2: Manage Users
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -410,7 +452,21 @@ class AppRouter {
               ),
             ],
           ),
-          // Branch 5: Manage Categories
+          // Branch 5: Manage Ratings
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/manage-ratings',
+                name: 'manage-ratings',
+                redirect: (context, state) => _adminGuard(context, state),
+                pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+                  child: const ManageRatingsPage(),
+                  name: state.name,
+                ),
+              ),
+            ],
+          ),
+          // Branch 6: Manage Categories
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -424,7 +480,63 @@ class AppRouter {
               ),
             ],
           ),
-          // Branch 6: System Settings
+          // Branch 7: Analytics
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/analytics',
+                name: 'analytics',
+                redirect: (context, state) => _adminGuard(context, state),
+                pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+                  child: const AnalyticsPage(),
+                  name: state.name,
+                ),
+              ),
+            ],
+          ),
+          // Branch 8: Manage Bookmarks
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/manage-bookmarks',
+                name: 'manage-bookmarks',
+                redirect: (context, state) => _adminGuard(context, state),
+                pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+                  child: const ManageBookmarksPage(),
+                  name: state.name,
+                ),
+              ),
+            ],
+          ),
+          // Branch 9: Manage Library Items
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/manage-library-items',
+                name: 'manage-library-items',
+                redirect: (context, state) => _adminGuard(context, state),
+                pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+                  child: const ManageLibraryItemsPage(),
+                  name: state.name,
+                ),
+              ),
+            ],
+          ),
+          // Branch 10: Manage Collections
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/manage-collections',
+                name: 'manage-collections',
+                redirect: (context, state) => _adminGuard(context, state),
+                pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+                  child: const ManageCollectionsPage(),
+                  name: state.name,
+                ),
+              ),
+            ],
+          ),
+          // Branch 11: System Settings
           StatefulShellBranch(
             routes: [
               GoRoute(
