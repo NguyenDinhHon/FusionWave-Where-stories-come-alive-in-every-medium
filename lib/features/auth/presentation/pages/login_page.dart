@@ -49,12 +49,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       
       if (!mounted) return;
       
-      // Redirect immediately based on role
-      if (user?.role == AppConstants.roleAdmin) {
-        context.go('/admin');
-      } else {
-        context.go('/home');
-      }
+      // Use post frame callback to ensure navigation happens after build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        // Redirect immediately based on role
+        if (user?.role == AppConstants.roleAdmin) {
+          context.go('/admin');
+        } else {
+          context.go('/home');
+        }
+      });
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -118,12 +122,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       
       if (!mounted) return;
       
-      // Redirect immediately based on role
-      if (user?.role == AppConstants.roleAdmin) {
-        context.go('/admin');
-      } else {
-        context.go('/home');
-      }
+      // Use post frame callback to ensure navigation happens after build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        // Redirect immediately based on role
+        if (user?.role == AppConstants.roleAdmin) {
+          context.go('/admin');
+        } else {
+          context.go('/home');
+        }
+      });
     } catch (e) {
       if (mounted) {
         final errorMessage = e.toString().replaceAll('Exception: ', '');
