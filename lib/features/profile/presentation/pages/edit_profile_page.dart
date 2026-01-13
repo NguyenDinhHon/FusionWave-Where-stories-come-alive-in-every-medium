@@ -226,14 +226,14 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 children: [
                   CircleAvatar(
                     radius: 60,
-                    backgroundColor: AppColors.primary.withOpacity(0.1),
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                     backgroundImage: _selectedImage != null
                         ? FileImage(_selectedImage!)
                         : (_currentPhotoUrl != null
                             ? NetworkImage(_currentPhotoUrl!)
                             : null) as ImageProvider?,
                     child: _selectedImage == null && _currentPhotoUrl == null
-                        ? Icon(
+                        ? const Icon(
                             Icons.person,
                             size: 60,
                             color: AppColors.primary,

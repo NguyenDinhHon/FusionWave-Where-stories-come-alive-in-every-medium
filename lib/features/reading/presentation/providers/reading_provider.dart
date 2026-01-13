@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../data/repositories/chapter_repository.dart';
 import '../../../../data/repositories/library_repository.dart';
 import '../../../../data/models/chapter_model.dart';
+import '../../../../core/utils/logger.dart';
 
 /// Chapter repository provider
 final chapterRepositoryProvider = Provider<ChapterRepository>((ref) {
@@ -16,16 +17,18 @@ final libraryRepositoryForReadingProvider = Provider<LibraryRepository>((ref) {
 /// Chapters by book ID provider
 final chaptersByBookIdProvider =
     FutureProvider.family<List<ChapterModel>, String>((ref, bookId) async {
-      print('[DEBUG] Loading chapters for bookId: $bookId');
+      AppLogger.debug('Loading chapters for bookId: $bookId');
       final repository = ref.watch(chapterRepositoryProvider);
       try {
         final chapters = await repository.getChaptersByBookId(bookId);
-        print('[DEBUG] Loaded ${chapters.length} chapters for bookId: $bookId');
+        AppLogger.debug('Loaded ${chapters.length} chapters for bookId: $bookId');
         return chapters;
       } catch (e, stack) {
-        print('[ERROR] Failed to load chapters for bookId: $bookId');
-        print('[ERROR] Error: $e');
-        print('[ERROR] Stack: $stack');
+        AppLogger.error(
+          'Failed to load chapters for bookId: $bookId',
+          error: e,
+          stackTrace: stack,
+        );
         rethrow;
       }
     });

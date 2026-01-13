@@ -46,10 +46,8 @@ class AudioPlayerService {
   // Set playlist
   Future<void> setPlaylist(List<String> urls, {int initialIndex = 0}) async {
     try {
-      final playlist = ConcatenatingAudioSource(
-        children: urls.map((url) => AudioSource.uri(Uri.parse(url))).toList(),
-      );
-      await _audioPlayer.setAudioSource(playlist, initialIndex: initialIndex);
+      final audioSources = urls.map((url) => AudioSource.uri(Uri.parse(url))).toList();
+      await _audioPlayer.setAudioSources(audioSources, initialIndex: initialIndex);
       AppLogger.info('Playlist set with ${urls.length} items');
     } catch (e) {
       AppLogger.error('Set playlist error', error: e);

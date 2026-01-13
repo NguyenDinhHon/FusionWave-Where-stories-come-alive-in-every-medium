@@ -108,10 +108,12 @@ class BookUploadService {
           totalPages = result['totalPages'] as int;
           break;
         case 'pdf':
-          // TODO: Implement PDF parsing
+          // ignore: todo
+          // TODO: Implement PDF parsing - requires pdf package
           throw UnimplementedError('PDF parsing not yet implemented');
         case 'docx':
-          // TODO: Implement DOCX parsing
+          // ignore: todo
+          // TODO: Implement DOCX parsing - requires docx package
           throw UnimplementedError('DOCX parsing not yet implemented');
         default:
           throw Exception('Unsupported file format: $extension');

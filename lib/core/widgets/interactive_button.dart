@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_shadows.dart';
 
@@ -138,7 +138,7 @@ class _InteractiveButtonState extends State<InteractiveButton>
                       ? LinearGradient(
                           colors: [
                             effectiveBackgroundColor,
-                            effectiveBackgroundColor.withOpacity(0.8),
+                            effectiveBackgroundColor.withValues(alpha: 0.8),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -168,8 +168,8 @@ class _InteractiveButtonState extends State<InteractiveButton>
                 onTapUp: isEnabled ? _handleTapUp : null,
                 onTapCancel: isEnabled ? _handleTapCancel : null,
                 borderRadius: BorderRadius.circular(widget.borderRadius),
-                splashColor: effectiveTextColor.withOpacity(0.2),
-                highlightColor: effectiveTextColor.withOpacity(0.1),
+                splashColor: effectiveTextColor.withValues(alpha: 0.2),
+                highlightColor: effectiveTextColor.withValues(alpha: 0.1),
                 child: Container(
                   alignment: Alignment.center,
                   child: widget.isLoading

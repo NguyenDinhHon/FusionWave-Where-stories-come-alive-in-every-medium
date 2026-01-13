@@ -8,7 +8,7 @@ final isAuthenticatedProvider = Provider<bool>((ref) {
   return userAsync.when(
     data: (user) => user != null,
     loading: () => false,
-    error: (_, __) => false,
+    error: (_, _) => false,
   );
 });
 
@@ -18,7 +18,7 @@ final isAdminProvider = Provider<bool>((ref) {
   return userAsync.when(
     data: (user) => user?.role == AppConstants.roleAdmin,
     loading: () => false,
-    error: (_, __) => false,
+    error: (_, _) => false,
   );
 });
 
@@ -28,6 +28,6 @@ final currentUserRoleProvider = Provider<String?>((ref) {
   return userAsync.when(
     data: (user) => user?.role,
     loading: () => null,
-    error: (_, __) => null,
+    error: (_, _) => null,
   );
 });

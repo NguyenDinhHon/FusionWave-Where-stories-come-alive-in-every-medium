@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/services/preferences_service.dart';
@@ -229,7 +229,7 @@ class _ReadingSettingsDialogState extends ConsumerState<ReadingSettingsDialog> {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const Center(child: Text('Error loading settings')),
+      error: (_, _) => const Center(child: Text('Error loading settings')),
     );
   }
 
@@ -253,7 +253,7 @@ class _ReadingSettingsDialogState extends ConsumerState<ReadingSettingsDialog> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? Theme.of(context).primaryColor.withOpacity(0.1)
+              ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
               : Colors.grey[100],
           borderRadius: BorderRadius.circular(12),
           border: Border.all(

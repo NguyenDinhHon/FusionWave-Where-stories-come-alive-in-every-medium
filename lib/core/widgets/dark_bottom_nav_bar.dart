@@ -12,7 +12,7 @@ class DarkBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.darkCard,
         border: Border(top: BorderSide(color: AppColors.darkBorder, width: 1)),
       ),

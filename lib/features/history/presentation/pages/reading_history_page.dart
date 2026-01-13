@@ -69,7 +69,7 @@ class ReadingHistoryPage extends ConsumerWidget {
             });
             
             if (allBooks.isEmpty) {
-              return EmptyState(
+              return const EmptyState(
                 title: 'No reading history',
                 message: 'Start reading books to see your history here',
                 icon: Icons.history,
@@ -117,7 +117,7 @@ class ReadingHistoryPage extends ConsumerWidget {
     return readingAsync.when(
       data: (books) {
         if (books.isEmpty) {
-          return EmptyState(
+          return const EmptyState(
             title: 'No books being read',
             message: 'Start reading a book to see it here',
             icon: Icons.menu_book,
@@ -169,7 +169,7 @@ class ReadingHistoryPage extends ConsumerWidget {
     return completedAsync.when(
       data: (books) {
         if (books.isEmpty) {
-          return EmptyState(
+          return const EmptyState(
             title: 'No completed books',
             message: 'Complete reading a book to see it here',
             icon: Icons.check_circle,
@@ -246,12 +246,12 @@ class ReadingHistoryPage extends ConsumerWidget {
                           child: Image.network(
                             book!.coverImageUrl!,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Icon(Icons.book),
+                            errorBuilder: (_, _, _) => const Icon(Icons.book),
                           ),
                         )
                       : const Icon(Icons.book),
                   loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                  error: (_, __) => const Icon(Icons.book),
+                  error: (_, _) => const Icon(Icons.book),
                 ),
               ),
               const SizedBox(width: 16),
@@ -272,7 +272,7 @@ class ReadingHistoryPage extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       loading: () => const Text('Loading...'),
-                      error: (_, __) => const Text('Unknown Book'),
+                      error: (_, _) => const Text('Unknown Book'),
                     ),
                     const SizedBox(height: 4),
                     Row(
@@ -284,8 +284,8 @@ class ReadingHistoryPage extends ConsumerWidget {
                           ),
                           decoration: BoxDecoration(
                             color: status == 'completed' 
-                                ? Colors.green.withOpacity(0.2)
-                                : Colors.blue.withOpacity(0.2),
+                                ? Colors.green.withValues(alpha: 0.2)
+                                : Colors.blue.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(

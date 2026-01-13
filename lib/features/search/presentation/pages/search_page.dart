@@ -30,7 +30,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   String? _authorFilter;
   String _sortBy = 'relevance'; // relevance, title, rating, date, popularity
   List<String> _searchHistory = [];
-  List<String> _popularSearches = [
+  final List<String> _popularSearches = [
     'Romance',
     'Fantasy',
     'Mystery',
@@ -173,7 +173,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
@@ -364,7 +364,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                     },
                     child: Row(
                       children: [
-                        Icon(Icons.category, color: AppColors.primary),
+                        const Icon(Icons.category, color: AppColors.primary),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -391,7 +391,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         if (_showFilters || _searchQuery.isNotEmpty)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: Colors.blue.withOpacity(0.1),
+            color: Colors.blue.withValues(alpha: 0.1),
             child: Column(
               children: [
                 Row(
@@ -584,7 +584,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               });
 
               if (filteredBooks.isEmpty) {
-                return EmptyState(
+                return const EmptyState(
                   title: 'No books found',
                   message: 'Try adjusting your search or filters',
                   icon: Icons.search_off,
@@ -629,7 +629,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                                           child: Image.network(
                                             filteredBooks[index].coverImageUrl!,
                                             fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) =>
+                                            errorBuilder: (_, _, _) =>
                                                 const Icon(Icons.book),
                                           ),
                                         )
@@ -659,7 +659,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                                           filteredBooks[index].authors.join(
                                             ', ',
                                           ),
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                             color: AppColors.textSecondaryLight,
                                             fontSize: 14,
                                           ),

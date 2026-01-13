@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -124,7 +124,7 @@ class CollectionsPage extends ConsumerWidget {
                         child: Image.network(
                           collection.coverImageUrl!,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _buildPlaceholder(collection),
+                          errorBuilder: (_, _, _) => _buildPlaceholder(collection),
                         ),
                       )
                     : _buildPlaceholder(collection),
@@ -185,8 +185,8 @@ class CollectionsPage extends ConsumerWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.blue.withOpacity(0.3),
-            Colors.purple.withOpacity(0.3),
+            Colors.blue.withValues(alpha: 0.3),
+            Colors.purple.withValues(alpha: 0.3),
           ],
         ),
       ),

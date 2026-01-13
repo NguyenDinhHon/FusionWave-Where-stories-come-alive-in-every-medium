@@ -6,39 +6,81 @@ import '../../../../core/widgets/empty_state.dart';
 import '../../../../data/models/activity_model.dart';
 
 /// Social Feed page với recent activity
-class SocialFeedPage extends ConsumerWidget {
+class SocialFeedPage extends ConsumerStatefulWidget {
   const SocialFeedPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: Implement activity provider
-    final activities = <ActivityModel>[];
+  ConsumerState<SocialFeedPage> createState() => _SocialFeedPageState();
+}
+
+class _SocialFeedPageState extends ConsumerState<SocialFeedPage> {
+  final List<ActivityModel> _activities = [];
+  bool _isLoading = false;
+
+  Future<void> _refreshFeed() async {
+    setState(() {
+      _isLoading = true;
+    });
     
+    // Simulate loading activities
+    await Future.delayed(const Duration(seconds: 1));
+    
+    // ignore: todo
+    // TODO: Load activities from provider/repository when implemented
+    // For now, just show empty state or existing activities
+    
+    setState(() {
+      _isLoading = false;
+    });
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Feed refreshed'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Social Feed'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              // TODO: Refresh feed
-            },
+            icon: _isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.refresh),
+            onPressed: _isLoading ? null : _refreshFeed,
           ),
         ],
       ),
-      body: activities.isEmpty
-          ? EmptyState(
-              title: 'No activity yet',
-              message: 'Follow friends to see their reading activity',
-              icon: Icons.people_outline,
+      body: _activities.isEmpty
+          ? RefreshIndicator(
+              onRefresh: _refreshFeed,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height - 200,
+                  child: const EmptyState(
+                    title: 'No activity yet',
+                    message: 'Follow friends to see their reading activity',
+                    icon: Icons.people_outline,
+                  ),
+                ),
+              ),
             )
           : RefreshIndicator(
-              onRefresh: () async {
-                // TODO: Refresh feed
-              },
+              onRefresh: _refreshFeed,
               child: ListView.builder(
                 padding: const EdgeInsets.all(16),
-                itemCount: activities.length,
+                itemCount: _activities.length,
                 itemBuilder: (context, index) {
                   return AnimationConfiguration.staggeredList(
                     position: index,
@@ -46,7 +88,7 @@ class SocialFeedPage extends ConsumerWidget {
                     child: SlideAnimation(
                       verticalOffset: 50.0,
                       child: FadeInAnimation(
-                        child: _buildActivityCard(context, activities[index]),
+                        child: _buildActivityCard(context, _activities[index]),
                       ),
                     ),
                   );
@@ -133,7 +175,7 @@ class SocialFeedPage extends ConsumerWidget {
                           child: Image.network(
                             activity.bookCoverUrl!,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Icon(Icons.book),
+                            errorBuilder: (_, _, _) => const Icon(Icons.book),
                           ),
                         ),
                       ),

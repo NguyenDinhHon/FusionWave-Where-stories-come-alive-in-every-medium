@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../constants/app_colors.dart';
 import 'shimmer_loading.dart';
@@ -49,7 +49,7 @@ class ImageWithPlaceholder extends StatelessWidget {
           size: (width != null && height != null) 
               ? (width! < height! ? width! * 0.4 : height! * 0.4)
               : 40,
-          color: defaultIconColor.withOpacity(0.5),
+          color: defaultIconColor.withValues(alpha: 0.5),
         ),
       );
     }
@@ -68,7 +68,7 @@ class ImageWithPlaceholder extends StatelessWidget {
           size: (width != null && height != null) 
               ? (width! < height! ? width! * 0.4 : height! * 0.4)
               : 40,
-          color: AppColors.error.withOpacity(0.5),
+          color: AppColors.error.withValues(alpha: 0.5),
         ),
       );
     }
@@ -127,7 +127,7 @@ class BookCoverImage extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

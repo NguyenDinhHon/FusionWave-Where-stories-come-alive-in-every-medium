@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/top_navigation_bar.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/interactive_button.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
@@ -30,6 +30,9 @@ final allUsersProvider = FutureProvider<List<Map<String, dynamic>>>((
       'createdAt': data['createdAt'],
       'lastLoginAt': data['lastLoginAt'],
       'photoUrl': data['photoUrl'],
+      'isBanned': data['isBanned'] ?? false,
+      'bannedUntil': data['bannedUntil'],
+      'banReason': data['banReason'],
     };
   }).toList();
 });
@@ -51,9 +54,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
   Widget build(BuildContext context) {
     final usersAsync = ref.watch(allUsersProvider);
 
-    return Scaffold(
-      appBar: const TopNavigationBar(),
-      body: Column(
+    return Column(
         children: [
           // Header with search, filter, view toggle
           Container(
@@ -98,8 +99,8 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                     DropdownButton<String>(
                       value: _roleFilter,
                       hint: const Text('Role'),
-                      items: [
-                        const DropdownMenuItem(
+                      items: const [
+                        DropdownMenuItem(
                           value: null,
                           child: Text('All Roles'),
                         ),
@@ -120,7 +121,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                     ),
                     const SizedBox(width: 8),
                     // View toggle
-                    InteractiveIconButton(
+                    InteractiveButton(
                       icon: _isGridView ? Icons.view_list : Icons.grid_view,
                       onPressed: () {
                         setState(() {
@@ -128,7 +129,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                         });
                       },
                       tooltip: _isGridView ? 'List view' : 'Grid view',
-                      size: 40,
+                      isIconButton: true,
                       iconColor: AppColors.iconLight,
                     ),
                   ],
@@ -201,8 +202,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildListView(List<Map<String, dynamic>> users) {
@@ -245,8 +245,8 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                       ),
                       decoration: BoxDecoration(
                         color: user['role'] == AppConstants.roleAdmin
-                            ? Colors.red.withOpacity(0.1)
-                            : Colors.blue.withOpacity(0.1),
+                            ? Colors.red.withValues(alpha: 0.1)
+                            : Colors.blue.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -260,6 +260,27 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                         ),
                       ),
                     ),
+                    if (user['isBanned'] == true) ...[
+                      const SizedBox(width: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'BANNED',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ],
@@ -267,6 +288,27 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (user['isBanned'] == true)
+                  InteractiveButton(
+                    icon: Icons.check_circle,
+                    onPressed: () {
+                      _unbanUser(context, ref, user);
+                    },
+                    isIconButton: true,
+                    iconColor: Colors.green,
+                    tooltip: 'Unban User',
+                  ),
+                if (user['isBanned'] != true)
+                  InteractiveButton(
+                    icon: Icons.block,
+                    onPressed: () {
+                      _showBanDialog(context, ref, user);
+                    },
+                    isIconButton: true,
+                    iconColor: Colors.orange,
+                    tooltip: 'Ban User',
+                  ),
+                const SizedBox(width: 8),
                 InteractiveButton(
                   icon: Icons.edit,
                   onPressed: () {
@@ -335,7 +377,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
               const SizedBox(height: 4),
               Text(
                 user['email'] ?? '',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 12,
                   color: AppColors.textSecondaryLight,
                 ),
@@ -347,8 +389,8 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: user['role'] == AppConstants.roleAdmin
-                      ? Colors.red.withOpacity(0.1)
-                      : Colors.blue.withOpacity(0.1),
+                      ? Colors.red.withValues(alpha: 0.1)
+                      : Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -388,12 +430,13 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
             Text('Email: ${user['email']}'),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
+              // ignore: deprecated_member_use
               value: user['role'] ?? AppConstants.roleUser,
               decoration: const InputDecoration(
                 labelText: 'Role',
                 border: OutlineInputBorder(),
               ),
-              items: [
+              items: const [
                 DropdownMenuItem(
                   value: AppConstants.roleUser,
                   child: Text(AppConstants.roleUser),
@@ -491,5 +534,181 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
         ],
       ),
     );
+  }
+
+  void _showBanDialog(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, dynamic> user,
+  ) {
+    final reasonController = TextEditingController();
+    DateTime? bannedUntil;
+    bool isPermanent = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Ban User'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Ban user: ${user['email']}'),
+                const SizedBox(height: 16),
+                CheckboxListTile(
+                  title: const Text('Permanent Ban'),
+                  value: isPermanent,
+                  onChanged: (value) {
+                    setDialogState(() {
+                      isPermanent = value ?? false;
+                      if (isPermanent) {
+                        bannedUntil = null;
+                      }
+                    });
+                  },
+                ),
+                if (!isPermanent) ...[
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () async {
+                      final date = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now().add(const Duration(days: 7)),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                      );
+                      if (date != null) {
+                        setDialogState(() {
+                          bannedUntil = date;
+                        });
+                      }
+                    },
+                    child: Text(
+                      bannedUntil == null
+                          ? 'Select Ban End Date'
+                          : 'Until: ${bannedUntil!.toString().split(' ')[0]}',
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                TextField(
+                  controller: reasonController,
+                  decoration: const InputDecoration(
+                    labelText: 'Ban Reason',
+                    border: OutlineInputBorder(),
+                    hintText: 'Enter reason for ban...',
+                  ),
+                  maxLines: 3,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (reasonController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please enter a ban reason'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+                if (!isPermanent && bannedUntil == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please select ban end date'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                try {
+                  final firestore = FirebaseService().firestore;
+                  await firestore
+                      .collection(AppConstants.usersCollection)
+                      .doc(user['id'])
+                      .update({
+                    'isBanned': true,
+                    'bannedUntil': isPermanent
+                        ? null
+                        : (bannedUntil != null
+                            ? Timestamp.fromDate(bannedUntil!)
+                            : null),
+                    'banReason': reasonController.text,
+                    'bannedAt': Timestamp.now(),
+                  });
+                  ref.invalidate(allUsersProvider);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('User banned successfully'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              child: const Text('Ban', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _unbanUser(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, dynamic> user,
+  ) async {
+    try {
+      final firestore = FirebaseService().firestore;
+      await firestore
+          .collection(AppConstants.usersCollection)
+          .doc(user['id'])
+          .update({
+        'isBanned': false,
+        'bannedUntil': null,
+        'banReason': null,
+        'bannedAt': null,
+      });
+      ref.invalidate(allUsersProvider);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('User unbanned successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

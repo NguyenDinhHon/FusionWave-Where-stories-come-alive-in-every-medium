@@ -1,1 +1,37 @@
 include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    # Disable some rules that might cause too many info messages
+    avoid_unnecessary_containers: false
+    prefer_const_constructors: true
+    prefer_const_literals_to_create_immutables: true
+    prefer_final_fields: true
+    prefer_final_locals: false
+    prefer_final_in_for_each: false
+    unnecessary_brace_in_string_interps: true
+    unnecessary_string_interpolations: true
+    sort_child_properties_last: true
+    avoid_types_as_parameter_names: true
+    curly_braces_in_flow_control_structures: true
+    use_build_context_synchronously: true
+    await_only_futures: true
+    avoid_print: true
+    avoid_relative_lib_imports: true
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "scripts/**"
+  errors:
+    # Treat info as warnings for better visibility
+    deprecated_member_use: warning
+    use_build_context_synchronously: warning
+    await_only_futures: warning
+    prefer_final_fields: info
+    unnecessary_brace_in_string_interps: info
+    unnecessary_string_interpolations: info
+    sort_child_properties_last: info
+    avoid_types_as_parameter_names: info
+    curly_braces_in_flow_control_structures: info

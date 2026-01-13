@@ -62,7 +62,7 @@ class _AnimatedBookCardState extends ConsumerState<AnimatedBookCard> {
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -99,7 +99,7 @@ class _AnimatedBookCardState extends ConsumerState<AnimatedBookCard> {
                       height: 16,
                       child: Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.star,
                             size: 12,
                             color: AppColors.warning,
@@ -107,7 +107,7 @@ class _AnimatedBookCardState extends ConsumerState<AnimatedBookCard> {
                           const SizedBox(width: 2),
                           Text(
                             widget.book.averageRating!.toStringAsFixed(1),
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 10,
                               color: AppColors.textSecondaryLight,
                             ),
@@ -123,7 +123,7 @@ class _AnimatedBookCardState extends ConsumerState<AnimatedBookCard> {
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.7),
+                      color: Colors.black.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Column(
@@ -169,7 +169,7 @@ class _AnimatedBookCardState extends ConsumerState<AnimatedBookCard> {
                             }
                           },
                           loading: () => const SizedBox.shrink(),
-                          error: (_, __) => InteractiveButton(
+                          error: (_, _) => InteractiveButton(
                             label: 'Đọc ngay',
                             icon: Icons.play_arrow,
                             onPressed: () {
@@ -196,17 +196,17 @@ class _AnimatedBookCardState extends ConsumerState<AnimatedBookCard> {
                                 onPressed: () async {
                                   final controller =
                                       ref.read(libraryControllerProvider);
+                                  final messenger = ScaffoldMessenger.of(context);
                                   await controller.removeFromLibrary(
                                     widget.book.id,
                                   );
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Đã xóa khỏi thư viện'),
-                                        duration: Duration(seconds: 1),
-                                      ),
-                                    );
-                                  }
+                                  if (!mounted) return;
+                                  messenger.showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Đã xóa khỏi thư viện'),
+                                      duration: Duration(seconds: 1),
+                                    ),
+                                  );
                                 },
                                 isOutlined: true,
                                 height: 32,
@@ -224,15 +224,15 @@ class _AnimatedBookCardState extends ConsumerState<AnimatedBookCard> {
                                 onPressed: () async {
                                   final controller =
                                       ref.read(libraryControllerProvider);
+                                  final messenger = ScaffoldMessenger.of(context);
                                   await controller.addToLibrary(widget.book.id);
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Đã thêm vào thư viện'),
-                                        duration: Duration(seconds: 1),
-                                      ),
-                                    );
-                                  }
+                                  if (!mounted) return;
+                                  messenger.showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Đã thêm vào thư viện'),
+                                      duration: Duration(seconds: 1),
+                                    ),
+                                  );
                                 },
                                 isOutlined: true,
                                 height: 32,
@@ -246,21 +246,21 @@ class _AnimatedBookCardState extends ConsumerState<AnimatedBookCard> {
                             }
                           },
                           loading: () => const SizedBox.shrink(),
-                          error: (_, __) => InteractiveButton(
+                          error: (_, _) => InteractiveButton(
                             label: 'Thêm vào thư viện',
                             icon: Icons.add,
                             onPressed: () async {
                               final controller =
                                   ref.read(libraryControllerProvider);
+                              final messenger = ScaffoldMessenger.of(context);
                               await controller.addToLibrary(widget.book.id);
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Đã thêm vào thư viện'),
-                                    duration: Duration(seconds: 1),
-                                  ),
-                                );
-                              }
+                              if (!mounted) return;
+                              messenger.showSnackBar(
+                                const SnackBar(
+                                  content: Text('Đã thêm vào thư viện'),
+                                  duration: Duration(seconds: 1),
+                                ),
+                              );
                             },
                             isOutlined: true,
                             height: 32,

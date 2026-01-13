@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../providers/challenge_provider.dart';
@@ -131,8 +131,8 @@ class ChallengesPage extends ConsumerWidget {
           gradient: isCompleted
               ? LinearGradient(
                   colors: [
-                    AppColors.success.withOpacity(0.1),
-                    AppColors.success.withOpacity(0.05),
+                    AppColors.success.withValues(alpha: 0.1),
+                    AppColors.success.withValues(alpha: 0.05),
                   ],
                 )
               : null,

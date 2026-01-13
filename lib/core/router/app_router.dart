@@ -25,6 +25,9 @@ import '../../features/admin/presentation/pages/manage_chapters_page.dart';
 import '../../features/admin/presentation/pages/edit_book_page.dart';
 import '../../features/admin/presentation/pages/edit_chapter_page.dart';
 import '../../features/admin/presentation/pages/manage_users_page.dart';
+import '../../features/admin/presentation/pages/manage_comments_page.dart';
+import '../../features/admin/presentation/pages/manage_categories_page.dart';
+import '../../features/admin/presentation/pages/system_settings_page.dart';
 import '../../features/auth/presentation/pages/email_link_verify_page.dart';
 import '../../features/bookmark/presentation/pages/bookmarks_page.dart';
 import '../../features/notes/presentation/pages/notes_page.dart';
@@ -39,8 +42,17 @@ import '../../features/notifications/presentation/pages/notifications_page.dart'
 import '../../features/social/presentation/pages/social_feed_page.dart';
 import '../../features/recommendations/presentation/pages/enhanced_recommendations_page.dart';
 import '../../features/offline/presentation/pages/offline_books_page.dart';
+import '../../features/info/presentation/pages/premium_page.dart';
+import '../../features/info/presentation/pages/terms_page.dart';
+import '../../features/info/presentation/pages/privacy_page.dart';
+import '../../features/info/presentation/pages/payment_policy_page.dart';
+import '../../features/info/presentation/pages/help_page.dart';
+import '../../features/info/presentation/pages/brand_partnerships_page.dart';
+import '../../features/info/presentation/pages/jobs_page.dart';
+import '../../features/info/presentation/pages/press_page.dart';
 import 'page_transitions.dart';
 import 'shell_scaffold.dart';
+import 'admin_shell_scaffold.dart';
 
 /// Application routing configuration
 class AppRouter {
@@ -100,13 +112,23 @@ class AppRouter {
       (route) => state.uri.path.startsWith(route),
     );
 
+    // Check if user is admin (only if authenticated)
+    bool isAdmin = false;
+    if (isAuthenticated) {
+      try {
+        final container = ProviderScope.containerOf(context);
+        isAdmin = container.read(isAdminProvider);
+      } catch (e) {
+        // Provider not available yet, will be checked in route
+      }
+    }
+
     // Admin routes are handled by _adminGuard (called in route redirect)
     // Exception: seed-data routes don't require admin (for development)
     if (state.uri.path.startsWith('/admin')) {
       if (state.uri.path == '/admin/seed-data' ||
           state.uri.path == '/admin/comprehensive-seed-data') {
         // Allow seed routes if authenticated (no admin check)
-        final isAuthenticated = FirebaseAuth.instance.currentUser != null;
         if (!isAuthenticated) {
           return '/login?redirect=${Uri.encodeComponent(state.uri.toString())}';
         }
@@ -120,14 +142,23 @@ class AppRouter {
       return null;
     }
 
-    // If user is authenticated and trying to access auth routes, redirect to home
+    // If user is authenticated and trying to access auth routes
     if (isAuthenticated && isAuthRoute) {
+      // Redirect admin to admin panel, regular users to home
+      if (isAdmin) {
+        return '/admin';
+      }
       return '/home';
     }
 
     // If user is not authenticated and trying to access protected routes, redirect to login
     if (!isAuthenticated && isProtectedRoute) {
       return '/login';
+    }
+
+    // If admin tries to access regular routes (home, library, etc), redirect to admin panel
+    if (isAuthenticated && isAdmin && (isProtectedRoute || state.uri.path == '/home' || state.uri.path == '/')) {
+      return '/admin';
     }
 
     // Allow access
@@ -300,16 +331,117 @@ class AppRouter {
         ),
       ),
 
-      // Admin Routes (Protected)
-      GoRoute(
-        path: '/admin',
-        name: 'admin',
-        redirect: (context, state) => _adminGuard(context, state),
-        pageBuilder: (context, state) => PageTransitions.fadeTransition(
-          child: const AdminDashboardPage(),
-          name: state.name,
-        ),
+      // Admin Shell Route - Separate admin interface
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return AdminShellScaffold(navigationShell: navigationShell);
+        },
+        branches: [
+          // Branch 0: Admin Dashboard
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin',
+                name: 'admin',
+                redirect: (context, state) => _adminGuard(context, state),
+                pageBuilder: (context, state) => PageTransitions.fadeTransition(
+                  child: const AdminDashboardPage(),
+                  name: state.name,
+                ),
+              ),
+            ],
+          ),
+          // Branch 1: Manage Books
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/manage-books',
+                name: 'manage-books',
+                redirect: (context, state) => _adminGuard(context, state),
+                pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+                  child: const ManageBooksPage(),
+                  name: state.name,
+                ),
+              ),
+            ],
+          ),
+          // Branch 2: Manage Chapters
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/manage-chapters',
+                name: 'manage-chapters',
+                redirect: (context, state) => _adminGuard(context, state),
+                pageBuilder: (context, state) {
+                  final bookId = state.uri.queryParameters['bookId'];
+                  return PageTransitions.slideFadeTransition(
+                    child: ManageChaptersPage(bookId: bookId),
+                    name: state.name,
+                  );
+                },
+              ),
+            ],
+          ),
+          // Branch 3: Manage Users
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/manage-users',
+                name: 'manage-users',
+                redirect: (context, state) => _adminGuard(context, state),
+                pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+                  child: const ManageUsersPage(),
+                  name: state.name,
+                ),
+              ),
+            ],
+          ),
+          // Branch 4: Manage Comments
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/manage-comments',
+                name: 'manage-comments',
+                redirect: (context, state) => _adminGuard(context, state),
+                pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+                  child: const ManageCommentsPage(),
+                  name: state.name,
+                ),
+              ),
+            ],
+          ),
+          // Branch 5: Manage Categories
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/manage-categories',
+                name: 'manage-categories',
+                redirect: (context, state) => _adminGuard(context, state),
+                pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+                  child: const ManageCategoriesPage(),
+                  name: state.name,
+                ),
+              ),
+            ],
+          ),
+          // Branch 6: System Settings
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/system-settings',
+                name: 'system-settings',
+                redirect: (context, state) => _adminGuard(context, state),
+                pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+                  child: const SystemSettingsPage(),
+                  name: state.name,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
+
+      // Admin Routes (Outside shell - full screen)
       GoRoute(
         path: '/admin/seed-data',
         name: 'seed-data',
@@ -338,27 +470,6 @@ class AppRouter {
         ),
       ),
       GoRoute(
-        path: '/admin/manage-books',
-        name: 'manage-books',
-        redirect: (context, state) => _adminGuard(context, state),
-        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
-          child: const ManageBooksPage(),
-          name: state.name,
-        ),
-      ),
-      GoRoute(
-        path: '/admin/manage-chapters',
-        name: 'manage-chapters',
-        redirect: (context, state) => _adminGuard(context, state),
-        pageBuilder: (context, state) {
-          final bookId = state.uri.queryParameters['bookId'];
-          return PageTransitions.slideFadeTransition(
-            child: ManageChaptersPage(bookId: bookId),
-            name: state.name,
-          );
-        },
-      ),
-      GoRoute(
         path: '/admin/edit-book/:bookId',
         name: 'edit-book',
         redirect: (context, state) => _adminGuard(context, state),
@@ -382,15 +493,6 @@ class AppRouter {
             name: state.name,
           );
         },
-      ),
-      GoRoute(
-        path: '/admin/manage-users',
-        name: 'manage-users',
-        redirect: (context, state) => _adminGuard(context, state),
-        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
-          child: const ManageUsersPage(),
-          name: state.name,
-        ),
       ),
 
       // Bookmark Routes
@@ -527,6 +629,72 @@ class AppRouter {
             name: state.name,
           );
         },
+      ),
+
+      // Info Routes
+      GoRoute(
+        path: '/premium',
+        name: 'premium',
+        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+          child: const PremiumPage(),
+          name: state.name,
+        ),
+      ),
+      GoRoute(
+        path: '/terms',
+        name: 'terms',
+        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+          child: const TermsPage(),
+          name: state.name,
+        ),
+      ),
+      GoRoute(
+        path: '/privacy',
+        name: 'privacy',
+        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+          child: const PrivacyPage(),
+          name: state.name,
+        ),
+      ),
+      GoRoute(
+        path: '/payment-policy',
+        name: 'payment-policy',
+        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+          child: const PaymentPolicyPage(),
+          name: state.name,
+        ),
+      ),
+      GoRoute(
+        path: '/help',
+        name: 'help',
+        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+          child: const HelpPage(),
+          name: state.name,
+        ),
+      ),
+      GoRoute(
+        path: '/brand-partnerships',
+        name: 'brand-partnerships',
+        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+          child: const BrandPartnershipsPage(),
+          name: state.name,
+        ),
+      ),
+      GoRoute(
+        path: '/jobs',
+        name: 'jobs',
+        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+          child: const JobsPage(),
+          name: state.name,
+        ),
+      ),
+      GoRoute(
+        path: '/press',
+        name: 'press',
+        pageBuilder: (context, state) => PageTransitions.slideFadeTransition(
+          child: const PressPage(),
+          name: state.name,
+        ),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

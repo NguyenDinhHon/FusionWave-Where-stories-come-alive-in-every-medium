@@ -31,7 +31,7 @@ class ManageChaptersPage extends ConsumerStatefulWidget {
 }
 
 class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
-  Set<String> _selectedChapterIds = {};
+  final Set<String> _selectedChapterIds = {};
   bool _isSelectionMode = false;
 
   @override
@@ -110,7 +110,7 @@ class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
                           ),
                     ),
                     loading: () => const Text('Loading...'),
-                    error: (_, __) => const Text('Quản Lý Chapters'),
+                    error: (_, _) => const Text('Quản Lý Chapters'),
                   ),
                 ),
                 if (_isSelectionMode && _selectedChapterIds.isNotEmpty)
@@ -118,7 +118,7 @@ class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
                     children: [
                       Text(
                         '${_selectedChapterIds.length} đã chọn',
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppColors.textSecondaryLight,
                           fontWeight: FontWeight.bold,
                         ),
@@ -238,13 +238,13 @@ class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.1),
+                                color: AppColors.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Center(
                                 child: Text(
                                   '${chapter.chapterNumber}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: AppColors.primary,
                                   ),
@@ -259,7 +259,7 @@ class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
                         ),
                         subtitle: Text(
                           '${chapter.content.length} characters • ${chapter.estimatedReadingTimeMinutes ?? 0} min',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 12,
                             color: AppColors.textSecondaryLight,
                           ),
@@ -383,6 +383,10 @@ class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
     WidgetRef ref,
     String bookId,
   ) async {
+    // Capture context before async operations
+    final currentContext = context;
+    final messenger = ScaffoldMessenger.of(currentContext);
+    
     try {
       final repository = ChapterRepository();
       final futures = _selectedChapterIds.map((chapterId) {
@@ -392,25 +396,23 @@ class _ManageChaptersPageState extends ConsumerState<ManageChaptersPage> {
       await Future.wait(futures);
       ref.invalidate(bookChaptersProvider(bookId));
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Đã xóa ${_selectedChapterIds.length} chapters thành công',
-            ),
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            'Đã xóa ${_selectedChapterIds.length} chapters thành công',
           ),
-        );
-        setState(() {
-          _isSelectionMode = false;
-          _selectedChapterIds.clear();
-        });
-      }
+        ),
+      );
+      setState(() {
+        _isSelectionMode = false;
+        _selectedChapterIds.clear();
+      });
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
-      }
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text('Lỗi: $e')),
+      );
     }
   }
 
