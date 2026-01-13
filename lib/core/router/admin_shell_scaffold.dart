@@ -48,7 +48,7 @@ class AdminShellScaffold extends ConsumerWidget {
       loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       ),
-      error: (_, __) => const Scaffold(
+      error: (error, stack) => const Scaffold(
         body: Center(child: Text('Error loading user data')),
       ),
     );
@@ -75,7 +75,7 @@ class AdminShellScaffold extends ConsumerWidget {
           // Admin Header
           Container(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: AppColors.primaryGradient,
             ),
             child: Column(

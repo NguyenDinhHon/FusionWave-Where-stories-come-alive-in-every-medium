@@ -47,7 +47,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       final user = await userAsync.when(
         data: (user) => Future.value(user),
         loading: () => Future.value(null),
-        error: (_, __) => Future.value(null),
+        error: (error, stack) => Future.value(null),
       );
       
       if (!mounted) return;
@@ -118,7 +118,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       final user = await userAsync.when(
         data: (user) => Future.value(user),
         loading: () => Future.value(null),
-        error: (_, __) => Future.value(null),
+        error: (error, stack) => Future.value(null),
       );
       
       if (!mounted) return;

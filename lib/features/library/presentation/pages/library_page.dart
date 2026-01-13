@@ -254,6 +254,68 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
     }
   }
 
+  void _showLibraryItemMenu(
+    BuildContext context,
+    WidgetRef ref,
+    LibraryItemModel item,
+    BookModel book,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(book.title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.book_outlined),
+              title: const Text('View Details'),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/book/${book.id}');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.play_arrow),
+              title: const Text('Continue Reading'),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/read/${book.id}');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.check_circle_outline),
+              title: const Text('Mark as Completed'),
+              onTap: () async {
+                Navigator.pop(context);
+                final controller = ref.read(libraryControllerProvider);
+                await controller.updateBookStatus(book.id, 'completed');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: Colors.red),
+              title: const Text(
+                'Remove from Library',
+                style: TextStyle(color: Colors.red),
+              ),
+              onTap: () async {
+                Navigator.pop(context);
+                final controller = ref.read(libraryControllerProvider);
+                await controller.removeFromLibrary(book.id);
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   List<LibraryItemModel> _applyFiltersAndSort(
     List<LibraryItemModel> items,
     List<BookModel> books,
