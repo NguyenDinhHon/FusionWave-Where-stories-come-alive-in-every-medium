@@ -7,7 +7,6 @@ import '../widgets/auth_text_field.dart';
 import '../widgets/auth_button.dart';
 import '../providers/auth_provider.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../../data/repositories/auth_repository.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -36,24 +35,23 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
-      final authController = ref.read(authControllerProvider.notifier);
       final authRepository = ref.read(authRepositoryProvider);
       
-      // Sign in and get user model directly
+      // Sign in and get user model directly from repository
       final userModel = await authRepository.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
       
-      // Update auth controller state
-      await authController.signInWithEmailAndPassword(
+      // Update auth controller state asynchronously (don't wait)
+      ref.read(authControllerProvider.notifier).signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
-      );
+      ).catchError((_) {}); // Ignore errors as we already have userModel
       
       if (!mounted) return;
       
-      // Redirect based on role using userModel from repository
+      // Redirect immediately based on role using userModel from repository
       if (userModel.role == AppConstants.roleAdmin) {
         context.go('/admin');
       } else {
@@ -116,12 +114,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       // Sign in and get user model directly from repository
       final userModel = await authRepository.signInWithGoogle();
       
-      // Update auth controller state
-      ref.read(authControllerProvider.notifier).state = AsyncValue.data(userModel);
+      // Update auth controller state asynchronously (don't wait)
+      ref.read(authControllerProvider.notifier).signInWithGoogle()
+          .catchError((_) {}); // Ignore errors as we already have userModel
       
       if (!mounted) return;
       
-      // Redirect based on role using userModel from repository
+      // Redirect immediately based on role using userModel from repository
       if (userModel.role == AppConstants.roleAdmin) {
         context.go('/admin');
       } else {
