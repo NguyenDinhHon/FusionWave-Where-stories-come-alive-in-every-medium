@@ -231,7 +231,10 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black.withValues(alpha: 0.7)],
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.7),
+                  ],
                 ),
               ),
             ),
@@ -315,12 +318,16 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                 },
               );
             },
-            loading: () => const AppButton(label: 'Loading...', onPressed: null),
+            loading: () =>
+                const AppButton(label: 'Loading...', onPressed: null),
             error: (_, _) => AppButton(
               label: 'Add to Library',
               icon: Icons.add,
               gradient: LinearGradient(
-                colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
+                colors: [
+                  AppColors.primary,
+                  AppColors.primary.withValues(alpha: 0.8),
+                ],
               ),
               onPressed: () {
                 ref.read(libraryControllerProvider).addToLibrary(book.id);
@@ -693,14 +700,26 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                 );
               }
 
-              // Show first 5 chapters
-              final displayChapters = chapters.take(5).toList();
+              // Watch library item to get completed chapters
+              final libraryItemAsync = ref.watch(
+                libraryItemByBookIdProvider(book.id),
+              );
 
-              return Column(
-                children: [
-                  ...displayChapters.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final chapter = entry.value;
+              return SizedBox(
+                height: 400, // Fixed height for scrollable list
+                child: ListView.builder(
+                  padding: EdgeInsets.zero,
+                  itemCount: chapters.length,
+                  itemBuilder: (context, index) {
+                    final chapter = chapters[index];
+
+                    // Check if chapter is completed
+                    final isCompleted = libraryItemAsync.maybeWhen(
+                      data: (item) =>
+                          item?.completedChapters.contains(chapter.id) ?? false,
+                      orElse: () => false,
+                    );
+
                     return AnimationConfiguration.staggeredList(
                       position: index,
                       duration: const Duration(milliseconds: 375),
@@ -712,17 +731,25 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.1),
+                                color: isCompleted
+                                    ? Colors.green.withValues(alpha: 0.2)
+                                    : AppColors.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Center(
-                                child: Text(
-                                  '${chapter.chapterNumber}',
-                                  style: const TextStyle(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                                child: isCompleted
+                                    ? const Icon(
+                                        Icons.check_circle,
+                                        color: Colors.green,
+                                        size: 24,
+                                      )
+                                    : Text(
+                                        '${chapter.chapterNumber}',
+                                        style: const TextStyle(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                               ),
                             ),
                             title: Text(
@@ -760,24 +787,8 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                         ),
                       ),
                     );
-                  }),
-                  if (chapters.length > 5)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: InteractiveButton(
-                        label: 'Show ${chapters.length - 5} more chapters',
-                        icon: Icons.arrow_forward,
-                        onPressed: () =>
-                            _showAllChaptersDialog(context, ref, book),
-                        isOutlined: true,
-                        height: 28,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                      ),
-                    ),
-                ],
+                  },
+                ),
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
@@ -852,57 +863,88 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                       );
                     }
 
-                    return ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: chapters.length,
-                      itemBuilder: (context, index) {
-                        final chapter = chapters[index];
-                        return ListTile(
-                          leading: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Center(
-                              child: Text(
-                                '${chapter.chapterNumber}',
-                                style: const TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.bold,
+                    return Consumer(
+                      builder: (context, ref, _) {
+                        final libraryItemAsync = ref.watch(
+                          libraryItemByBookIdProvider(book.id),
+                        );
+
+                        return ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: chapters.length,
+                          itemBuilder: (context, index) {
+                            final chapter = chapters[index];
+
+                            // Check completion status
+                            final isCompleted = libraryItemAsync.maybeWhen(
+                              data: (item) =>
+                                  item?.completedChapters.contains(
+                                    chapter.id,
+                                  ) ??
+                                  false,
+                              orElse: () => false,
+                            );
+
+                            return ListTile(
+                              leading: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: isCompleted
+                                      ? Colors.green.withValues(alpha: 0.2)
+                                      : AppColors.primary.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Center(
+                                  child: isCompleted
+                                      ? const Icon(
+                                          Icons.check_circle,
+                                          color: Colors.green,
+                                          size: 24,
+                                        )
+                                      : Text(
+                                          '${chapter.chapterNumber}',
+                                          style: const TextStyle(
+                                            color: AppColors.primary,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
                                 ),
                               ),
-                            ),
-                          ),
-                          title: Text(
-                            chapter.title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                          subtitle: chapter.subtitle != null
-                              ? Text(
-                                  chapter.subtitle!,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(color: Colors.white70),
-                                )
-                              : chapter.estimatedReadingTimeMinutes != null
-                              ? Text(
-                                  '${chapter.estimatedReadingTimeMinutes} min read',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white70,
-                                  ),
-                                )
-                              : null,
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () {
-                            Navigator.pop(context);
-                            context.push(
-                              '/reading/${book.id}?chapterId=${chapter.id}',
+                              title: Text(
+                                chapter.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              subtitle: chapter.subtitle != null
+                                  ? Text(
+                                      chapter.subtitle!,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                      ),
+                                    )
+                                  : chapter.estimatedReadingTimeMinutes != null
+                                  ? Text(
+                                      '${chapter.estimatedReadingTimeMinutes} min read',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white70,
+                                      ),
+                                    )
+                                  : null,
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () {
+                                Navigator.pop(context);
+                                context.push(
+                                  '/reading/${book.id}?chapterId=${chapter.id}',
+                                );
+                              },
                             );
                           },
                         );

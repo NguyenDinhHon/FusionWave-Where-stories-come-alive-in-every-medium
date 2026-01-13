@@ -9,12 +9,13 @@ class LibraryItemModel {
   final String status; // reading, completed, want_to_read, dropped
   final int currentPage;
   final int currentChapter;
+  final List<String> completedChapters; // List of completed chapter IDs
   final double progress; // 0.0 - 1.0
   final DateTime addedAt;
   final DateTime? lastReadAt;
   final int totalReadingTimeMinutes;
   final bool isDownloaded;
-  
+
   LibraryItemModel({
     required this.id,
     required this.userId,
@@ -22,13 +23,14 @@ class LibraryItemModel {
     this.status = AppConstants.bookStatusReading,
     this.currentPage = 0,
     this.currentChapter = 1,
+    this.completedChapters = const [],
     this.progress = 0.0,
     required this.addedAt,
     this.lastReadAt,
     this.totalReadingTimeMinutes = 0,
     this.isDownloaded = false,
   });
-  
+
   // Create from Firestore document
   factory LibraryItemModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
@@ -39,6 +41,7 @@ class LibraryItemModel {
       status: data['status'] ?? AppConstants.bookStatusReading,
       currentPage: data['currentPage'] ?? 0,
       currentChapter: data['currentChapter'] ?? 1,
+      completedChapters: List<String>.from(data['completedChapters'] ?? []),
       progress: (data['progress'] as num?)?.toDouble() ?? 0.0,
       addedAt: (data['addedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       lastReadAt: (data['lastReadAt'] as Timestamp?)?.toDate(),
@@ -46,7 +49,7 @@ class LibraryItemModel {
       isDownloaded: data['isDownloaded'] ?? false,
     );
   }
-  
+
   // Convert to Firestore document
   Map<String, dynamic> toFirestore() {
     return {
@@ -55,6 +58,7 @@ class LibraryItemModel {
       'status': status,
       'currentPage': currentPage,
       'currentChapter': currentChapter,
+      'completedChapters': completedChapters,
       'progress': progress,
       'addedAt': Timestamp.fromDate(addedAt),
       'lastReadAt': lastReadAt != null ? Timestamp.fromDate(lastReadAt!) : null,
@@ -62,7 +66,7 @@ class LibraryItemModel {
       'isDownloaded': isDownloaded,
     };
   }
-  
+
   // Create copy with updated fields
   LibraryItemModel copyWith({
     String? id,
@@ -71,6 +75,7 @@ class LibraryItemModel {
     String? status,
     int? currentPage,
     int? currentChapter,
+    List<String>? completedChapters,
     double? progress,
     DateTime? addedAt,
     DateTime? lastReadAt,
@@ -84,12 +89,13 @@ class LibraryItemModel {
       status: status ?? this.status,
       currentPage: currentPage ?? this.currentPage,
       currentChapter: currentChapter ?? this.currentChapter,
+      completedChapters: completedChapters ?? this.completedChapters,
       progress: progress ?? this.progress,
       addedAt: addedAt ?? this.addedAt,
       lastReadAt: lastReadAt ?? this.lastReadAt,
-      totalReadingTimeMinutes: totalReadingTimeMinutes ?? this.totalReadingTimeMinutes,
+      totalReadingTimeMinutes:
+          totalReadingTimeMinutes ?? this.totalReadingTimeMinutes,
       isDownloaded: isDownloaded ?? this.isDownloaded,
     );
   }
 }
-
