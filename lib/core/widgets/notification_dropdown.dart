@@ -137,7 +137,7 @@ class NotificationDropdown extends ConsumerWidget {
               );
             },
             loading: () => const SizedBox(),
-            error: (_, __) => const SizedBox(),
+            error: (_, _) => const SizedBox(),
           ),
         ],
       ),
@@ -191,7 +191,7 @@ class NotificationDropdown extends ConsumerWidget {
                       decoration: BoxDecoration(
                         color: notification.isRead 
                             ? Colors.transparent 
-                            : Colors.blue.withOpacity(0.05),
+                            : Colors.blue.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -200,7 +200,7 @@ class NotificationDropdown extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: _getNotificationColor(notification.type).withOpacity(0.2),
+                              color: _getNotificationColor(notification.type).withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
@@ -228,7 +228,7 @@ class NotificationDropdown extends ConsumerWidget {
                                 const SizedBox(height: 4),
                                 Text(
                                   notification.body,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 12,
                                     color: AppColors.textSecondaryLight,
                                   ),
@@ -238,7 +238,7 @@ class NotificationDropdown extends ConsumerWidget {
                                 const SizedBox(height: 4),
                                 Text(
                                   _formatDate(notification.createdAt),
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 11,
                                     color: AppColors.textSecondaryLight,
                                   ),

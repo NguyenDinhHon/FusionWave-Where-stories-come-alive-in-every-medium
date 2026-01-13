@@ -87,10 +87,24 @@ class SettingsPage extends ConsumerWidget {
               title: AppStrings.dailyReminder,
               value: prefs.getDailyReminder(),
               onChanged: (value) async {
-                await ref.read(settingsControllerProvider).setDailyReminder(value);
                 if (value) {
-                  // TODO: Schedule reminder with time picker
+                  final selectedTime = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay.now(),
+                  );
+                  if (selectedTime != null && context.mounted) {
+                    await ref.read(settingsControllerProvider).setDailyReminder(true);
+                    await ref.read(notificationControllerProvider).scheduleDailyReminder(selectedTime);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Nhắc nhở đọc sách đã được đặt lúc ${selectedTime.format(context)}'),
+                        ),
+                      );
+                    }
+                  }
                 } else {
+                  await ref.read(settingsControllerProvider).setDailyReminder(false);
                   await ref.read(notificationControllerProvider).cancelDailyReminder();
                 }
               },
@@ -150,7 +164,9 @@ class SettingsPage extends ConsumerWidget {
             RadioListTile<String>(
               title: const Text(AppStrings.lightMode),
               value: AppConstants.themeLight,
+              // ignore: deprecated_member_use
               groupValue: ref.read(themeProvider),
+              // ignore: deprecated_member_use
               onChanged: (value) {
                 if (value != null) {
                   ref.read(themeProvider.notifier).setTheme(value);
@@ -161,7 +177,9 @@ class SettingsPage extends ConsumerWidget {
             RadioListTile<String>(
               title: const Text(AppStrings.darkMode),
               value: AppConstants.themeDark,
+              // ignore: deprecated_member_use
               groupValue: ref.read(themeProvider),
+              // ignore: deprecated_member_use
               onChanged: (value) {
                 if (value != null) {
                   ref.read(themeProvider.notifier).setTheme(value);
@@ -172,7 +190,9 @@ class SettingsPage extends ConsumerWidget {
             RadioListTile<String>(
               title: const Text(AppStrings.sepiaMode),
               value: AppConstants.themeSepia,
+              // ignore: deprecated_member_use
               groupValue: ref.read(themeProvider),
+              // ignore: deprecated_member_use
               onChanged: (value) {
                 if (value != null) {
                   ref.read(themeProvider.notifier).setTheme(value);
@@ -183,7 +203,9 @@ class SettingsPage extends ConsumerWidget {
             RadioListTile<String>(
               title: const Text(AppStrings.autoMode),
               value: AppConstants.themeAuto,
+              // ignore: deprecated_member_use
               groupValue: ref.read(themeProvider),
+              // ignore: deprecated_member_use
               onChanged: (value) {
                 if (value != null) {
                   ref.read(themeProvider.notifier).setTheme(value);
@@ -208,7 +230,9 @@ class SettingsPage extends ConsumerWidget {
             RadioListTile<String>(
               title: const Text(AppStrings.scrollMode),
               value: AppConstants.readingModeScroll,
+              // ignore: deprecated_member_use
               groupValue: ref.read(readingModeProvider),
+              // ignore: deprecated_member_use
               onChanged: (value) {
                 if (value != null) {
                   ref.read(readingModeProvider.notifier).setReadingMode(value);
@@ -219,7 +243,9 @@ class SettingsPage extends ConsumerWidget {
             RadioListTile<String>(
               title: const Text(AppStrings.pageMode),
               value: AppConstants.readingModePage,
+              // ignore: deprecated_member_use
               groupValue: ref.read(readingModeProvider),
+              // ignore: deprecated_member_use
               onChanged: (value) {
                 if (value != null) {
                   ref.read(readingModeProvider.notifier).setReadingMode(value);
@@ -234,46 +260,51 @@ class SettingsPage extends ConsumerWidget {
   }
   
   void _showFontSizeDialog(BuildContext context, WidgetRef ref, double currentSize) {
+    double selectedFontSize = currentSize;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(AppStrings.fontSize),
-        content: StatefulBuilder(
-          builder: (context, setState) {
-            double fontSize = currentSize;
-            return Column(
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text(AppStrings.fontSize),
+            content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Slider(
-                  value: fontSize,
+                  value: selectedFontSize,
                   min: 12,
                   max: 24,
                   divisions: 12,
-                  label: fontSize.toStringAsFixed(0),
+                  label: selectedFontSize.toStringAsFixed(0),
                   onChanged: (value) {
                     setState(() {
-                      fontSize = value;
+                      selectedFontSize = value;
                     });
                   },
                 ),
-                Text('${fontSize.toStringAsFixed(0)}px'),
+                Text('${selectedFontSize.toStringAsFixed(0)}px'),
               ],
-            );
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              // TODO: Save font size
-              Navigator.pop(context);
-            },
-            child: const Text('Save'),
-          ),
-        ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await ref.read(settingsControllerProvider).setFontSize(selectedFontSize);
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Font size đã được lưu')),
+                    );
+                  }
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

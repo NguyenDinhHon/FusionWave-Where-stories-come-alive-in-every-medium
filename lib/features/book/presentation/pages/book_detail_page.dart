@@ -188,7 +188,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                 );
               },
               loading: () => const SizedBox(),
-              error: (_, __) => const SizedBox(),
+              error: (_, _) => const SizedBox(),
             );
           },
         ),
@@ -221,7 +221,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
               Image.network(
                 book.coverImageUrl!,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _buildPlaceholderCover(),
+                errorBuilder: (_, _, _) => _buildPlaceholderCover(),
               )
             else
               _buildPlaceholderCover(),
@@ -231,7 +231,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+                  colors: [Colors.transparent, Colors.black.withValues(alpha: 0.7)],
                 ),
               ),
             ),
@@ -243,7 +243,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
 
   Widget _buildPlaceholderCover() {
     return Container(
-      decoration: BoxDecoration(gradient: AppColors.primaryGradient),
+      decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
       child: const Center(
         child: Icon(Icons.book, size: 100, color: Colors.white70),
       ),
@@ -300,7 +300,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                 gradient: LinearGradient(
                   colors: [
                     AppColors.primary,
-                    AppColors.primary.withOpacity(0.8),
+                    AppColors.primary.withValues(alpha: 0.8),
                   ],
                 ),
                 onPressed: () {
@@ -315,12 +315,12 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                 },
               );
             },
-            loading: () => AppButton(label: 'Loading...', onPressed: null),
-            error: (_, __) => AppButton(
+            loading: () => const AppButton(label: 'Loading...', onPressed: null),
+            error: (_, _) => AppButton(
               label: 'Add to Library',
               icon: Icons.add,
               gradient: LinearGradient(
-                colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
+                colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
               ),
               onPressed: () {
                 ref.read(libraryControllerProvider).addToLibrary(book.id);
@@ -331,9 +331,9 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
         const SizedBox(width: 12),
         AppButton(
           label: 'Read Now',
-          icon: Icons.book,
           isOutlined: true,
           color: AppColors.primary,
+          textColor: Colors.white,
           onPressed: () => context.push('/reading/${book.id}'),
         ),
       ],
@@ -352,7 +352,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
           child: AppCard(
             child: Column(
               children: [
-                Icon(Icons.star, color: Colors.amber, size: 28),
+                const Icon(Icons.star, color: Colors.amber, size: 28),
                 const SizedBox(height: 8),
                 averageRatingAsync.when(
                   data: (rating) => Text(
@@ -364,12 +364,12 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                     ),
                   ),
                   loading: () => const CircularProgressIndicator(),
-                  error: (_, __) => const Text('N/A'),
+                  error: (_, _) => const Text('N/A'),
                 ),
                 const SizedBox(height: 4),
-                Text(
+                const Text(
                   'Rating',
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
             ),
@@ -380,7 +380,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
           child: AppCard(
             child: Column(
               children: [
-                Icon(Icons.menu_book, color: Colors.blue, size: 28),
+                const Icon(Icons.menu_book, color: Colors.blue, size: 28),
                 const SizedBox(height: 8),
                 Text(
                   '${book.totalChapters}',
@@ -391,9 +391,9 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
+                const Text(
                   'Chapters',
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
             ),
@@ -404,7 +404,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
           child: AppCard(
             child: Column(
               children: [
-                Icon(Icons.visibility, color: Colors.green, size: 28),
+                const Icon(Icons.visibility, color: Colors.green, size: 28),
                 const SizedBox(height: 8),
                 Text(
                   '${book.totalReads}',
@@ -415,9 +415,9 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
+                const Text(
                   'Reads',
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
             ),
@@ -477,7 +477,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                         style: TextStyle(color: Colors.white70),
                       ),
                 loading: () => const CircularProgressIndicator(),
-                error: (_, __) => const Text(
+                error: (_, _) => const Text(
                   'Error',
                   style: TextStyle(color: Colors.white70),
                 ),
@@ -490,9 +490,9 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
               if (userRating == null) {
                 return AppButton(
                   label: 'Rate this book',
-                  icon: Icons.star_outline,
                   isOutlined: true,
                   color: AppColors.primary,
+                  textColor: Colors.white,
                   onPressed: () {
                     _showRatingDialog(context, ref, book);
                   },
@@ -591,7 +591,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
               );
             },
             loading: () => const CircularProgressIndicator(),
-            error: (_, __) => const SizedBox(),
+            error: (_, _) => const SizedBox(),
           ),
         ],
       ),
@@ -712,13 +712,13 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.1),
+                                color: AppColors.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Center(
                                 child: Text(
                                   '${chapter.chapterNumber}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: AppColors.primary,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -814,7 +814,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(12),
                     topRight: Radius.circular(12),
@@ -862,13 +862,13 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.1),
+                              color: AppColors.primary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Center(
                               child: Text(
                                 '${chapter.chapterNumber}',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: AppColors.primary,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -968,7 +968,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.rate_review_outlined,
                         size: 48,
                         color: AppColors.textSecondaryLight,
@@ -1054,7 +1054,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                                   style: const TextStyle(
                                     fontSize: 14,
                                     height: 1.5,
-                                    color: Colors.white,
+                                    color: Colors.black,
                                   ),
                                   maxLines: 4,
                                   overflow: TextOverflow.ellipsis,
@@ -1212,8 +1212,8 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
       children: book.categories.map((category) {
         return Chip(
           label: Text(category),
-          backgroundColor: AppColors.primary.withOpacity(0.1),
-          labelStyle: TextStyle(color: AppColors.primary),
+          backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+          labelStyle: const TextStyle(color: AppColors.primary),
         );
       }).toList(),
     );
@@ -1277,7 +1277,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                                           child: Image.network(
                                             books[index].coverImageUrl!,
                                             fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) =>
+                                            errorBuilder: (_, _, _) =>
                                                 const Icon(Icons.book),
                                           ),
                                         )
@@ -1311,7 +1311,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
               itemCount: 5,
               itemBuilder: (context, index) => const ShimmerBookCard(),
             ),
-            error: (_, __) => const SizedBox(),
+            error: (_, _) => const SizedBox(),
           ),
         ),
       ],

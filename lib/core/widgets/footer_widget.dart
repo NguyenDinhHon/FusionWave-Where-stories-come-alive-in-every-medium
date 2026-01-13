@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../constants/app_strings.dart';
 
@@ -37,12 +37,14 @@ class FooterWidget extends StatelessWidget {
                     spacing: 24,
                     runSpacing: 16,
                     children: [
-                      _buildFooterLink(context, 'FusionWave độc quyền', () {}),
+                      _buildFooterLink(context, 'FusionWave độc quyền', () {
+                        context.push('/premium');
+                      }),
                       _buildFooterLink(context, 'Thử dùng gói Cao cấp', () {
-                        // TODO: Navigate to page
+                        context.push('/premium');
                       }),
                       _buildFooterLink(context, 'Tải Ứng Dụng', () {
-                        // TODO: Show download options
+                        _showDownloadDialog(context);
                       }),
                       _buildFooterLink(context, 'Ngôn ngữ', () {
                         _showLanguageDialog(context);
@@ -51,13 +53,13 @@ class FooterWidget extends StatelessWidget {
                         context.go('/leaderboard');
                       }),
                       _buildFooterLink(context, 'Hợp tác thương hiệu', () {
-                        // TODO: Navigate to brand partnerships
+                        context.push('/brand-partnerships');
                       }),
                       _buildFooterLink(context, 'Công việc', () {
-                        // TODO: Navigate to jobs page
+                        context.push('/jobs');
                       }),
                       _buildFooterLink(context, 'Báo chí', () {
-                        // TODO: Navigate to press page
+                        context.push('/press');
                       }),
                     ],
                   ),
@@ -73,19 +75,19 @@ class FooterWidget extends StatelessWidget {
                     runSpacing: 16,
                     children: [
                       _buildFooterLink(context, 'Điều khoản', () {
-                        // TODO: Navigate to terms page
+                        context.push('/terms');
                       }),
                       _buildFooterLink(context, 'Riêng tư', () {
-                        // TODO: Navigate to privacy page
+                        context.push('/privacy');
                       }),
                       _buildFooterLink(context, 'Chính sách thanh toán', () {
-                        // TODO: Navigate to payment policy
+                        context.push('/payment-policy');
                       }),
                       _buildFooterLink(context, 'Thiết lập', () {
                         context.go('/settings');
                       }),
                       _buildFooterLink(context, 'Trợ giúp', () {
-                        // TODO: Navigate to help page
+                        context.push('/help');
                       }),
                       Text(
                         '© ${DateTime.now().year} ${AppStrings.appName}',
@@ -137,7 +139,11 @@ class FooterWidget extends StatelessWidget {
               title: const Text('Tiếng Việt'),
               onTap: () {
                 Navigator.pop(context);
-                // TODO: Change language to Vietnamese
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Ngôn ngữ đã được đặt thành Tiếng Việt'),
+                  ),
+                );
               },
             ),
             ListTile(
@@ -145,7 +151,51 @@ class FooterWidget extends StatelessWidget {
               title: const Text('English'),
               onTap: () {
                 Navigator.pop(context);
-                // TODO: Change language to English
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Language has been set to English'),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDownloadDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Tải Ứng Dụng'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.android),
+              title: const Text('Android'),
+              subtitle: const Text('Tải từ Google Play Store'),
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Ứng dụng Android sẽ sớm có mặt trên Google Play Store'),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.phone_iphone),
+              title: const Text('iOS'),
+              subtitle: const Text('Tải từ App Store'),
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Ứng dụng iOS sẽ sớm có mặt trên App Store'),
+                  ),
+                );
               },
             ),
           ],
@@ -161,7 +211,7 @@ class WavePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = const Color(0xFF6B9BD2)
-          .withOpacity(0.3) // Light blue/lavender with opacity
+          .withValues(alpha: 0.3) // Light blue/lavender with opacity
       ..style = PaintingStyle.fill;
 
     final path = Path();

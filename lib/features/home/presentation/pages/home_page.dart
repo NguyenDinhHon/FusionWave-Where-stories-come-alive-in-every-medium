@@ -173,7 +173,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                         decoration: BoxDecoration(
                           color: _currentCarouselPage == index
                               ? Colors.white
-                              : Colors.white.withOpacity(0.4),
+                              : Colors.white.withValues(alpha: 0.4),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -209,7 +209,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -225,7 +225,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               imageUrl: book.coverImageUrl,
               fit: BoxFit.cover,
               placeholder: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: AppColors.primaryGradient,
                 ),
                 child: const Center(
@@ -235,7 +235,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
               ),
               errorWidget: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: AppColors.primaryGradient,
                 ),
                 child: const Center(
@@ -254,7 +254,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black.withOpacity(0.4)],
+                  colors: [Colors.transparent, Colors.black.withValues(alpha: 0.4)],
                 ),
               ),
             ),
@@ -337,7 +337,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         return InteractiveIconButton(
           icon: isInLibrary ? Icons.bookmark : Icons.bookmark_border,
           iconColor: Colors.white,
-          backgroundColor: Colors.white.withOpacity(0.2),
+          backgroundColor: Colors.white.withValues(alpha: 0.2),
           size: 36,
           onPressed: () async {
             try {
@@ -372,14 +372,14 @@ class _HomePageState extends ConsumerState<HomePage> {
       loading: () => InteractiveIconButton(
         icon: Icons.bookmark_border,
         iconColor: Colors.white,
-        backgroundColor: Colors.white.withOpacity(0.2),
+        backgroundColor: Colors.white.withValues(alpha: 0.2),
         size: 36,
         onPressed: null,
       ),
-      error: (_, __) => InteractiveIconButton(
+      error: (_, _) => InteractiveIconButton(
         icon: Icons.bookmark_border,
         iconColor: Colors.white,
-        backgroundColor: Colors.white.withOpacity(0.2),
+        backgroundColor: Colors.white.withValues(alpha: 0.2),
         size: 36,
         onPressed: () async {
           try {
@@ -526,7 +526,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         );
       },
       loading: () => const ShimmerBookCard(),
-      error: (_, __) => const SizedBox(
+      error: (_, _) => const SizedBox(
         width: 200,
         height: 380,
         child: Center(
@@ -558,7 +558,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               height: 280,
               child: Center(child: CircularProgressIndicator()),
             ),
-            error: (_, __) => const SizedBox(),
+            error: (_, _) => const SizedBox(),
           ),
         ),
       ),
@@ -587,7 +587,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               height: 280,
               child: Center(child: CircularProgressIndicator()),
             ),
-            error: (_, __) => const SizedBox(),
+            error: (_, _) => const SizedBox(),
           ),
         ),
       ),
@@ -616,7 +616,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               height: 280,
               child: Center(child: CircularProgressIndicator()),
             ),
-            error: (_, __) => const SizedBox(),
+            error: (_, _) => const SizedBox(),
           ),
         ),
       ),
@@ -645,7 +645,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               height: 280,
               child: Center(child: CircularProgressIndicator()),
             ),
-            error: (_, __) => const SizedBox(),
+            error: (_, _) => const SizedBox(),
           ),
         ),
       ),
@@ -674,7 +674,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               height: 280,
               child: Center(child: CircularProgressIndicator()),
             ),
-            error: (_, __) => const SizedBox(),
+            error: (_, _) => const SizedBox(),
           ),
         ),
       ),
@@ -703,7 +703,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               height: 280,
               child: Center(child: CircularProgressIndicator()),
             ),
-            error: (_, __) => const SizedBox(),
+            error: (_, _) => const SizedBox(),
           ),
         ),
       ),

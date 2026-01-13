@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../../data/models/book_model.dart';
 import '../../../../core/constants/app_colors.dart';
 
@@ -79,8 +79,8 @@ class _AnimatedBookCardState extends State<AnimatedBookCard>
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(
-                              _isHovered ? 0.3 : 0.15,
+                            color: Colors.black.withValues(
+                              alpha: _isHovered ? 0.3 : 0.15,
                             ),
                             blurRadius: _isHovered ? 12 : 8,
                             offset: Offset(0, _isHovered ? 6 : 4),
@@ -90,7 +90,7 @@ class _AnimatedBookCardState extends State<AnimatedBookCard>
                             ? DecorationImage(
                                 image: NetworkImage(widget.book.coverImageUrl!),
                                 fit: BoxFit.cover,
-                                onError: (_, __) {},
+                                onError: (_, _) {},
                               )
                             : null,
                       ),
@@ -118,7 +118,7 @@ class _AnimatedBookCardState extends State<AnimatedBookCard>
                             end: Alignment.bottomCenter,
                             colors: [
                               Colors.transparent,
-                              Colors.black.withOpacity(0.7),
+                              Colors.black.withValues(alpha: 0.7),
                             ],
                           ),
                         ),
@@ -142,11 +142,11 @@ class _AnimatedBookCardState extends State<AnimatedBookCard>
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.amber.withOpacity(0.9),
+                            color: Colors.amber.withValues(alpha: 0.9),
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
+                                color: Colors.black.withValues(alpha: 0.2),
                                 blurRadius: 4,
                                 offset: const Offset(0, 2),
                               ),

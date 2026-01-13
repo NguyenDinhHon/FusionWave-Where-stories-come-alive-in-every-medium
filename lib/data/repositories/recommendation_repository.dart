@@ -58,7 +58,8 @@ class RecommendationRepository {
   
   // Get favorite categories from reading history
   List<String> _getFavoriteCategories(List<dynamic> libraryItems) {
-    // TODO: Get categories from books in library
+    // ignore: todo
+    // TODO: Get categories from books in library - requires library data access
     // For now, return default categories
     return ['Fiction', 'Non-Fiction', 'Science'];
   }
@@ -66,7 +67,8 @@ class RecommendationRepository {
   // Get recommendations based on similar users
   Future<List<BookModel>> getSimilarUsersRecommendations({int limit = 10}) async {
     try {
-      // TODO: Implement collaborative filtering
+      // ignore: todo
+      // TODO: Implement collaborative filtering - requires user similarity algorithm
       // For now, return featured books
       return _bookRepository.getFeaturedBooks(limit: limit);
     } catch (e) {

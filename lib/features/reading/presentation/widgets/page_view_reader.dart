@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
@@ -50,7 +50,7 @@ class _PageViewReaderState extends ConsumerState<PageViewReader>
   
   Future<void> _loadSettings() async {
     final prefsAsync = ref.read(preferencesServiceProvider);
-    await prefsAsync.whenData((prefs) {
+    prefsAsync.whenData((prefs) {
       setState(() {
         _fontSize = prefs.getFontSize();
         _lineHeight = prefs.getLineHeight();
@@ -165,7 +165,7 @@ class _PageViewReaderState extends ConsumerState<PageViewReader>
                       widget.chapter.subtitle!,
                       style: TextStyle(
                         fontSize: _fontSize * 0.9,
-                        color: _getTextColor().withOpacity(0.7),
+                        color: _getTextColor().withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -192,7 +192,7 @@ class _PageViewReaderState extends ConsumerState<PageViewReader>
                     child: Text(
                       'Page ${index + 1} of ${_pages.length}',
                       style: TextStyle(
-                        color: _getTextColor().withOpacity(0.6),
+                        color: _getTextColor().withValues(alpha: 0.6),
                         fontSize: 12,
                       ),
                     ),

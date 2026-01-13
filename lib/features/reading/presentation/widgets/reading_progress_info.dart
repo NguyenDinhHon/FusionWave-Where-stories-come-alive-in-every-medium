@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 /// Reading progress info widget
 class ReadingProgressInfo extends StatelessWidget {
@@ -25,7 +25,7 @@ class ReadingProgressInfo extends StatelessWidget {
         color: Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -85,7 +85,7 @@ class ReadingProgressInfo extends StatelessWidget {
                     Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
                     const SizedBox(width: 4),
                     Text(
-                      '${timeRemainingMinutes} min left',
+                      '$timeRemainingMinutes min left',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],

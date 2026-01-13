@@ -100,7 +100,7 @@ class _EmailLinkVerifyPageState extends ConsumerState<EmailLinkVerifyPage> {
                 const SizedBox(height: 60),
                 
                 // Icon
-                Icon(
+                const Icon(
                   Icons.email_outlined,
                   size: 64,
                   color: AppColors.primary,

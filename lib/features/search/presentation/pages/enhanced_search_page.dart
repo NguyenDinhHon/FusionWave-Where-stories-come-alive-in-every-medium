@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -6,6 +6,7 @@ import '../../../home/presentation/providers/book_provider.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
+import '../../../../core/services/preferences_service.dart';
 import '../../../../data/models/book_model.dart';
 import '../widgets/search_filters_dialog.dart';
 
@@ -40,12 +41,27 @@ class _EnhancedSearchPageState extends ConsumerState<EnhancedSearchPage> {
     super.dispose();
   }
   
-  void _loadSearchHistory() {
-    // TODO: Load from SharedPreferences
-    _searchHistory = [];
+  void _loadSearchHistory() async {
+    try {
+      final prefsService = PreferencesService();
+      await prefsService.init();
+      final history = await prefsService.getSearchHistory();
+      if (mounted) {
+        setState(() {
+          _searchHistory = history;
+        });
+      }
+    } catch (e) {
+      // Ignore errors, use empty history
+      if (mounted) {
+        setState(() {
+          _searchHistory = [];
+        });
+      }
+    }
   }
   
-  void _saveSearchHistory(String query) {
+  void _saveSearchHistory(String query) async {
     if (query.isEmpty) return;
     if (!_searchHistory.contains(query)) {
       setState(() {
@@ -54,7 +70,13 @@ class _EnhancedSearchPageState extends ConsumerState<EnhancedSearchPage> {
           _searchHistory = _searchHistory.take(10).toList();
         }
       });
-      // TODO: Save to SharedPreferences
+      try {
+        final prefsService = PreferencesService();
+        await prefsService.init();
+        await prefsService.saveSearchHistory(_searchHistory);
+      } catch (e) {
+        // Ignore errors
+      }
     }
   }
   
@@ -359,7 +381,7 @@ class _EnhancedSearchPageState extends ConsumerState<EnhancedSearchPage> {
                                       child: Image.network(
                                         filteredBooks[index].coverImageUrl!,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) => const Icon(Icons.book),
+                                        errorBuilder: (_, _, _) => const Icon(Icons.book),
                                       ),
                                     )
                                   : const Icon(Icons.book),

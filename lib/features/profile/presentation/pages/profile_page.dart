@@ -10,6 +10,7 @@ import '../../../../core/widgets/top_navigation_bar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../stats/presentation/providers/stats_provider.dart';
 import '../../../goals/presentation/providers/goals_provider.dart';
+import '../../../../core/constants/app_constants.dart';
 
 /// Profile Page với design giống Wattpad & Waka
 class ProfilePage extends ConsumerWidget {
@@ -28,7 +29,7 @@ class ProfilePage extends ConsumerWidget {
           // Profile Header
           SliverToBoxAdapter(
             child: Container(
-              decoration: BoxDecoration(gradient: AppColors.primaryGradient),
+              decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Row(
@@ -71,14 +72,14 @@ class ProfilePage extends ConsumerWidget {
                             children: [
                               CircleAvatar(
                                 radius: 60,
-                                backgroundColor: AppColors.primary.withOpacity(
-                                  0.1,
+                                backgroundColor: AppColors.primary.withValues(
+                                  alpha: 0.1,
                                 ),
                                 backgroundImage: user?.photoUrl != null
                                     ? NetworkImage(user!.photoUrl!)
                                     : null,
                                 child: user?.photoUrl == null
-                                    ? Icon(
+                                    ? const Icon(
                                         Icons.person,
                                         size: 60,
                                         color: AppColors.primary,
@@ -119,25 +120,45 @@ class ProfilePage extends ConsumerWidget {
                           const SizedBox(height: 4),
                           Text(
                             user?.email ?? '',
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: AppColors.textSecondaryLight,
                               fontSize: 14,
                             ),
                           ),
                           const SizedBox(height: 20),
-                          AppButton(
-                            label: 'Edit Profile',
-                            icon: Icons.edit,
-                            isOutlined: false,
-                            color: AppColors.primary,
-                            textColor: Colors.white,
-                            iconColor: Colors.white,
-                            onPressed: () => context.push('/edit-profile'),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: AppButton(
+                                  label: 'Edit Profile',
+                                  icon: Icons.edit,
+                                  isOutlined: false,
+                                  color: AppColors.primary,
+                                  textColor: Colors.white,
+                                  iconColor: Colors.white,
+                                  onPressed: () => context.push('/edit-profile'),
+                                ),
+                              ),
+                              if (user?.role == AppConstants.roleAdmin) ...[
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: AppButton(
+                                    label: 'Admin',
+                                    icon: Icons.admin_panel_settings,
+                                    isOutlined: false,
+                                    color: Colors.red,
+                                    textColor: Colors.white,
+                                    iconColor: Colors.white,
+                                    onPressed: () => context.push('/admin'),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ],
                       ),
                       loading: () => const CircularProgressIndicator(),
-                      error: (_, __) => const Icon(Icons.error),
+                      error: (_, _) => const Icon(Icons.error),
                     ),
                   ),
 
@@ -151,7 +172,7 @@ class ProfilePage extends ConsumerWidget {
                           child: AppCard(
                             child: Column(
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.menu_book,
                                   color: Colors.blue,
                                   size: 32,
@@ -165,7 +186,7 @@ class ProfilePage extends ConsumerWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                Text(
+                                const Text(
                                   'Books Read',
                                   style: TextStyle(
                                     color: AppColors.textSecondaryLight,
@@ -181,7 +202,7 @@ class ProfilePage extends ConsumerWidget {
                           child: AppCard(
                             child: Column(
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.local_fire_department,
                                   color: Colors.orange,
                                   size: 32,
@@ -195,7 +216,7 @@ class ProfilePage extends ConsumerWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                Text(
+                                const Text(
                                   'Day Streak',
                                   style: TextStyle(
                                     color: AppColors.textSecondaryLight,
@@ -211,7 +232,7 @@ class ProfilePage extends ConsumerWidget {
                           child: AppCard(
                             child: Column(
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.description,
                                   color: Colors.green,
                                   size: 32,
@@ -225,7 +246,7 @@ class ProfilePage extends ConsumerWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                Text(
+                                const Text(
                                   'Pages Read',
                                   style: TextStyle(
                                     color: AppColors.textSecondaryLight,
@@ -239,7 +260,7 @@ class ProfilePage extends ConsumerWidget {
                       ],
                     ),
                     loading: () => const SizedBox(),
-                    error: (_, __) => const SizedBox(),
+                    error: (_, _) => const SizedBox(),
                   ),
 
                   const SizedBox(height: 24),
@@ -290,7 +311,7 @@ class ProfilePage extends ConsumerWidget {
                                     ),
                                     Text(
                                       '${(goal.progress * 100).toStringAsFixed(0)}%',
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         color: AppColors.textSecondaryLight,
                                         fontSize: 12,
                                       ),
@@ -399,7 +420,7 @@ class ProfilePage extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: (item['color'] as Color).withOpacity(0.1),
+                          color: (item['color'] as Color).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -418,7 +439,7 @@ class ProfilePage extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      Icon(
+                      const Icon(
                         Icons.chevron_right,
                         color: AppColors.textSecondaryLight,
                       ),

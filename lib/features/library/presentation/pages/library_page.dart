@@ -73,7 +73,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      const Text(
                         AppStrings.myLibrary,
                         style: TextStyle(
                           fontSize: 24,
@@ -138,8 +138,8 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                 TabBar(
                   controller: _tabController,
                   labelColor: AppColors.primary,
-                  unselectedLabelColor: AppColors.textPrimaryLight.withOpacity(
-                    0.7,
+                  unselectedLabelColor: AppColors.textPrimaryLight.withValues(
+                    alpha: 0.7,
                   ),
                   indicatorColor: AppColors.primary,
                   indicatorWeight: 3,
@@ -158,7 +158,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                         Icons.menu_book,
                         color: _tabController.index == 0
                             ? AppColors.primary
-                            : AppColors.textPrimaryLight.withOpacity(0.7),
+                            : AppColors.textPrimaryLight.withValues(alpha: 0.7),
                       ),
                     ),
                     Tab(
@@ -167,7 +167,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                         Icons.check_circle,
                         color: _tabController.index == 1
                             ? AppColors.primary
-                            : AppColors.textPrimaryLight.withOpacity(0.7),
+                            : AppColors.textPrimaryLight.withValues(alpha: 0.7),
                       ),
                     ),
                     Tab(
@@ -176,7 +176,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                         Icons.bookmark_border,
                         color: _tabController.index == 2
                             ? AppColors.primary
-                            : AppColors.textPrimaryLight.withOpacity(0.7),
+                            : AppColors.textPrimaryLight.withValues(alpha: 0.7),
                       ),
                     ),
                     Tab(
@@ -185,7 +185,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                         Icons.library_books,
                         color: _tabController.index == 3
                             ? AppColors.primary
-                            : AppColors.textPrimaryLight.withOpacity(0.7),
+                            : AppColors.textPrimaryLight.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -252,6 +252,68 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
         _sortBy = result;
       });
     }
+  }
+
+  void _showLibraryItemMenu(
+    BuildContext context,
+    WidgetRef ref,
+    LibraryItemModel item,
+    BookModel book,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(book.title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.book_outlined),
+              title: const Text('View Details'),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/book/${book.id}');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.play_arrow),
+              title: const Text('Continue Reading'),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/read/${book.id}');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.check_circle_outline),
+              title: const Text('Mark as Completed'),
+              onTap: () async {
+                Navigator.pop(context);
+                final controller = ref.read(libraryControllerProvider);
+                await controller.updateBookStatus(book.id, 'completed');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: Colors.red),
+              title: const Text(
+                'Remove from Library',
+                style: TextStyle(color: Colors.red),
+              ),
+              onTap: () async {
+                Navigator.pop(context);
+                final controller = ref.read(libraryControllerProvider);
+                await controller.removeFromLibrary(book.id);
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   List<LibraryItemModel> _applyFiltersAndSort(
@@ -363,7 +425,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
     return libraryItemsAsync.when(
       data: (items) {
         if (items.isEmpty) {
-          return EmptyState(
+          return const EmptyState(
             title: 'No books in this section',
             message: 'Start reading to build your library',
             icon: Icons.library_books_outlined,
@@ -544,7 +606,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                             child: Image.network(
                               book.coverImageUrl!,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
+                              errorBuilder: (_, _, _) =>
                                   const Icon(Icons.book),
                             ),
                           )
@@ -557,7 +619,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                       child: Container(
                         height: 4,
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.3),
+                          color: Colors.black.withValues(alpha: 0.3),
                           borderRadius: const BorderRadius.only(
                             bottomLeft: Radius.circular(12),
                             bottomRight: Radius.circular(12),
@@ -567,9 +629,9 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                           alignment: Alignment.centerLeft,
                           widthFactor: item.progress.clamp(0.0, 1.0),
                           child: Container(
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: Colors.blue,
-                              borderRadius: const BorderRadius.only(
+                              borderRadius: BorderRadius.only(
                                 bottomLeft: Radius.circular(12),
                                 bottomRight: Radius.circular(12),
                               ),
@@ -589,10 +651,10 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                   children: [
                     Text(
                       book.title,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: AppColors.textPrimaryLight,
+                        color: Colors.white,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -601,54 +663,21 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                       const SizedBox(height: 4),
                       Text(
                         book.authors.join(', '),
-                        style: TextStyle(
-                          color: AppColors.textSecondaryLight,
+                        style: const TextStyle(
+                          color: Colors.white70,
                           fontSize: 14,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _getStatusColor(
-                              item.status,
-                            ).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            item.status,
-                            style: TextStyle(
-                              color: _getStatusColor(item.status),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          '${(item.progress * 100).toStringAsFixed(0)}%',
-                          style: TextStyle(
-                            color: AppColors.textSecondaryLight,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),
               InteractiveIconButton(
                 icon: Icons.more_vert,
                 onPressed: () {
-                  // TODO: Show menu
+                  _showLibraryItemMenu(context, ref, item, book);
                 },
                 tooltip: 'More options',
                 size: 40,
@@ -658,7 +687,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
         );
       },
       loading: () => const ShimmerListItem(),
-      error: (_, __) => const SizedBox(),
+      error: (_, _) => const SizedBox(),
     );
   }
 
@@ -693,7 +722,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                               child: Image.network(
                                 book.coverImageUrl!,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) =>
+                                errorBuilder: (_, _, _) =>
                                     const Icon(Icons.book),
                               ),
                             )
@@ -707,7 +736,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                       child: Container(
                         height: 4,
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.3),
+                          color: Colors.black.withValues(alpha: 0.3),
                           borderRadius: const BorderRadius.only(
                             bottomLeft: Radius.circular(12),
                             bottomRight: Radius.circular(12),
@@ -717,9 +746,9 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                           alignment: Alignment.centerLeft,
                           widthFactor: item.progress.clamp(0.0, 1.0),
                           child: Container(
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: Colors.blue,
-                              borderRadius: const BorderRadius.only(
+                              borderRadius: BorderRadius.only(
                                 bottomLeft: Radius.circular(12),
                                 bottomRight: Radius.circular(12),
                               ),
@@ -734,7 +763,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
               const SizedBox(height: 8),
               Text(
                 book.title,
-                style: TextStyle(
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                   color: AppColors.textPrimaryLight,
@@ -745,7 +774,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
               const SizedBox(height: 4),
               Text(
                 '${(item.progress * 100).toStringAsFixed(0)}%',
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppColors.textSecondaryLight,
                   fontSize: 12,
                 ),
@@ -755,20 +784,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
         );
       },
       loading: () => const ShimmerBookCard(),
-      error: (_, __) => const SizedBox(),
+      error: (_, _) => const SizedBox(),
     );
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case AppConstants.bookStatusReading:
-        return Colors.blue;
-      case AppConstants.bookStatusCompleted:
-        return Colors.green;
-      case AppConstants.bookStatusWantToRead:
-        return Colors.orange;
-      default:
-        return Colors.grey;
-    }
   }
 }

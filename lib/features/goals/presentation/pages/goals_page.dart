@@ -131,14 +131,14 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.success.withOpacity(0.1),
+                          color: AppColors.success.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Row(
+                        child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.check_circle, color: AppColors.success),
-                            const SizedBox(width: 8),
+                            SizedBox(width: 8),
                             Text(
                               'Goal Achieved! 🎉',
                               style: TextStyle(
@@ -168,12 +168,12 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    const Row(
                       children: [
                         Icon(Icons.local_fire_department, 
                           color: Colors.orange, size: 28),
-                        const SizedBox(width: 12),
-                        const Text(
+                        SizedBox(width: 12),
+                        Text(
                           'Reading Streak',
                           style: TextStyle(
                             fontSize: 20,
@@ -297,7 +297,7 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: achieved 
-            ? AppColors.success.withOpacity(0.1)
+            ? AppColors.success.withValues(alpha: 0.1)
             : Colors.grey[100],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
@@ -338,7 +338,7 @@ class _GoalsPageState extends ConsumerState<GoalsPage> {
             ),
           ),
           if (achieved)
-            Icon(Icons.check_circle, color: AppColors.success),
+            const Icon(Icons.check_circle, color: AppColors.success),
         ],
       ),
     );

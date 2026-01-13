@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../data/models/book_model.dart';
@@ -163,7 +163,7 @@ class RecommendationsPage extends ConsumerWidget {
                         child: Image.network(
                           book.coverImageUrl!,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Icon(Icons.book),
+                          errorBuilder: (_, _, _) => const Icon(Icons.book),
                         ),
                       )
                     : const Icon(Icons.book),

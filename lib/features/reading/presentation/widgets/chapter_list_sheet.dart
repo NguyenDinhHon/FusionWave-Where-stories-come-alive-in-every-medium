@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/chapter.dart';
 import '../providers/current_chapter_provider.dart';
@@ -27,7 +27,7 @@ class ChapterListSheet extends ConsumerWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 10,
                 offset: const Offset(0, -2),
               ),
@@ -44,7 +44,7 @@ class ChapterListSheet extends ConsumerWidget {
                   color: Theme.of(context)
                       .colorScheme
                       .onSurfaceVariant
-                      .withOpacity(0.4),
+                      .withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -77,7 +77,7 @@ class ChapterListSheet extends ConsumerWidget {
                         color: Theme.of(context)
                             .colorScheme
                             .primaryContainer
-                            .withOpacity(0.5),
+                            .withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -135,7 +135,7 @@ class ChapterListSheet extends ConsumerWidget {
           Icon(
             Icons.menu_book_outlined,
             size: 64,
-            color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+            color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           Text(
@@ -151,7 +151,7 @@ class ChapterListSheet extends ConsumerWidget {
                   color: Theme.of(context)
                       .colorScheme
                       .onSurfaceVariant
-                      .withOpacity(0.7),
+                      .withValues(alpha: 0.7),
                 ),
           ),
         ],
@@ -178,7 +178,7 @@ class _ChapterListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: isCurrent
-          ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
+          ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
           : Colors.transparent,
       child: InkWell(
         onTap: onTap,
@@ -193,7 +193,7 @@ class _ChapterListItem extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isCurrent
                       ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.surfaceVariant,
+                      : Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
@@ -239,7 +239,7 @@ class _ChapterListItem extends StatelessWidget {
                             color: Theme.of(context)
                                 .colorScheme
                                 .onSurfaceVariant
-                                .withOpacity(0.7),
+                                .withValues(alpha: 0.7),
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -251,7 +251,7 @@ class _ChapterListItem extends StatelessWidget {
                                   color: Theme.of(context)
                                       .colorScheme
                                       .onSurfaceVariant
-                                      .withOpacity(0.7),
+                                      .withValues(alpha: 0.7),
                                 ),
                           ),
                         ],
@@ -283,7 +283,7 @@ class _ChapterListItem extends StatelessWidget {
                   color: Theme.of(context)
                       .colorScheme
                       .onSurfaceVariant
-                      .withOpacity(0.5),
+                      .withValues(alpha: 0.5),
                 ),
             ],
           ),

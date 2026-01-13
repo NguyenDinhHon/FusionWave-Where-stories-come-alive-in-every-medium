@@ -31,7 +31,7 @@ class OfflineBooksPage extends ConsumerWidget {
           final downloadedBooks = offlineService.getDownloadedBooks();
           
           if (downloadedBooks.isEmpty) {
-            return EmptyState(
+            return const EmptyState(
               title: 'No offline books',
               message: 'Download books to read them offline',
               icon: Icons.cloud_download_outlined,
@@ -97,7 +97,7 @@ class OfflineBooksPage extends ConsumerWidget {
                       child: Image.network(
                         book.coverImageUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.book),
+                        errorBuilder: (_, _, _) => const Icon(Icons.book),
                       ),
                     )
                   : const Icon(Icons.book),
@@ -112,7 +112,7 @@ class OfflineBooksPage extends ConsumerWidget {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
+                const Icon(
                   Icons.cloud_done,
                   color: Colors.green,
                   size: 20,
@@ -129,7 +129,7 @@ class OfflineBooksPage extends ConsumerWidget {
         );
       },
       loading: () => const ShimmerListItem(),
-      error: (_, __) => const SizedBox(),
+      error: (_, _) => const SizedBox(),
     );
   }
   
@@ -152,7 +152,7 @@ class OfflineBooksPage extends ConsumerWidget {
           TextButton(
             onPressed: () async {
               final offlineServiceAsync = ref.read(offlineServiceProvider);
-              await offlineServiceAsync.whenData((service) async {
+              offlineServiceAsync.whenData((service) async {
                 await service.removeDownloadedBook(bookId);
               });
               if (context.mounted) {
@@ -183,7 +183,7 @@ class OfflineBooksPage extends ConsumerWidget {
           TextButton(
             onPressed: () async {
               final offlineServiceAsync = ref.read(offlineServiceProvider);
-              await offlineServiceAsync.whenData((service) async {
+              offlineServiceAsync.whenData((service) async {
                 await service.clearAllOfflineContent();
               });
               if (context.mounted) {

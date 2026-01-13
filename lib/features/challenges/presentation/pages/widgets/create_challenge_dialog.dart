@@ -70,6 +70,7 @@ class _CreateChallengeDialogState extends ConsumerState<CreateChallengeDialog> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<ChallengeType>(
+                // ignore: deprecated_member_use
                 value: _selectedType,
                 decoration: const InputDecoration(
                   labelText: 'Challenge Type',

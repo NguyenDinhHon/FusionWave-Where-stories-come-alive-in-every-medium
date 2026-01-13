@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
@@ -122,7 +122,7 @@ class NotesPage extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       loading: () => const Text('Loading...'),
-                      error: (_, __) => const Text('Unknown Book'),
+                      error: (_, _) => const Text('Unknown Book'),
                     ),
                   ),
                   PopupMenuButton(
@@ -136,10 +136,17 @@ class NotesPage extends ConsumerWidget {
                             Text('Edit'),
                           ],
                         ),
-                        onTap: () => Future.delayed(
-                          Duration.zero,
-                          () => _showEditNoteDialog(context, ref, note),
-                        ),
+                        onTap: () {
+                          final dialogContext = context;
+                          Future.delayed(
+                            Duration.zero,
+                            () {
+                              if (dialogContext.mounted) {
+                                _showEditNoteDialog(dialogContext, ref, note);
+                              }
+                            },
+                          );
+                        },
                       ),
                       PopupMenuItem(
                         child: const Row(
@@ -149,10 +156,17 @@ class NotesPage extends ConsumerWidget {
                             Text('Delete', style: TextStyle(color: Colors.red)),
                           ],
                         ),
-                        onTap: () => Future.delayed(
-                          Duration.zero,
-                          () => _showDeleteDialog(context, ref, note),
-                        ),
+                        onTap: () {
+                          final dialogContext = context;
+                          Future.delayed(
+                            Duration.zero,
+                            () {
+                              if (dialogContext.mounted) {
+                                _showDeleteDialog(dialogContext, ref, note);
+                              }
+                            },
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -177,10 +191,10 @@ class NotesPage extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: highlightColor.withOpacity(0.2),
+                  color: highlightColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: highlightColor.withOpacity(0.5),
+                    color: highlightColor.withValues(alpha: 0.5),
                     width: 1,
                   ),
                 ),
@@ -331,7 +345,7 @@ class NotesPage extends ConsumerWidget {
         return;
       }
       
-      await Share.share(text, subject: 'Book Notes Export');
+      await SharePlus.instance.share(ShareParams(text: text));
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
