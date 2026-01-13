@@ -161,7 +161,7 @@ class _ManageCommentsPageState extends ConsumerState<ManageCommentsPage> {
                             ),
                             Row(
                               children: [
-                                Icon(Icons.favorite,
+                                const Icon(Icons.favorite,
                                     size: 16, color: Colors.red),
                                 const SizedBox(width: 4),
                                 Text('${comment.likes}'),
@@ -227,7 +227,7 @@ class _ManageCommentsPageState extends ConsumerState<ManageCommentsPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Xác nhận xóa'),
-        content: Text('Bạn có chắc muốn xóa comment này?'),
+        content: const Text('Bạn có chắc muốn xóa comment này?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
