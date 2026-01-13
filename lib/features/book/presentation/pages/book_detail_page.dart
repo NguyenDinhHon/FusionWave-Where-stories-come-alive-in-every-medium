@@ -192,6 +192,77 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
             );
           },
         ),
+        // Bookmark Button
+        Consumer(
+          builder: (context, ref, child) {
+            final libraryItemAsync = ref.watch(
+              libraryItemByBookIdProvider(book.id),
+            );
+
+            return libraryItemAsync.when(
+              data: (item) {
+                final isBookmarked = item?.isBookmarked ?? false;
+
+                return InteractiveIconButton(
+                  icon: isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                  iconColor: Colors.white,
+                  size: 32,
+                  onPressed: () async {
+                    final repository = ref.read(libraryRepositoryProvider);
+
+                    try {
+                      if (item == null) {
+                        // Not in library -> Add to library with isBookmarked = true
+                        await repository.addToLibrary(
+                          book.id,
+                          isBookmarked: true,
+                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Added to Want to Read'),
+                            ),
+                          );
+                        }
+                      } else {
+                        // In library -> Toggle isBookmarked
+                        await repository.updateBookmarkStatus(
+                          book.id,
+                          !isBookmarked,
+                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                isBookmarked
+                                    ? 'Removed from Want to Read'
+                                    : 'Added to Want to Read',
+                              ),
+                            ),
+                          );
+                        }
+                      }
+
+                      ref.invalidate(libraryItemByBookIdProvider(book.id));
+                      ref.invalidate(libraryItemsProvider);
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Failed to update bookmark'),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  tooltip: isBookmarked ? 'Remove Bookmark' : 'Add Bookmark',
+                );
+              },
+              loading: () => const SizedBox(),
+              error: (_, _) => const SizedBox(),
+            );
+          },
+        ),
         InteractiveIconButton(
           icon: Icons.share,
           iconColor: Colors.white,
@@ -231,7 +302,10 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black.withValues(alpha: 0.7)],
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.7),
+                  ],
                 ),
               ),
             ),
@@ -303,9 +377,35 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                     AppColors.primary.withValues(alpha: 0.8),
                   ],
                 ),
-                onPressed: () {
+                onPressed: () async {
                   if (isInLibrary) {
-                    context.push('/reading/${book.id}');
+                    // Navigate to last read chapter
+                    try {
+                      final chapters = await ref.read(
+                        chaptersByBookIdProvider(book.id).future,
+                      );
+
+                      if (chapters.isNotEmpty && item!.currentChapter != null) {
+                        // Find the chapter matching currentChapter number
+                        final chapter = chapters.firstWhere(
+                          (c) => c.chapterNumber == item.currentChapter,
+                          orElse: () => chapters.first,
+                        );
+                        if (context.mounted) {
+                          context.push(
+                            '/reading/${book.id}?chapterId=${chapter.id}',
+                          );
+                        }
+                      } else if (context.mounted) {
+                        // Fallback to first chapter if no currentChapter
+                        context.push('/reading/${book.id}');
+                      }
+                    } catch (e) {
+                      // Fallback on error
+                      if (context.mounted) {
+                        context.push('/reading/${book.id}');
+                      }
+                    }
                   } else {
                     ref.read(libraryControllerProvider).addToLibrary(book.id);
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -315,12 +415,16 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                 },
               );
             },
-            loading: () => const AppButton(label: 'Loading...', onPressed: null),
+            loading: () =>
+                const AppButton(label: 'Loading...', onPressed: null),
             error: (_, _) => AppButton(
               label: 'Add to Library',
               icon: Icons.add,
               gradient: LinearGradient(
-                colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
+                colors: [
+                  AppColors.primary,
+                  AppColors.primary.withValues(alpha: 0.8),
+                ],
               ),
               onPressed: () {
                 ref.read(libraryControllerProvider).addToLibrary(book.id);
@@ -331,9 +435,9 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
         const SizedBox(width: 12),
         AppButton(
           label: 'Read Now',
-          icon: Icons.book,
           isOutlined: true,
           color: AppColors.primary,
+          textColor: Colors.white,
           onPressed: () => context.push('/reading/${book.id}'),
         ),
       ],
@@ -490,9 +594,9 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
               if (userRating == null) {
                 return AppButton(
                   label: 'Rate this book',
-                  icon: Icons.star_outline,
                   isOutlined: true,
                   color: AppColors.primary,
+                  textColor: Colors.white,
                   onPressed: () {
                     _showRatingDialog(context, ref, book);
                   },
@@ -693,14 +797,26 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                 );
               }
 
-              // Show first 5 chapters
-              final displayChapters = chapters.take(5).toList();
+              // Watch library item to get completed chapters
+              final libraryItemAsync = ref.watch(
+                libraryItemByBookIdProvider(book.id),
+              );
 
-              return Column(
-                children: [
-                  ...displayChapters.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final chapter = entry.value;
+              return SizedBox(
+                height: 400, // Fixed height for scrollable list
+                child: ListView.builder(
+                  padding: EdgeInsets.zero,
+                  itemCount: chapters.length,
+                  itemBuilder: (context, index) {
+                    final chapter = chapters[index];
+
+                    // Check if chapter is completed
+                    final isCompleted = libraryItemAsync.maybeWhen(
+                      data: (item) =>
+                          item?.completedChapters.contains(chapter.id) ?? false,
+                      orElse: () => false,
+                    );
+
                     return AnimationConfiguration.staggeredList(
                       position: index,
                       duration: const Duration(milliseconds: 375),
@@ -712,17 +828,25 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.1),
+                                color: isCompleted
+                                    ? Colors.green.withValues(alpha: 0.2)
+                                    : AppColors.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Center(
-                                child: Text(
-                                  '${chapter.chapterNumber}',
-                                  style: const TextStyle(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                                child: isCompleted
+                                    ? const Icon(
+                                        Icons.check_circle,
+                                        color: Colors.green,
+                                        size: 24,
+                                      )
+                                    : Text(
+                                        '${chapter.chapterNumber}',
+                                        style: const TextStyle(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                               ),
                             ),
                             title: Text(
@@ -760,24 +884,8 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                         ),
                       ),
                     );
-                  }),
-                  if (chapters.length > 5)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: InteractiveButton(
-                        label: 'Show ${chapters.length - 5} more chapters',
-                        icon: Icons.arrow_forward,
-                        onPressed: () =>
-                            _showAllChaptersDialog(context, ref, book),
-                        isOutlined: true,
-                        height: 28,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                      ),
-                    ),
-                ],
+                  },
+                ),
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
@@ -852,57 +960,88 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                       );
                     }
 
-                    return ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: chapters.length,
-                      itemBuilder: (context, index) {
-                        final chapter = chapters[index];
-                        return ListTile(
-                          leading: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Center(
-                              child: Text(
-                                '${chapter.chapterNumber}',
-                                style: const TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.bold,
+                    return Consumer(
+                      builder: (context, ref, _) {
+                        final libraryItemAsync = ref.watch(
+                          libraryItemByBookIdProvider(book.id),
+                        );
+
+                        return ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: chapters.length,
+                          itemBuilder: (context, index) {
+                            final chapter = chapters[index];
+
+                            // Check completion status
+                            final isCompleted = libraryItemAsync.maybeWhen(
+                              data: (item) =>
+                                  item?.completedChapters.contains(
+                                    chapter.id,
+                                  ) ??
+                                  false,
+                              orElse: () => false,
+                            );
+
+                            return ListTile(
+                              leading: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: isCompleted
+                                      ? Colors.green.withValues(alpha: 0.2)
+                                      : AppColors.primary.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Center(
+                                  child: isCompleted
+                                      ? const Icon(
+                                          Icons.check_circle,
+                                          color: Colors.green,
+                                          size: 24,
+                                        )
+                                      : Text(
+                                          '${chapter.chapterNumber}',
+                                          style: const TextStyle(
+                                            color: AppColors.primary,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
                                 ),
                               ),
-                            ),
-                          ),
-                          title: Text(
-                            chapter.title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                          subtitle: chapter.subtitle != null
-                              ? Text(
-                                  chapter.subtitle!,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(color: Colors.white70),
-                                )
-                              : chapter.estimatedReadingTimeMinutes != null
-                              ? Text(
-                                  '${chapter.estimatedReadingTimeMinutes} min read',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white70,
-                                  ),
-                                )
-                              : null,
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () {
-                            Navigator.pop(context);
-                            context.push(
-                              '/reading/${book.id}?chapterId=${chapter.id}',
+                              title: Text(
+                                chapter.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              subtitle: chapter.subtitle != null
+                                  ? Text(
+                                      chapter.subtitle!,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                      ),
+                                    )
+                                  : chapter.estimatedReadingTimeMinutes != null
+                                  ? Text(
+                                      '${chapter.estimatedReadingTimeMinutes} min read',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white70,
+                                      ),
+                                    )
+                                  : null,
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () {
+                                Navigator.pop(context);
+                                context.push(
+                                  '/reading/${book.id}?chapterId=${chapter.id}',
+                                );
+                              },
                             );
                           },
                         );
@@ -1054,7 +1193,7 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                                   style: const TextStyle(
                                     fontSize: 14,
                                     height: 1.5,
-                                    color: Colors.white,
+                                    color: Colors.black,
                                   ),
                                   maxLines: 4,
                                   overflow: TextOverflow.ellipsis,

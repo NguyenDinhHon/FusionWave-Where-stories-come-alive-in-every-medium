@@ -20,6 +20,8 @@ import '../widgets/reading_settings_panel.dart';
 
 // Firebase data provider
 import '../providers/reading_provider.dart';
+import '../../../library/presentation/providers/library_provider.dart';
+import '../../../../data/repositories/library_repository.dart';
 
 /// Enhanced Reading Page - Simple, Clean, Beautiful
 /// Integrates Phase 1 (Models & Providers) + Phase 2 (UI Widgets)
@@ -38,6 +40,9 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
   final ScrollController _scrollController = ScrollController();
   late AnimationController _controlsAnimationController;
   double _lastScrollOffset = 0;
+  bool _hasInitializedChapter = false; // Track if we've initialized the chapter
+  bool _hasMarkedCurrentChapterComplete =
+      false; // Track if current chapter is marked complete
 
   @override
   void initState() {
@@ -74,6 +79,21 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
     }
 
     _lastScrollOffset = currentOffset;
+
+    // Check if scrolled to 90% for chapter completion
+    if (_scrollController.hasClients) {
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final currentScroll = _scrollController.position.pixels;
+
+      if (maxScroll > 0) {
+        final scrollPercentage = currentScroll / maxScroll;
+
+        // Mark complete when scrolled to 90%
+        if (scrollPercentage >= 0.9 && !_hasMarkedCurrentChapterComplete) {
+          _markCurrentChapterComplete();
+        }
+      }
+    }
   }
 
   void _showControls() {
@@ -92,6 +112,62 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
       _hideControls();
     } else {
       _showControls();
+    }
+  }
+
+  Future<void> _markCurrentChapterComplete() async {
+    final currentChapter = ref.read(currentChapterProvider);
+    if (currentChapter == null) return;
+
+    setState(() {
+      _hasMarkedCurrentChapterComplete = true;
+    });
+
+    try {
+      final repository = ref.read(libraryRepositoryProvider);
+      final chapters = ref.read(chaptersListProvider);
+
+      // Check if book is in library, if not add it with 'reading' status
+      // If already in library (e.g. 'want_to_read'), keep the existing status
+      var libraryItem = await repository.getLibraryItemByBookId(widget.bookId);
+      if (libraryItem == null) {
+        await repository.addToLibrary(widget.bookId, status: 'reading');
+        libraryItem = await repository.getLibraryItemByBookId(widget.bookId);
+      }
+
+      // 1. Mark chapter as completed
+      await repository.markChapterCompleted(
+        bookId: widget.bookId,
+        chapterId: currentChapter.id,
+      );
+
+      // 2. Get updated library item
+      libraryItem = await repository.getLibraryItemByBookId(widget.bookId);
+      final completedCount = libraryItem?.completedChapters.length ?? 0;
+
+      // 3. Calculate new progress
+      final progress = chapters.isNotEmpty
+          ? completedCount / chapters.length
+          : 0.0;
+
+      // 4. Update progress
+      await repository.updateReadingProgress(
+        bookId: widget.bookId,
+        currentPage: 0,
+        currentChapter: currentChapter.chapterNumber,
+        progress: progress,
+      );
+
+      // 5. Check if all chapters completed
+      await repository.checkAndUpdateCompletionStatus(
+        bookId: widget.bookId,
+        totalChapters: chapters.length,
+      );
+
+      // Refresh library provider
+      ref.invalidate(libraryItemByBookIdProvider(widget.bookId));
+    } catch (e) {
+      print('Failed to mark chapter complete: $e');
     }
   }
 
@@ -303,40 +379,6 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
     );
   }
 
-  void _addBookmark() async {
-    final currentChapter = ref.read(currentChapterProvider);
-    if (currentChapter == null) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    final bookmarkKey = 'bookmarks_${widget.bookId}';
-
-    // Get existing bookmarks
-    final bookmarksJson = prefs.getStringList(bookmarkKey) ?? [];
-
-    // Add new bookmark
-    final newBookmark = {
-      'chapterId': currentChapter.id,
-      'chapterTitle': currentChapter.title,
-      'chapterNumber': currentChapter.chapterNumber,
-      'position': _scrollController.offset.toInt(),
-      'timestamp': DateTime.now().toIso8601String(),
-    };
-
-    bookmarksJson.add(newBookmark.toString());
-    await prefs.setStringList(bookmarkKey, bookmarksJson);
-
-    // Show success message
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Đã lưu bookmark: ${currentChapter.title}'),
-          duration: const Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final currentChapter = ref.watch(currentChapterProvider);
@@ -370,34 +412,55 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
             .toList();
 
         // Load chapters into provider if not already loaded
-        if (chapters.isEmpty || chapters.length != loadedChapters.length) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          // Load chapters list directly without resetting index
+          if (chapters.isEmpty || chapters.length != loadedChapters.length) {
+            debugPrint(
+              '[ReadingPage] Loading ${loadedChapters.length} chapters into provider',
+            );
             ref
-                .read(chapterNavigationProvider.notifier)
+                .read(chaptersListProvider.notifier)
                 .loadChapters(loadedChapters);
+          }
 
-            // If specific chapter requested, navigate to it
-            if (widget.chapterId != null && currentChapter == null) {
+          // Only initialize chapter once (not on every rebuild)
+          if (!_hasInitializedChapter) {
+            _hasInitializedChapter = true;
+            debugPrint(
+              '[ReadingPage] Initializing chapter. chapterId: ${widget.chapterId}',
+            );
+
+            if (widget.chapterId != null) {
               final index = loadedChapters.indexWhere(
                 (c) => c.id == widget.chapterId,
               );
+              debugPrint('[ReadingPage] Found chapter at index: $index');
               if (index >= 0) {
+                debugPrint('[ReadingPage] Jumping to chapter index $index');
                 ref
                     .read(chapterNavigationProvider.notifier)
                     .jumpToChapter(index);
+                final currentIndex = ref.read(chapterNavigationProvider);
+                debugPrint(
+                  '[ReadingPage] Current index after jump: $currentIndex',
+                );
+              } else {
+                debugPrint(
+                  '[ReadingPage] Chapter ID not found in loaded chapters!',
+                );
               }
             } else if (currentChapter == null && loadedChapters.isNotEmpty) {
               // Default to first chapter if no chapter specified
+              debugPrint('[ReadingPage] No chapterId, defaulting to chapter 0');
               ref.read(chapterNavigationProvider.notifier).jumpToChapter(0);
             }
-          });
-        }
+          }
+        });
 
         // Now build the reader with book data
         return bookAsync.when(
           data: (book) => _buildReader(
             book: book,
-            currentChapter: currentChapter,
             chapters: chapters.isEmpty ? loadedChapters : chapters,
             controlsVisible: controlsVisible,
             prefs: prefs,
@@ -440,12 +503,16 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
 
   Widget _buildReader({
     required BookModel? book,
-    required Chapter? currentChapter,
     required List<Chapter> chapters,
     required bool controlsVisible,
     required dynamic prefs,
     required dynamic mode,
   }) {
+    // Watch current chapter from provider (updates when navigation changes)
+    final currentChapter = ref.watch(currentChapterProvider);
+    // Watch chapter index to trigger rebuild when navigation changes
+    ref.watch(chapterNavigationProvider);
+
     if (book == null || currentChapter == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -493,6 +560,9 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
                       ref
                           .read(chapterNavigationProvider.notifier)
                           .nextChapter();
+                      setState(() {
+                        _hasMarkedCurrentChapterComplete = false;
+                      });
                       _scrollController.animateTo(
                         0,
                         duration: const Duration(milliseconds: 250),
@@ -652,20 +722,6 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Bookmark Button
-            FloatingActionButton.small(
-              heroTag: 'bookmark',
-              onPressed: _addBookmark,
-              backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
-              tooltip: 'Bookmark',
-              child: Icon(
-                Icons.bookmark_add_outlined,
-                color: Theme.of(context).colorScheme.onTertiaryContainer,
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
             // Chapter List Button
             FloatingActionButton.small(
               heroTag: 'chapters',
@@ -725,6 +781,9 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
                     ref
                         .read(chapterNavigationProvider.notifier)
                         .previousChapter();
+                    setState(() {
+                      _hasMarkedCurrentChapterComplete = false;
+                    });
                     _scrollController.animateTo(
                       0,
                       duration: const Duration(milliseconds: 300),
@@ -749,6 +808,9 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
                 child: FilledButton.icon(
                   onPressed: () {
                     ref.read(chapterNavigationProvider.notifier).nextChapter();
+                    setState(() {
+                      _hasMarkedCurrentChapterComplete = false;
+                    });
                     _scrollController.animateTo(
                       0,
                       duration: const Duration(milliseconds: 300),
@@ -807,11 +869,11 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
   Future<void> _shareBook(BuildContext context, WidgetRef ref) async {
     final bookAsync = ref.read(bookByIdProvider(widget.bookId));
     final currentChapter = ref.read(currentChapterProvider);
-    
+
     await bookAsync.when(
       data: (book) async {
         if (book == null) return;
-        
+
         String shareText = 'Check out "${book.title}" on FusionWave!\n\n';
         if (book.authors.isNotEmpty) {
           shareText += 'By: ${book.authors.join(', ')}\n';
@@ -820,7 +882,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
           shareText += 'Currently reading: ${currentChapter.title}\n';
         }
         shareText += '\nDownload FusionWave to read more!';
-        
+
         await SharePlus.instance.share(ShareParams(text: shareText));
       },
       loading: () async {
@@ -829,9 +891,9 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
         );
       },
       error: (error, stack) async {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $error')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $error')));
       },
     );
   }

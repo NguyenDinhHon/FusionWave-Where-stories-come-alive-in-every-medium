@@ -44,60 +44,72 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Hide chips when viewing category grid (cards visible), show when a category is selected
+    final showChips = _selectedCategory != null;
+    
     return Scaffold(
       appBar: const TopNavigationBar(),
       body: Column(
         children: [
-          // Category Chips
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _categories.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final category = entry.value;
-                  final isSelected = _selectedCategory == category['name'];
-                  
-                  return AnimationConfiguration.staggeredList(
-                    position: index,
-                    duration: const Duration(milliseconds: 375),
-                    child: SlideAnimation(
-                      horizontalOffset: 50.0,
-                      child: FadeInAnimation(
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 12),
-                          child: FilterChip(
-                            label: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  category['icon'] as IconData,
-                                  size: 18,
-                                  color: isSelected 
-                                      ? Colors.white 
-                                      : category['color'] as Color,
+          // Category Chips - Hidden when grid cards are visible
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            height: showChips ? 72 : 0,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 200),
+              opacity: showChips ? 1.0 : 0.0,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: _categories.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final category = entry.value;
+                      final isSelected = _selectedCategory == category['name'];
+                      
+                      return AnimationConfiguration.staggeredList(
+                        position: index,
+                        duration: const Duration(milliseconds: 375),
+                        child: SlideAnimation(
+                          horizontalOffset: 50.0,
+                          child: FadeInAnimation(
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 12),
+                              child: FilterChip(
+                                label: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      category['icon'] as IconData,
+                                      size: 18,
+                                      color: isSelected 
+                                          ? Colors.white 
+                                          : category['color'] as Color,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(category['name'] as String),
+                                  ],
                                 ),
-                                const SizedBox(width: 8),
-                                Text(category['name'] as String),
-                              ],
+                                selected: isSelected,
+                                selectedColor: category['color'] as Color,
+                                checkmarkColor: Colors.white,
+                                onSelected: (selected) {
+                                  setState(() {
+                                    _selectedCategory = selected 
+                                        ? category['name'] as String 
+                                        : null;
+                                  });
+                                },
+                              ),
                             ),
-                            selected: isSelected,
-                            selectedColor: category['color'] as Color,
-                            checkmarkColor: Colors.white,
-                            onSelected: (selected) {
-                              setState(() {
-                                _selectedCategory = selected 
-                                    ? category['name'] as String 
-                                    : null;
-                              });
-                            },
                           ),
                         ),
-                      ),
-                    ),
-                  );
-                }).toList(),
+                      );
+                    }).toList(),
+                  ),
+                ),
               ),
             ),
           ),

@@ -18,6 +18,7 @@ import '../widgets/library_sort_dialog.dart';
 import '../../../../data/models/library_item_model.dart';
 import '../../../../data/models/book_model.dart';
 import '../../../home/presentation/providers/book_provider.dart';
+import '../../../reading/presentation/providers/reading_provider.dart';
 
 /// Library Page với design giống Wattpad & Waka
 class LibraryPage extends ConsumerStatefulWidget {
@@ -252,6 +253,94 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
         _sortBy = result;
       });
     }
+  }
+
+  void _showLibraryItemMenu(
+    BuildContext context,
+    WidgetRef ref,
+    LibraryItemModel item,
+    BookModel book,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(book.title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.book_outlined),
+              title: const Text('View Details'),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/book/${book.id}');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.play_arrow),
+              title: const Text('Continue Reading'),
+              onTap: () async {
+                Navigator.pop(context);
+
+                try {
+                  final chapters = await ref.read(
+                    chaptersByBookIdProvider(book.id).future,
+                  );
+
+                  if (chapters.isNotEmpty && item.currentChapter != null) {
+                    // Find the chapter matching currentChapter number
+                    final chapter = chapters.firstWhere(
+                      (c) => c.chapterNumber == item.currentChapter,
+                      orElse: () => chapters.first,
+                    );
+                    if (context.mounted) {
+                      context.push(
+                        '/reading/${book.id}?chapterId=${chapter.id}',
+                      );
+                    }
+                  } else if (context.mounted) {
+                    // Fallback to first chapter
+                    context.push('/reading/${book.id}');
+                  }
+                } catch (e) {
+                  // Fallback on error
+                  if (context.mounted) {
+                    context.push('/reading/${book.id}');
+                  }
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.check_circle_outline),
+              title: const Text('Mark as Completed'),
+              onTap: () async {
+                Navigator.pop(context);
+                final controller = ref.read(libraryControllerProvider);
+                await controller.updateBookStatus(book.id, 'completed');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: Colors.red),
+              title: const Text(
+                'Remove from Library',
+                style: TextStyle(color: Colors.red),
+              ),
+              onTap: () async {
+                Navigator.pop(context);
+                final controller = ref.read(libraryControllerProvider);
+                await controller.removeFromLibrary(book.id);
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   List<LibraryItemModel> _applyFiltersAndSort(
@@ -544,8 +633,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                             child: Image.network(
                               book.coverImageUrl!,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, _, _) =>
-                                  const Icon(Icons.book),
+                              errorBuilder: (_, _, _) => const Icon(Icons.book),
                             ),
                           )
                         : const Icon(Icons.book),
@@ -592,7 +680,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: AppColors.textPrimaryLight,
+                        color: Colors.white,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -602,56 +690,58 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                       Text(
                         book.authors.join(', '),
                         style: const TextStyle(
-                          color: AppColors.textSecondaryLight,
+                          color: Colors.white70,
                           fontSize: 14,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _getStatusColor(
-                              item.status,
-                            ).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            item.status,
-                            style: TextStyle(
-                              color: _getStatusColor(item.status),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          '${(item.progress * 100).toStringAsFixed(0)}%',
-                          style: const TextStyle(
-                            color: AppColors.textSecondaryLight,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),
-              InteractiveIconButton(
-                icon: Icons.more_vert,
-                onPressed: () {
-                  _showLibraryItemMenu(context, ref, item, book);
-                },
-                tooltip: 'More options',
-                size: 40,
+              Container(
+                constraints: const BoxConstraints(maxWidth: 120),
+                child: Consumer(
+                  builder: (context, ref, _) {
+                    final chaptersAsync = ref.watch(
+                      chaptersByBookIdProvider(book.id),
+                    );
+                    return chaptersAsync.maybeWhen(
+                      data: (chapters) {
+                        if (chapters.isEmpty) return const SizedBox();
+
+                        final chapter = chapters.firstWhere(
+                          (c) => c.chapterNumber == item.currentChapter,
+                          orElse: () => chapters.first,
+                        );
+
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            chapter.title,
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
+                        );
+                      },
+                      orElse: () => const SizedBox(),
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -756,176 +846,6 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
       },
       loading: () => const ShimmerBookCard(),
       error: (_, _) => const SizedBox(),
-    );
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case AppConstants.bookStatusReading:
-        return Colors.blue;
-      case AppConstants.bookStatusCompleted:
-        return Colors.green;
-      case AppConstants.bookStatusWantToRead:
-        return Colors.orange;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  void _showLibraryItemMenu(
-    BuildContext context,
-    WidgetRef ref,
-    LibraryItemModel item,
-    BookModel book,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.book),
-              title: const Text('View Book Details'),
-              onTap: () {
-                Navigator.pop(context);
-                context.push('/book/${book.id}');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.bookmark),
-              title: const Text('Change Status'),
-              onTap: () {
-                Navigator.pop(context);
-                _showStatusDialog(context, ref, item);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete, color: Colors.red),
-              title: const Text('Remove from Library', style: TextStyle(color: Colors.red)),
-              onTap: () {
-                Navigator.pop(context);
-                _showRemoveDialog(context, ref, item, book);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showStatusDialog(
-    BuildContext context,
-    WidgetRef ref,
-    LibraryItemModel item,
-  ) {
-    String? selectedStatus = item.status;
-    showDialog(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Change Status'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              RadioListTile<String>(
-                title: const Text('Reading'),
-                value: AppConstants.bookStatusReading,
-                // ignore: deprecated_member_use
-                groupValue: selectedStatus,
-                // ignore: deprecated_member_use
-                onChanged: (value) {
-                  setState(() {
-                    selectedStatus = value;
-                  });
-                },
-              ),
-              RadioListTile<String>(
-                title: const Text('Want to Read'),
-                value: AppConstants.bookStatusWantToRead,
-                // ignore: deprecated_member_use
-                groupValue: selectedStatus,
-                // ignore: deprecated_member_use
-                onChanged: (value) {
-                  setState(() {
-                    selectedStatus = value;
-                  });
-                },
-              ),
-              RadioListTile<String>(
-                title: const Text('Completed'),
-                value: AppConstants.bookStatusCompleted,
-                // ignore: deprecated_member_use
-                groupValue: selectedStatus,
-                // ignore: deprecated_member_use
-                onChanged: (value) {
-                  setState(() {
-                    selectedStatus = value;
-                  });
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                if (selectedStatus != null && selectedStatus != item.status) {
-                  await ref.read(libraryControllerProvider).updateBookStatus(
-                        item.bookId,
-                        selectedStatus!,
-                      );
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Status changed to $selectedStatus')),
-                    );
-                    Navigator.pop(context);
-                  }
-                } else {
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showRemoveDialog(
-    BuildContext context,
-    WidgetRef ref,
-    LibraryItemModel item,
-    BookModel book,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Remove from Library'),
-        content: Text('Are you sure you want to remove "${book.title}" from your library?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              await ref.read(libraryControllerProvider).removeFromLibrary(item.bookId);
-              if (context.mounted) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Removed from library')),
-                );
-              }
-            },
-            child: const Text('Remove', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
     );
   }
 }
