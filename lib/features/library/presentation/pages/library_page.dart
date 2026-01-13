@@ -589,10 +589,10 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                   children: [
                     Text(
                       book.title,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: AppColors.textPrimaryLight,
+                        color: Colors.white,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -601,47 +601,14 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                       const SizedBox(height: 4),
                       Text(
                         book.authors.join(', '),
-                        style: TextStyle(
-                          color: AppColors.textSecondaryLight,
+                        style: const TextStyle(
+                          color: Colors.white70,
                           fontSize: 14,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _getStatusColor(
-                              item.status,
-                            ).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            item.status,
-                            style: TextStyle(
-                              color: _getStatusColor(item.status),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          '${(item.progress * 100).toStringAsFixed(0)}%',
-                          style: TextStyle(
-                            color: AppColors.textSecondaryLight,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),
@@ -757,18 +724,5 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
       loading: () => const ShimmerBookCard(),
       error: (_, __) => const SizedBox(),
     );
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case AppConstants.bookStatusReading:
-        return Colors.blue;
-      case AppConstants.bookStatusCompleted:
-        return Colors.green;
-      case AppConstants.bookStatusWantToRead:
-        return Colors.orange;
-      default:
-        return Colors.grey;
-    }
   }
 }
