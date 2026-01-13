@@ -32,9 +32,7 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const TopNavigationBar(),
-      body: Column(
+    return Column(
         children: [
           // Header với filters
           Container(
@@ -353,8 +351,7 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
             child: const Text('Xóa', style: TextStyle(color: Colors.red)),
           ),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildGridView(List<BookModel> books) {

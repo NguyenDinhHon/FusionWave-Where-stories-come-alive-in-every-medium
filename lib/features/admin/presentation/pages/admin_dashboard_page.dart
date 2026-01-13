@@ -15,9 +15,7 @@ class AdminDashboardPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      appBar: const TopNavigationBar(),
-      body: SingleChildScrollView(
+    return SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Center(
           child: ConstrainedBox(
@@ -72,8 +70,7 @@ class AdminDashboardPage extends ConsumerWidget {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildStatsSection(BuildContext context, WidgetRef ref) {

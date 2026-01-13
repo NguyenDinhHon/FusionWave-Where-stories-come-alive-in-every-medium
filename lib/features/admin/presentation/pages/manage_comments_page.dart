@@ -42,9 +42,7 @@ class _ManageCommentsPageState extends ConsumerState<ManageCommentsPage> {
   Widget build(BuildContext context) {
     final commentsAsync = ref.watch(allCommentsProvider);
 
-    return Scaffold(
-      appBar: const TopNavigationBar(),
-      body: Column(
+    return Column(
         children: [
           // Header
           Container(

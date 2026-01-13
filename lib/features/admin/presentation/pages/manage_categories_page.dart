@@ -51,9 +51,7 @@ class _ManageCategoriesPageState extends ConsumerState<ManageCategoriesPage> {
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoriesProvider);
 
-    return Scaffold(
-      appBar: const TopNavigationBar(),
-      body: Column(
+    return Column(
         children: [
           // Header
           Container(

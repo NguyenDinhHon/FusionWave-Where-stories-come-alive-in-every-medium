@@ -24,9 +24,7 @@ class _SystemSettingsPageState extends ConsumerState<SystemSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const TopNavigationBar(),
-      body: SingleChildScrollView(
+    return SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Center(
           child: ConstrainedBox(
@@ -182,8 +180,7 @@ class _SystemSettingsPageState extends ConsumerState<SystemSettingsPage> {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   void _saveSettings() {

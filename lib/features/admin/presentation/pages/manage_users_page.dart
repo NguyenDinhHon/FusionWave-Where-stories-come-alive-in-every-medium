@@ -55,9 +55,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
   Widget build(BuildContext context) {
     final usersAsync = ref.watch(allUsersProvider);
 
-    return Scaffold(
-      appBar: const TopNavigationBar(),
-      body: Column(
+    return Column(
         children: [
           // Header with search, filter, view toggle
           Container(
