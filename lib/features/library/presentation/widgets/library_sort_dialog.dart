@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 
 /// Library sort dialog
@@ -35,7 +35,7 @@ class LibrarySortDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(12),
                   topRight: Radius.circular(12),
@@ -80,7 +80,9 @@ class LibrarySortDialog extends StatelessWidget {
                       ],
                     ),
                     value: option['value'] as String,
+                    // ignore: deprecated_member_use
                     groupValue: currentSort,
+                    // ignore: deprecated_member_use
                     onChanged: (value) {
                       Navigator.pop(context, value);
                     },

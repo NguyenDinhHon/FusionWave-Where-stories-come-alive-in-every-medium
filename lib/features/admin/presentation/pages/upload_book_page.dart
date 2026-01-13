@@ -286,6 +286,7 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
 
                         // Category
                         DropdownButtonFormField<String>(
+                          // ignore: deprecated_member_use
                           value: _selectedCategory,
                           decoration: const InputDecoration(
                             labelText: 'Thể loại',
@@ -373,7 +374,7 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
                                       if (_bookFile != null)
                                         Text(
                                           '${(_bookFile!.lengthSync() / 1024).toStringAsFixed(2)} KB',
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                             fontSize: 12,
                                             color: AppColors.textSecondaryLight,
                                           ),
@@ -436,7 +437,7 @@ class _UploadBookPageState extends ConsumerState<UploadBookPage> {
                           Center(
                             child: Text(
                               _uploadStatus,
-                              style: TextStyle(color: AppColors.primary),
+                              style: const TextStyle(color: AppColors.primary),
                             ),
                           ),
                         ],

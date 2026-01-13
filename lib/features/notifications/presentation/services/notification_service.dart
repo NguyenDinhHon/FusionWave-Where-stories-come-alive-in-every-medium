@@ -155,7 +155,8 @@ class NotificationService {
       // final bookId = message.data['bookId'] as String?;
       // final chapterId = message.data['chapterId'] as String?;
       
-      // TODO: Navigate based on notification type
+      // ignore: todo
+      // TODO: Navigate based on notification type - requires router context
       AppLogger.info('Notification tapped: $type');
     } catch (e) {
       AppLogger.error('Handle notification tap error', error: e);
@@ -164,7 +165,8 @@ class NotificationService {
   
   // Notification tap callback
   void _onNotificationTapped(NotificationResponse response) {
-    // TODO: Handle notification tap
+    // ignore: todo
+    // TODO: Handle notification tap - requires router context
     AppLogger.info('Local notification tapped: ${response.payload}');
   }
   

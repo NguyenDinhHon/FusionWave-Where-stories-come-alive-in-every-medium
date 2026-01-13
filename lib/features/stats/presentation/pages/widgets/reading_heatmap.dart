@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../../../data/models/reading_stats_model.dart';
 import '../../../../../core/constants/app_colors.dart';
 
@@ -149,11 +149,11 @@ class ReadingHeatmap extends StatelessWidget {
     final intensity = value / (maxValue > 0 ? maxValue : 1);
     
     if (intensity < 0.25) {
-      return AppColors.accent.withOpacity(0.3);
+      return AppColors.accent.withValues(alpha: 0.3);
     } else if (intensity < 0.5) {
-      return AppColors.accent.withOpacity(0.5);
+      return AppColors.accent.withValues(alpha: 0.5);
     } else if (intensity < 0.75) {
-      return AppColors.accent.withOpacity(0.7);
+      return AppColors.accent.withValues(alpha: 0.7);
     } else {
       return AppColors.accent;
     }

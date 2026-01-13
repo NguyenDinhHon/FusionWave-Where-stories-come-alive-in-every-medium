@@ -177,15 +177,18 @@ class _CommentsPageState extends ConsumerState<CommentsPage> {
                   IconButton(
                     icon: const Icon(Icons.delete, size: 20),
                     onPressed: () async {
+                      // Capture context and messenger before async operations
+                      final currentContext = context;
+                      final messenger = ScaffoldMessenger.of(currentContext);
+                      
                       try {
                         await ref.read(socialControllerProvider).deleteComment(comment.id);
                         ref.invalidate(commentsByBookIdProvider(widget.bookId));
                       } catch (e) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error: $e')),
-                          );
-                        }
+                        if (!mounted) return;
+                        messenger.showSnackBar(
+                          SnackBar(content: Text('Error: $e')),
+                        );
                       }
                     },
                   ),

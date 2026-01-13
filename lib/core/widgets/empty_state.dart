@@ -55,17 +55,17 @@ class EmptyState extends StatelessWidget {
                   padding: AppSpacing.paddingXL,
                   decoration: BoxDecoration(
                     color: isDark 
-                        ? AppColors.surfaceDark.withOpacity(0.5)
+                        ? AppColors.surfaceDark.withValues(alpha: 0.5)
                         : AppColors.surfaceLight,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     icon,
                     size: 64,
-                    color: iconColor.withOpacity(0.7),
+                    color: iconColor.withValues(alpha: 0.7),
                   ),
                 ),
-              SizedBox(height: AppSpacing.spacing24),
+              const SizedBox(height: AppSpacing.spacing24),
               Text(
                 title,
                 style: AppTextStyles.heading3().copyWith(
@@ -75,7 +75,7 @@ class EmptyState extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               if (message != null) ...[
-                SizedBox(height: AppSpacing.spacing8),
+                const SizedBox(height: AppSpacing.spacing8),
                 Text(
                   message!,
                   style: AppTextStyles.body().copyWith(
@@ -87,7 +87,7 @@ class EmptyState extends StatelessWidget {
                 ),
               ],
               if (action != null || (actionLabel != null && onAction != null)) ...[
-                SizedBox(height: AppSpacing.spacing24),
+                const SizedBox(height: AppSpacing.spacing24),
                 action ?? InteractiveButton(
                   label: actionLabel!,
                   onPressed: onAction,

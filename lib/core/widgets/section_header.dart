@@ -45,7 +45,7 @@ class SectionHeader extends StatelessWidget {
                       size: 24,
                       color: AppColors.primary,
                     ),
-                    SizedBox(width: AppSpacing.spacing8),
+                    const SizedBox(width: AppSpacing.spacing8),
                   ],
                   Text(
                     title,
@@ -62,7 +62,7 @@ class SectionHeader extends StatelessWidget {
                       (seeAllRoute != null 
                           ? () => context.push(seeAllRoute!)
                           : null),
-                  icon: Icon(
+                  icon: const Icon(
                     Icons.arrow_forward_ios,
                     size: 14,
                     color: AppColors.primary,
@@ -84,7 +84,7 @@ class SectionHeader extends StatelessWidget {
           ),
         ),
         if (showDivider) ...[
-          SizedBox(height: AppSpacing.spacing8),
+          const SizedBox(height: AppSpacing.spacing8),
           Container(
             margin: AppSpacing.paddingHorizontalL,
             height: 1,
@@ -93,15 +93,15 @@ class SectionHeader extends StatelessWidget {
                 colors: [
                   Colors.transparent,
                   isDark 
-                      ? AppColors.borderDark.withOpacity(0.3)
-                      : AppColors.borderLight.withOpacity(0.3),
+                      ? AppColors.borderDark.withValues(alpha: 0.3)
+                      : AppColors.borderLight.withValues(alpha: 0.3),
                   Colors.transparent,
                 ],
               ),
             ),
           ),
         ],
-        SizedBox(height: AppSpacing.spacing16),
+        const SizedBox(height: AppSpacing.spacing16),
       ],
     );
   }

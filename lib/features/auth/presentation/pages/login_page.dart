@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../widgets/auth_text_field.dart';
 import '../widgets/auth_button.dart';
 import '../providers/auth_provider.dart';
+import '../../../../core/constants/app_constants.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -39,7 +40,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         password: _passwordController.text,
       );
       
-      if (mounted) {
+      if (!mounted) return;
+      
+      // Check if user is admin and redirect accordingly
+      final userAsync = ref.read(currentUserModelProvider);
+      final user = await userAsync.when(
+        data: (user) => Future.value(user),
+        loading: () => Future.value(null),
+        error: (_, __) => Future.value(null),
+      );
+      
+      if (!mounted) return;
+      
+      if (user?.role == AppConstants.roleAdmin) {
+        context.go('/admin');
+      } else {
         context.go('/home');
       }
     } catch (e) {
@@ -96,7 +111,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     try {
       await ref.read(authControllerProvider.notifier).signInWithGoogle();
       
-      if (mounted) {
+      if (!mounted) return;
+      
+      // Check if user is admin and redirect accordingly
+      final userAsync = ref.read(currentUserModelProvider);
+      final user = await userAsync.when(
+        data: (user) => Future.value(user),
+        loading: () => Future.value(null),
+        error: (_, __) => Future.value(null),
+      );
+      
+      if (!mounted) return;
+      
+      if (user?.role == AppConstants.roleAdmin) {
+        context.go('/admin');
+      } else {
         context.go('/home');
       }
     } catch (e) {
@@ -316,7 +345,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(AppStrings.dontHaveAccount),
+                    const Text(AppStrings.dontHaveAccount),
                     TextButton(
                       onPressed: () => context.go('/register'),
                       child: const Text(AppStrings.register),

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../data/models/chapter_model.dart';
 import '../providers/reading_provider.dart';
@@ -30,7 +30,7 @@ class ChapterListDrawer extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
               ),
               child: Row(
                 children: [
@@ -47,7 +47,7 @@ class ChapterListDrawer extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       loading: () => const Text('Loading...'),
-                      error: (_, __) => const Text('Chapters'),
+                      error: (_, _) => const Text('Chapters'),
                     ),
                   ),
                   IconButton(

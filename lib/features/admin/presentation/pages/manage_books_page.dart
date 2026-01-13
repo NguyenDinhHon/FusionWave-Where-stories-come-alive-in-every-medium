@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/top_navigation_bar.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/interactive_button.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
@@ -26,14 +25,13 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
   DateTime? _dateFrom;
   DateTime? _dateTo;
   bool _isGridView = false;
-  Set<String> _selectedBookIds = {};
+  final Set<String> _selectedBookIds = {};
+  // ignore: prefer_final_fields
   bool _isSelectionMode = false;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const TopNavigationBar(),
-      body: Column(
+    return Column(
         children: [
           // Header với filters
           Container(
@@ -140,8 +138,7 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
           // Books list
           Expanded(child: _buildBooksList()),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildBooksList() {
@@ -247,7 +244,7 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
                       child: Image.network(
                         book.coverImageUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.book),
+                        errorBuilder: (_, _, _) => const Icon(Icons.book),
                       ),
                     )
                   : const Icon(Icons.book),
@@ -400,7 +397,7 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
                               child: Image.network(
                                 book.coverImageUrl!,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) =>
+                                errorBuilder: (_, _, _) =>
                                     const Icon(Icons.book),
                               ),
                             )
@@ -422,7 +419,7 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
                     book.authors.isNotEmpty
                         ? book.authors.join(', ')
                         : 'Unknown',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 12,
                       color: AppColors.textSecondaryLight,
                     ),

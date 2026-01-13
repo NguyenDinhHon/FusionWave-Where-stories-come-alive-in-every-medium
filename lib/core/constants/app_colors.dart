@@ -104,14 +104,17 @@ class AppColors {
     end: Alignment.bottomRight,
   );
 
-  static LinearGradient cardGradient = LinearGradient(
+  static const LinearGradient cardGradient = LinearGradient(
     colors: [Colors.white, surfaceLightVariant],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static LinearGradient overlayGradient = LinearGradient(
-    colors: [Colors.black.withOpacity(0.7), Colors.black.withOpacity(0.9)],
+    colors: [
+      Colors.black.withValues(alpha: 0.7),
+      Colors.black.withValues(alpha: 0.9),
+    ],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );

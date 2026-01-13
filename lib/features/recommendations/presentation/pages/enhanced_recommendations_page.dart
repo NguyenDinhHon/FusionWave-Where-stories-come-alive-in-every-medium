@@ -16,7 +16,9 @@ class EnhancedRecommendationsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final personalizedAsync = ref.watch(personalizedRecommendationsProvider);
     final trendingAsync = ref.watch(trendingBooksProvider);
-    final similarAsync = ref.watch(similarBooksProvider('')); // TODO: Get from current book
+    // ignore: todo
+    // TODO: Get from current book - requires current book context
+    final similarAsync = ref.watch(similarBooksProvider(''));
     
     return DefaultTabController(
       length: 3,
@@ -50,7 +52,7 @@ class EnhancedRecommendationsPage extends ConsumerWidget {
     return async.when(
       data: (books) {
         if (books.isEmpty) {
-          return EmptyState(
+          return const EmptyState(
             title: 'No recommendations yet',
             message: 'Start reading to get personalized recommendations based on your preferences',
             icon: Icons.recommend_outlined,
@@ -93,7 +95,7 @@ class EnhancedRecommendationsPage extends ConsumerWidget {
                                         child: Image.network(
                                           books[index].coverImageUrl!,
                                           fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => const Icon(Icons.book),
+                                          errorBuilder: (_, _, _) => const Icon(Icons.book),
                                         ),
                                       )
                                     : const Icon(Icons.book),
@@ -106,7 +108,7 @@ class EnhancedRecommendationsPage extends ConsumerWidget {
                                   children: [
                                     Row(
                                       children: [
-                                        Icon(Icons.auto_awesome, size: 16, color: Colors.amber),
+                                        const Icon(Icons.auto_awesome, size: 16, color: Colors.amber),
                                         const SizedBox(width: 4),
                                         Expanded(
                                           child: Text(
@@ -196,7 +198,7 @@ class EnhancedRecommendationsPage extends ConsumerWidget {
     return async.when(
       data: (books) {
         if (books.isEmpty) {
-          return EmptyState(
+          return const EmptyState(
             title: 'No trending books',
             message: 'Check back later for trending content',
             icon: Icons.trending_up,
@@ -258,7 +260,7 @@ class EnhancedRecommendationsPage extends ConsumerWidget {
                                         child: Image.network(
                                           books[index].coverImageUrl!,
                                           fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => const Icon(Icons.book),
+                                          errorBuilder: (_, _, _) => const Icon(Icons.book),
                                         ),
                                       )
                                     : const Icon(Icons.book),
@@ -305,7 +307,7 @@ class EnhancedRecommendationsPage extends ConsumerWidget {
                                   ],
                                 ),
                               ),
-                              Icon(
+                              const Icon(
                                 Icons.trending_up,
                                 color: Colors.green,
                               ),
@@ -341,7 +343,7 @@ class EnhancedRecommendationsPage extends ConsumerWidget {
     return async.when(
       data: (books) {
         if (books.isEmpty) {
-          return EmptyState(
+          return const EmptyState(
             title: 'No similar books',
             message: 'View a book to see similar recommendations',
             icon: Icons.auto_awesome,
@@ -384,7 +386,7 @@ class EnhancedRecommendationsPage extends ConsumerWidget {
                                         child: Image.network(
                                           books[index].coverImageUrl!,
                                           fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => const Icon(Icons.book),
+                                          errorBuilder: (_, _, _) => const Icon(Icons.book),
                                         ),
                                       )
                                     : const Icon(Icons.book),
@@ -397,7 +399,7 @@ class EnhancedRecommendationsPage extends ConsumerWidget {
                                   children: [
                                     Row(
                                       children: [
-                                        Icon(Icons.compare_arrows, size: 16, color: Colors.blue),
+                                        const Icon(Icons.compare_arrows, size: 16, color: Colors.blue),
                                         const SizedBox(width: 4),
                                         Expanded(
                                           child: Text(
@@ -446,7 +448,7 @@ class EnhancedRecommendationsPage extends ConsumerWidget {
                                           const Icon(Icons.star, size: 14, color: Colors.amber),
                                           const SizedBox(width: 4),
                                           Text(
-                                            '${books[index].averageRating!.toStringAsFixed(1)}',
+                                            books[index].averageRating!.toStringAsFixed(1),
                                             style: const TextStyle(fontSize: 12),
                                           ),
                                         ],

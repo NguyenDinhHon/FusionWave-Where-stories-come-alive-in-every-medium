@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/widgets/interactive_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
@@ -84,7 +85,7 @@ class _VideoPlayerWidgetState extends ConsumerState<VideoPlayerWidget> {
           end: Alignment.bottomCenter,
           colors: [
             Colors.transparent,
-            Colors.black.withOpacity(0.7),
+            Colors.black.withValues(alpha: 0.7),
           ],
         ),
       ),
@@ -138,11 +139,16 @@ class _VideoPlayerWidgetState extends ConsumerState<VideoPlayerWidget> {
                     icon: _isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen,
                     iconColor: Colors.white,
                     size: 40,
-                    onPressed: () {
-                      // TODO: Implement fullscreen toggle
+                    onPressed: () async {
                       setState(() {
                         _isFullScreen = !_isFullScreen;
                       });
+                      // Toggle system UI overlay
+                      if (_isFullScreen) {
+                        SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+                      } else {
+                        SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+                      }
                     },
                     tooltip: _isFullScreen ? 'Exit Fullscreen' : 'Fullscreen',
                   ),

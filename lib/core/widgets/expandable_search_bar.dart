@@ -124,7 +124,7 @@ class _ExpandableSearchBarState extends ConsumerState<ExpandableSearchBar>
 
   Future<void> _loadSearchHistory() async {
     final prefsAsync = ref.read(preferencesServiceProvider);
-    await prefsAsync.whenData((prefs) async {
+    prefsAsync.whenData((prefs) async {
       final history = await prefs.getSearchHistory();
       if (mounted) {
         setState(() {
@@ -201,7 +201,7 @@ class _ExpandableSearchBarState extends ConsumerState<ExpandableSearchBar>
     try {
       // Lưu vào lịch sử
       final prefsAsync = ref.read(preferencesServiceProvider);
-      await prefsAsync.whenData((prefs) async {
+      prefsAsync.whenData((prefs) async {
         await prefs.addToSearchHistory(searchQuery);
       });
 
@@ -301,7 +301,7 @@ class _ExpandableSearchBarState extends ConsumerState<ExpandableSearchBar>
                         ? LinearGradient(
                             colors: [
                               Colors.white,
-                              AppColors.primary.withOpacity(0.05),
+                              AppColors.primary.withValues(alpha: 0.05),
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -313,14 +313,14 @@ class _ExpandableSearchBarState extends ConsumerState<ExpandableSearchBar>
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: _isExpanded || _focusNode.hasFocus
-                          ? AppColors.primary.withOpacity(0.3)
+                          ? AppColors.primary.withValues(alpha: 0.3)
                           : Colors.grey[200]!,
                       width: _isExpanded || _focusNode.hasFocus ? 2 : 1,
                     ),
                     boxShadow: _isExpanded || _focusNode.hasFocus
                         ? [
                             BoxShadow(
-                              color: AppColors.primary.withOpacity(0.1),
+                              color: AppColors.primary.withValues(alpha: 0.1),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -355,7 +355,7 @@ class _ExpandableSearchBarState extends ConsumerState<ExpandableSearchBar>
                               child: Container(
                                 margin: const EdgeInsets.only(left: 8),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary.withOpacity(0.1),
+                                  color: AppColors.primary.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: PopupMenuButton<String>(
@@ -507,7 +507,7 @@ class _ExpandableSearchBarState extends ConsumerState<ExpandableSearchBar>
                 child: CompositedTransformFollower(
                   link: _layerLink,
                   showWhenUnlinked: false,
-                  offset: Offset(0, 45),
+                  offset: const Offset(0, 45),
                   child: MouseRegion(
                     onEnter: (_) {
                       setState(() {
@@ -534,7 +534,7 @@ class _ExpandableSearchBarState extends ConsumerState<ExpandableSearchBar>
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: AppColors.primary.withOpacity(0.2),
+                            color: AppColors.primary.withValues(alpha: 0.2),
                             width: 1,
                           ),
                         ),
@@ -699,8 +699,8 @@ class _ExpandableSearchBarState extends ConsumerState<ExpandableSearchBar>
 
   Widget _buildSearchResultsList() {
     if (_searchResults.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(24),
+      return const Padding(
+        padding: EdgeInsets.all(24),
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -710,7 +710,7 @@ class _ExpandableSearchBarState extends ConsumerState<ExpandableSearchBar>
                 size: 48,
                 color: AppColors.textSecondaryLight,
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Text(
                 'Không tìm thấy kết quả',
                 style: TextStyle(
@@ -796,7 +796,7 @@ class _ExpandableSearchBarState extends ConsumerState<ExpandableSearchBar>
                 color: Colors.grey[200],
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -808,7 +808,7 @@ class _ExpandableSearchBarState extends ConsumerState<ExpandableSearchBar>
                     ? Image.network(
                         book.coverImageUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(
+                        errorBuilder: (_, _, _) => const Icon(
                           Icons.book,
                           size: 35,
                           color: Colors.grey,
@@ -839,7 +839,7 @@ class _ExpandableSearchBarState extends ConsumerState<ExpandableSearchBar>
                   if (book.authors.isNotEmpty)
                     Text(
                       book.authors.join(', '),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 13,
                         color: AppColors.iconLight,
                         height: 1.4,
@@ -855,7 +855,7 @@ class _ExpandableSearchBarState extends ConsumerState<ExpandableSearchBar>
                         const SizedBox(width: 4),
                         Text(
                           (book.averageRating ?? 0).toStringAsFixed(1),
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 13,
                             color: AppColors.iconLight,
                             fontWeight: FontWeight.w500,
@@ -870,12 +870,12 @@ class _ExpandableSearchBarState extends ConsumerState<ExpandableSearchBar>
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
+                            color: AppColors.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             book.categories.first,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 11,
                               color: AppColors.primary,
                               fontWeight: FontWeight.w600,

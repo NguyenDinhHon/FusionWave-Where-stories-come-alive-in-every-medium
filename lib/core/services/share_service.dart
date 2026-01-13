@@ -16,9 +16,11 @@ ${book.averageRating != null ? '⭐ ${book.averageRating!.toStringAsFixed(1)}/5.
 Read this amazing book on FusionWave Reader!
       ''';
       
-      await Share.share(
-        text.trim(),
-        subject: book.title,
+      await SharePlus.instance.share(
+        ShareParams(
+          text: text.trim(),
+          subject: book.title,
+        ),
       );
       
       AppLogger.info('Book shared: ${book.title}');
@@ -47,9 +49,11 @@ Read this amazing book on FusionWave Reader!
       
       text += '\n\nShared from FusionWave Reader';
       
-      await Share.share(
-        text,
-        subject: 'Quote from $bookTitle',
+      await SharePlus.instance.share(
+        ShareParams(
+          text: text,
+          subject: 'Quote from $bookTitle',
+        ),
       );
       
       AppLogger.info('Quote shared');
@@ -78,9 +82,11 @@ Progress: $progressPercent%
 Keep reading on FusionWave Reader! 📚
       ''';
       
-      await Share.share(
-        text.trim(),
-        subject: 'Reading Progress: $bookTitle',
+      await SharePlus.instance.share(
+        ShareParams(
+          text: text.trim(),
+          subject: 'Reading Progress: $bookTitle',
+        ),
       );
       
       AppLogger.info('Reading progress shared');
@@ -105,9 +111,11 @@ ${book.averageRating != null ? '⭐ ${book.averageRating!.toStringAsFixed(1)}/5.
 Read on FusionWave Reader!
       ''';
       
-      await Share.share(
-        text.trim(),
-        subject: book.title,
+      await SharePlus.instance.share(
+        ShareParams(
+          text: text.trim(),
+          subject: book.title,
+        ),
       );
       
       AppLogger.info('Book shared with custom message');

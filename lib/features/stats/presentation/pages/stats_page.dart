@@ -127,7 +127,7 @@ class StatsPage extends ConsumerWidget {
         padding: const EdgeInsets.all(24),
         child: Row(
           children: [
-            Icon(
+            const Icon(
               Icons.local_fire_department,
               size: 48,
               color: Colors.orange,
@@ -186,7 +186,7 @@ class StatsPage extends ConsumerWidget {
                 BarChartData(
                   alignment: BarChartAlignment.spaceAround,
                   maxY: entries.map((e) => e.value.toDouble()).reduce((a, b) => a > b ? a : b) * 1.2,
-                  barTouchData: BarTouchData(enabled: false),
+                  barTouchData: const BarTouchData(enabled: false),
                   titlesData: FlTitlesData(
                     show: true,
                     bottomTitles: AxisTitles(
@@ -203,7 +203,7 @@ class StatsPage extends ConsumerWidget {
                         },
                       ),
                     ),
-                    leftTitles: AxisTitles(
+                    leftTitles: const AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 40,
@@ -281,7 +281,7 @@ class StatsPage extends ConsumerWidget {
                         },
                       ),
                     ),
-                    leftTitles: AxisTitles(
+                    leftTitles: const AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 40,

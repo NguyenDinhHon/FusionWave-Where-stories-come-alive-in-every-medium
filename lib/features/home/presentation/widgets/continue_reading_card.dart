@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../home/presentation/providers/book_provider.dart';
@@ -51,7 +51,7 @@ class ContinueReadingCard extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: Colors.black.withValues(alpha: 0.1),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -63,7 +63,7 @@ class ContinueReadingCard extends ConsumerWidget {
                                 child: Image.network(
                                   book.coverImageUrl!,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => const Icon(Icons.book, size: 40),
+                                  errorBuilder: (_, _, _) => const Icon(Icons.book, size: 40),
                                 ),
                               )
                             : const Icon(Icons.book, size: 40),
@@ -164,7 +164,7 @@ class ContinueReadingCard extends ConsumerWidget {
           child: Center(child: CircularProgressIndicator()),
         ),
       ),
-      error: (_, __) => const SizedBox(),
+      error: (_, _) => const SizedBox(),
     );
   }
 }

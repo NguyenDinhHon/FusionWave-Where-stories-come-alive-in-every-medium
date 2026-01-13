@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 
 /// Category card với icon và gradient
@@ -34,7 +34,7 @@ class _CategoryCardState extends State<CategoryCard> {
       onTap: widget.onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        transform: Matrix4.identity()..scale(_isPressed ? 0.95 : 1.0),
+        transform: Matrix4.identity()..scaleByDouble(_isPressed ? 0.95 : 1.0, _isPressed ? 0.95 : 1.0, _isPressed ? 0.95 : 1.0, 1.0),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
@@ -44,13 +44,13 @@ class _CategoryCardState extends State<CategoryCard> {
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isDark
-                  ? AppColors.borderDark.withOpacity(0.3)
+                  ? AppColors.borderDark.withValues(alpha: 0.3)
                   : AppColors.borderLight,
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
+                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -62,7 +62,7 @@ class _CategoryCardState extends State<CategoryCard> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(widget.icon, size: 20, color: AppColors.primary),
