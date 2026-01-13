@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../constants/app_colors.dart';
-import '../widgets/app_card.dart';
 import '../widgets/interactive_button.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../core/constants/app_constants.dart';
@@ -58,6 +57,7 @@ class AdminShellScaffold extends ConsumerWidget {
   Widget _buildAdminSidebar(
     BuildContext context,
     StatefulNavigationShell navigationShell,
+    WidgetRef ref,
   ) {
     return Container(
       width: 280,
