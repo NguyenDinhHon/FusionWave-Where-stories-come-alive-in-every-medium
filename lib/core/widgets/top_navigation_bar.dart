@@ -19,11 +19,13 @@ class TopNavigationBar extends ConsumerWidget implements PreferredSizeWidget {
     // Map routes to navigation items
     if (location == '/home' || location == '/') return '/home';
     if (location == '/library') return '/library';
-    if (location == '/categories' || location.startsWith('/categories'))
+    if (location == '/categories' || location.startsWith('/categories')) {
       return '/categories';
+    }
     if (location == '/recommendations' ||
-        location.startsWith('/recommendations'))
+        location.startsWith('/recommendations')) {
       return '/recommendations';
+    }
     return location;
   }
 

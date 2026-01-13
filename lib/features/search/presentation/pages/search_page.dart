@@ -30,7 +30,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   String? _authorFilter;
   String _sortBy = 'relevance'; // relevance, title, rating, date, popularity
   List<String> _searchHistory = [];
-  List<String> _popularSearches = [
+  final List<String> _popularSearches = [
     'Romance',
     'Fantasy',
     'Mystery',

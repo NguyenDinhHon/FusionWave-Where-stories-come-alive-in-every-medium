@@ -14,7 +14,7 @@ import '../../../../core/widgets/shimmer_loading.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/services/share_service.dart';
 import '../../../../data/models/book_model.dart';
-import '../../../offline/presentation/widgets/offline_indicator.dart';
+// import '../../../offline/presentation/widgets/offline_indicator.dart';
 import '../../../offline/presentation/pages/offline_books_page.dart';
 import '../../../recommendations/presentation/providers/recommendation_provider.dart';
 
@@ -49,103 +49,58 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
       bookAverageRatingProvider(widget.bookId),
     );
 
-    return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
-      body: Column(
-        children: [
-          const OfflineIndicator(),
-          Expanded(
-            child: bookAsync.when(
-              data: (book) {
-                if (book == null) {
-                  return const Center(
-                    child: Text(
-                      'Book not found',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  );
-                }
-
-                return CustomScrollView(
-                  controller: _scrollController,
-                  slivers: [
-                    // Parallax Header
-                    _buildHeader(context, book),
-
-                    // Book Info Section
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Title & Authors
-                            _buildTitleSection(context, book),
-                            const SizedBox(height: 20),
-
-                            // Action Buttons
-                            _buildActionButtons(
-                              context,
-                              ref,
-                              book,
-                              libraryItemAsync,
-                            ),
-                            const SizedBox(height: 24),
-
-                            // Stats Cards
-                            _buildStatsCards(
-                              context,
-                              ref,
-                              book,
-                              averageRatingAsync,
-                            ),
-                            const SizedBox(height: 24),
-
-                            // Rating Section
-                            _buildRatingSection(
-                              context,
-                              ref,
-                              book,
-                              userRatingAsync,
-                              averageRatingAsync,
-                            ),
-                            const SizedBox(height: 24),
-
-                            // Description
-                            _buildDescriptionSection(context, book),
-                            const SizedBox(height: 24),
-
-                            // Categories
-                            if (book.categories.isNotEmpty) ...[
-                              _buildCategoriesSection(context, book),
-                              const SizedBox(height: 24),
-                            ],
-
-                            // Chapters List
-                            _buildChaptersSection(context, ref, book),
-                            const SizedBox(height: 24),
-
-                            // Reviews Section
-                            _buildReviewsSection(context, ref, book),
-                            const SizedBox(height: 24),
-
-                            // Similar Books
-                            _buildSimilarBooksSection(context, ref, book),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => ErrorState(
-                message: error.toString(),
-                onRetry: () => ref.invalidate(bookByIdProvider(widget.bookId)),
-              ),
+    return bookAsync.when(
+      data: (book) {
+        if (book == null) {
+          return Scaffold(
+            backgroundColor: AppColors.backgroundDark,
+            appBar: AppBar(
+              title: const Text('Book'),
+              backgroundColor: AppColors.primary,
             ),
+            body: const Center(child: Text('Book not found', style: TextStyle(color: Colors.white))),
+          );
+        }
+
+        return Scaffold(
+          backgroundColor: AppColors.backgroundDark,
+          appBar: AppBar(
+            title: Text(book.title),
+            backgroundColor: AppColors.primary,
           ),
-        ],
+          body: ListView(
+            controller: _scrollController,
+            padding: const EdgeInsets.all(16),
+            children: [
+              _buildTitleSection(context, book),
+              const SizedBox(height: 16),
+              _buildActionButtons(context, ref, book, libraryItemAsync),
+              const SizedBox(height: 24),
+              _buildStatsCards(context, ref, book, averageRatingAsync),
+              const SizedBox(height: 24),
+              _buildRatingSection(context, ref, book, userRatingAsync, averageRatingAsync),
+              const SizedBox(height: 24),
+              _buildDescriptionSection(context, book),
+              const SizedBox(height: 24),
+              if (book.categories.isNotEmpty) ...[
+                _buildCategoriesSection(context, book),
+                const SizedBox(height: 24),
+              ],
+              _buildChaptersSection(context, ref, book),
+              const SizedBox(height: 24),
+              _buildReviewsSection(context, ref, book),
+              const SizedBox(height: 24),
+              _buildSimilarBooksSection(context, ref, book),
+            ],
+          ),
+        );
+      },
+      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (error, stack) => Scaffold(
+        body: ErrorState(
+          message: error.toString(),
+          onRetry: () => ref.invalidate(bookByIdProvider(widget.bookId)),
+        ),
       ),
     );
   }
@@ -932,25 +887,6 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
     WidgetRef ref,
     BookModel book,
   ) {
-<<<<<<< HEAD
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-                Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(160, 40),
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Rate this book', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-=======
     final reviewsAsync = ref.watch(bookReviewsProvider(book.id));
 
     return AppCard(
@@ -965,7 +901,6 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
->>>>>>> eac2607db92a51a80920cd2fbf5bcd332ad6ccd4
                 ),
               ),
               InteractiveButton(

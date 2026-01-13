@@ -656,11 +656,11 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
               heroTag: 'bookmark',
               onPressed: _addBookmark,
               backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
+              tooltip: 'Bookmark',
               child: Icon(
                 Icons.bookmark_add_outlined,
                 color: Theme.of(context).colorScheme.onTertiaryContainer,
               ),
-              tooltip: 'Bookmark',
             ),
 
             const SizedBox(height: 12),
@@ -670,11 +670,11 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
               heroTag: 'chapters',
               onPressed: _showChapterList,
               backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              tooltip: 'Chapters',
               child: Icon(
                 Icons.list_rounded,
                 color: Theme.of(context).colorScheme.onPrimaryContainer,
               ),
-              tooltip: 'Chapters',
             ),
 
             const SizedBox(height: 12),
@@ -684,11 +684,11 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
               heroTag: 'settings',
               onPressed: _showSettings,
               backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+              tooltip: 'Settings',
               child: Icon(
                 Icons.tune_rounded,
                 color: Theme.of(context).colorScheme.onSecondaryContainer,
               ),
-              tooltip: 'Settings',
             ),
           ],
         ),
@@ -700,8 +700,9 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
     final currentIndex = ref.watch(chapterNavigationProvider);
     final currentChapter = ref.watch(currentChapterProvider);
 
-    if (currentChapter == null || chapters.isEmpty)
+    if (currentChapter == null || chapters.isEmpty) {
       return const SizedBox.shrink();
+    }
 
     final hasNext = currentIndex < chapters.length - 1;
     final hasPrev = currentIndex > 0;

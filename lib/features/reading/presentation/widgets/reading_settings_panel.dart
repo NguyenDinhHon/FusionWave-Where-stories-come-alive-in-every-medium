@@ -413,7 +413,7 @@ class _ReadingSettingsPanelState extends ConsumerState<ReadingSettingsPanel>
       child: Material(
         color: isSelected
             ? Theme.of(context).colorScheme.primary
-            : Theme.of(context).colorScheme.surfaceVariant,
+            : Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: () {
