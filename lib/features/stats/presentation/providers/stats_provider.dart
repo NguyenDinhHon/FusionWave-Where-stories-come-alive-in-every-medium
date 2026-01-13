@@ -1,16 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../data/repositories/stats_repository.dart';
+import '../../../../data/repositories/local_stats_repository.dart';
 import '../../../../data/models/reading_stats_model.dart';
 
 /// Stats repository provider
-final statsRepositoryProvider = Provider<StatsRepository>((ref) {
-  return StatsRepository();
+final statsRepositoryProvider = Provider<LocalStatsRepository>((ref) {
+  return LocalStatsRepository();
 });
 
-/// Reading stats provider
-final readingStatsProvider = StreamProvider<ReadingStatsModel?>((ref) {
+/// Reading stats provider (one-shot read from local storage)
+final readingStatsProvider = FutureProvider<ReadingStatsModel?>((ref) async {
   final repository = ref.watch(statsRepositoryProvider);
-  return repository.getReadingStatsStream();
+  return repository.getReadingStats();
 });
 
 /// Stats controller provider
@@ -19,12 +19,12 @@ final statsControllerProvider = Provider<StatsController>((ref) {
 });
 
 class StatsController {
-  final StatsRepository _repository;
+  final LocalStatsRepository _repository;
   
   StatsController(this._repository);
   
   Future<ReadingStatsModel?> getReadingStats() => _repository.getReadingStats();
-  Future<void> updateReadingStats({
+  Future<ReadingStatsModel> updateReadingStats({
     int? pagesRead,
     int? chaptersRead,
     int? readingTimeMinutes,

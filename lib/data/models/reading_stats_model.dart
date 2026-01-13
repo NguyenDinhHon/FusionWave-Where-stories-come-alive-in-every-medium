@@ -61,6 +61,40 @@ class ReadingStatsModel {
       'updatedAt': Timestamp.fromDate(updatedAt),
     };
   }
+
+  // Convert to plain JSON (for local storage)
+  Map<String, dynamic> toJson() {
+    return {
+      'userId': userId,
+      'totalPagesRead': totalPagesRead,
+      'totalChaptersRead': totalChaptersRead,
+      'totalBooksCompleted': totalBooksCompleted,
+      'totalReadingTimeMinutes': totalReadingTimeMinutes,
+      'currentStreak': currentStreak,
+      'lastReadingDate': lastReadingDate?.toIso8601String(),
+      'dailyStats': dailyStats,
+      'weeklyStats': weeklyStats,
+      'monthlyStats': monthlyStats,
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
+
+  // Create from plain JSON (local storage)
+  factory ReadingStatsModel.fromJson(Map<String, dynamic> data) {
+    return ReadingStatsModel(
+      userId: data['userId'] ?? '',
+      totalPagesRead: data['totalPagesRead'] ?? 0,
+      totalChaptersRead: data['totalChaptersRead'] ?? 0,
+      totalBooksCompleted: data['totalBooksCompleted'] ?? 0,
+      totalReadingTimeMinutes: data['totalReadingTimeMinutes'] ?? 0,
+      currentStreak: data['currentStreak'] ?? 0,
+      lastReadingDate: data['lastReadingDate'] != null ? DateTime.parse(data['lastReadingDate']) : null,
+      dailyStats: Map<String, int>.from(data['dailyStats'] ?? {}),
+      weeklyStats: Map<String, int>.from(data['weeklyStats'] ?? {}),
+      monthlyStats: Map<String, int>.from(data['monthlyStats'] ?? {}),
+      updatedAt: data['updatedAt'] != null ? DateTime.parse(data['updatedAt']) : DateTime.now(),
+    );
+  }
   
   // Create copy with updated fields
   ReadingStatsModel copyWith({
