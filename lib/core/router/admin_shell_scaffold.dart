@@ -23,10 +23,8 @@ class AdminShellScaffold extends ConsumerWidget {
       data: (user) {
         // Check if user is admin
         if (user?.role != AppConstants.roleAdmin) {
-          // Redirect to login if not admin
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            context.go('/login');
-          });
+          // Show loading while checking, don't redirect immediately
+          // The router guard will handle redirect
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );

@@ -35,24 +35,40 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
-      final authRepository = ref.read(authRepositoryProvider);
-      
-      // Sign in and get user model directly from repository
-      final userModel = await authRepository.signInWithEmailAndPassword(
+      // Use auth controller which will update state and providers
+      await ref.read(authControllerProvider.notifier).signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
       
-      // Update auth controller state asynchronously (don't wait)
-      ref.read(authControllerProvider.notifier).signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      ).catchError((_) {}); // Ignore errors as we already have userModel
+      if (!mounted) return;
+      
+      // Wait a moment for providers to update
+      await Future.delayed(const Duration(milliseconds: 200));
       
       if (!mounted) return;
       
-      // Redirect immediately based on role using userModel from repository
-      if (userModel.role == AppConstants.roleAdmin) {
+      // Check user role from provider
+      final userAsync = ref.read(currentUserModelProvider);
+      final user = await userAsync.when(
+        data: (user) => Future.value(user),
+        loading: () async {
+          // Wait a bit more if still loading
+          await Future.delayed(const Duration(milliseconds: 300));
+          final retry = ref.read(currentUserModelProvider);
+          return await retry.when(
+            data: (user) => Future.value(user),
+            loading: () => Future.value(null),
+            error: (_, __) => Future.value(null),
+          );
+        },
+        error: (_, __) => Future.value(null),
+      );
+      
+      if (!mounted) return;
+      
+      // Redirect based on role
+      if (user?.role == AppConstants.roleAdmin) {
         context.go('/admin');
       } else {
         context.go('/home');
@@ -109,19 +125,37 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     setState(() => _isLoading = true);
     
     try {
-      final authRepository = ref.read(authRepositoryProvider);
-      
-      // Sign in and get user model directly from repository
-      final userModel = await authRepository.signInWithGoogle();
-      
-      // Update auth controller state asynchronously (don't wait)
-      ref.read(authControllerProvider.notifier).signInWithGoogle()
-          .catchError((_) {}); // Ignore errors as we already have userModel
+      // Use auth controller which will update state and providers
+      await ref.read(authControllerProvider.notifier).signInWithGoogle();
       
       if (!mounted) return;
       
-      // Redirect immediately based on role using userModel from repository
-      if (userModel.role == AppConstants.roleAdmin) {
+      // Wait a moment for providers to update
+      await Future.delayed(const Duration(milliseconds: 200));
+      
+      if (!mounted) return;
+      
+      // Check user role from provider
+      final userAsync = ref.read(currentUserModelProvider);
+      final user = await userAsync.when(
+        data: (user) => Future.value(user),
+        loading: () async {
+          // Wait a bit more if still loading
+          await Future.delayed(const Duration(milliseconds: 300));
+          final retry = ref.read(currentUserModelProvider);
+          return await retry.when(
+            data: (user) => Future.value(user),
+            loading: () => Future.value(null),
+            error: (_, __) => Future.value(null),
+          );
+        },
+        error: (_, __) => Future.value(null),
+      );
+      
+      if (!mounted) return;
+      
+      // Redirect based on role
+      if (user?.role == AppConstants.roleAdmin) {
         context.go('/admin');
       } else {
         context.go('/home');
