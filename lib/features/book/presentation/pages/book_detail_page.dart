@@ -192,6 +192,77 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
             );
           },
         ),
+        // Bookmark Button
+        Consumer(
+          builder: (context, ref, child) {
+            final libraryItemAsync = ref.watch(
+              libraryItemByBookIdProvider(book.id),
+            );
+
+            return libraryItemAsync.when(
+              data: (item) {
+                final isBookmarked = item?.isBookmarked ?? false;
+
+                return InteractiveIconButton(
+                  icon: isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                  iconColor: Colors.white,
+                  size: 32,
+                  onPressed: () async {
+                    final repository = ref.read(libraryRepositoryProvider);
+
+                    try {
+                      if (item == null) {
+                        // Not in library -> Add to library with isBookmarked = true
+                        await repository.addToLibrary(
+                          book.id,
+                          isBookmarked: true,
+                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Added to Want to Read'),
+                            ),
+                          );
+                        }
+                      } else {
+                        // In library -> Toggle isBookmarked
+                        await repository.updateBookmarkStatus(
+                          book.id,
+                          !isBookmarked,
+                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                isBookmarked
+                                    ? 'Removed from Want to Read'
+                                    : 'Added to Want to Read',
+                              ),
+                            ),
+                          );
+                        }
+                      }
+
+                      ref.invalidate(libraryItemByBookIdProvider(book.id));
+                      ref.invalidate(libraryItemsProvider);
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Failed to update bookmark'),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  tooltip: isBookmarked ? 'Remove Bookmark' : 'Add Bookmark',
+                );
+              },
+              loading: () => const SizedBox(),
+              error: (_, _) => const SizedBox(),
+            );
+          },
+        ),
         InteractiveIconButton(
           icon: Icons.share,
           iconColor: Colors.white,

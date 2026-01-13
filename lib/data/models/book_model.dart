@@ -23,7 +23,7 @@ class BookModel {
   final bool isPublished;
   final String? language;
   final int? estimatedReadingTimeMinutes;
-  
+
   BookModel({
     required this.id,
     required this.title,
@@ -47,7 +47,7 @@ class BookModel {
     this.language,
     this.estimatedReadingTimeMinutes,
   });
-  
+
   // Create from Firestore document
   factory BookModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
@@ -57,9 +57,19 @@ class BookModel {
       subtitle: data['subtitle'],
       description: data['description'],
       coverImageUrl: data['coverImageUrl'],
-      authors: List<String>.from(data['authors'] ?? []),
-      categories: List<String>.from(data['categories'] ?? []),
-      tags: List<String>.from(data['tags'] ?? []),
+      authors:
+          (data['authors'] as List?)
+              ?.map((e) => e?.toString() ?? '')
+              .toList() ??
+          [],
+      categories:
+          (data['categories'] as List?)
+              ?.map((e) => e?.toString() ?? '')
+              .toList() ??
+          [],
+      tags:
+          (data['tags'] as List?)?.map((e) => e?.toString() ?? '').toList() ??
+          [],
       totalPages: data['totalPages'] ?? 0,
       totalChapters: data['totalChapters'] ?? 0,
       audioUrl: data['audioUrl'],
@@ -75,7 +85,7 @@ class BookModel {
       estimatedReadingTimeMinutes: data['estimatedReadingTimeMinutes'],
     );
   }
-  
+
   // Convert to Firestore document
   Map<String, dynamic> toFirestore() {
     return {
@@ -101,7 +111,7 @@ class BookModel {
       'estimatedReadingTimeMinutes': estimatedReadingTimeMinutes,
     };
   }
-  
+
   // Create copy with updated fields
   BookModel copyWith({
     String? id,
@@ -147,8 +157,8 @@ class BookModel {
       editorId: editorId ?? this.editorId,
       isPublished: isPublished ?? this.isPublished,
       language: language ?? this.language,
-      estimatedReadingTimeMinutes: estimatedReadingTimeMinutes ?? this.estimatedReadingTimeMinutes,
+      estimatedReadingTimeMinutes:
+          estimatedReadingTimeMinutes ?? this.estimatedReadingTimeMinutes,
     );
   }
 }
-

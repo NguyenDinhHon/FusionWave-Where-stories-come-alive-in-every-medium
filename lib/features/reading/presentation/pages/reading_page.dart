@@ -127,10 +127,12 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
       final repository = ref.read(libraryRepositoryProvider);
       final chapters = ref.read(chaptersListProvider);
 
-      // Check if book is in library, if not add it
+      // Check if book is in library, if not add it with 'reading' status
+      // If already in library (e.g. 'want_to_read'), keep the existing status
       var libraryItem = await repository.getLibraryItemByBookId(widget.bookId);
       if (libraryItem == null) {
         await repository.addToLibrary(widget.bookId, status: 'reading');
+        libraryItem = await repository.getLibraryItemByBookId(widget.bookId);
       }
 
       // 1. Mark chapter as completed
@@ -375,40 +377,6 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
         ),
       ),
     );
-  }
-
-  void _addBookmark() async {
-    final currentChapter = ref.read(currentChapterProvider);
-    if (currentChapter == null) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    final bookmarkKey = 'bookmarks_${widget.bookId}';
-
-    // Get existing bookmarks
-    final bookmarksJson = prefs.getStringList(bookmarkKey) ?? [];
-
-    // Add new bookmark
-    final newBookmark = {
-      'chapterId': currentChapter.id,
-      'chapterTitle': currentChapter.title,
-      'chapterNumber': currentChapter.chapterNumber,
-      'position': _scrollController.offset.toInt(),
-      'timestamp': DateTime.now().toIso8601String(),
-    };
-
-    bookmarksJson.add(newBookmark.toString());
-    await prefs.setStringList(bookmarkKey, bookmarksJson);
-
-    // Show success message
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Đã lưu bookmark: ${currentChapter.title}'),
-          duration: const Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
   }
 
   @override
@@ -754,20 +722,6 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Bookmark Button
-            FloatingActionButton.small(
-              heroTag: 'bookmark',
-              onPressed: _addBookmark,
-              backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
-              tooltip: 'Bookmark',
-              child: Icon(
-                Icons.bookmark_add_outlined,
-                color: Theme.of(context).colorScheme.onTertiaryContainer,
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
             // Chapter List Button
             FloatingActionButton.small(
               heroTag: 'chapters',

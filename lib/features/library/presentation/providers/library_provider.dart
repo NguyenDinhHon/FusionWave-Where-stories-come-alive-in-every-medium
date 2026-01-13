@@ -8,16 +8,18 @@ final libraryRepositoryProvider = Provider<LibraryRepository>((ref) {
 });
 
 /// Library items provider
-final libraryItemsProvider = StreamProvider.family<List<LibraryItemModel>, String?>((ref, status) {
-  final repository = ref.watch(libraryRepositoryProvider);
-  return repository.getLibraryItemsStream(status: status);
-});
+final libraryItemsProvider =
+    StreamProvider.family<List<LibraryItemModel>, String?>((ref, status) {
+      final repository = ref.watch(libraryRepositoryProvider);
+      return repository.getLibraryItemsStream(status: status);
+    });
 
 /// Library item by book ID provider
-final libraryItemByBookIdProvider = FutureProvider.family<LibraryItemModel?, String>((ref, bookId) async {
-  final repository = ref.watch(libraryRepositoryProvider);
-  return repository.getLibraryItemByBookId(bookId);
-});
+final libraryItemByBookIdProvider =
+    FutureProvider.family<LibraryItemModel?, String>((ref, bookId) async {
+      final repository = ref.watch(libraryRepositoryProvider);
+      return repository.getLibraryItemByBookId(bookId);
+    });
 
 /// Library controller provider
 final libraryControllerProvider = Provider<LibraryController>((ref) {
@@ -26,17 +28,29 @@ final libraryControllerProvider = Provider<LibraryController>((ref) {
 
 class LibraryController {
   final LibraryRepository _repository;
-  
+
   LibraryController(this._repository);
-  
-  Future<void> addToLibrary(String bookId, {String? status}) async {
-    await _repository.addToLibrary(bookId, status: status);
+
+  Future<void> addToLibrary(
+    String bookId, {
+    String? status,
+    bool isBookmarked = false,
+  }) async {
+    await _repository.addToLibrary(
+      bookId,
+      status: status,
+      isBookmarked: isBookmarked,
+    );
   }
-  
+
+  Future<void> updateBookmarkStatus(String bookId, bool isBookmarked) async {
+    await _repository.updateBookmarkStatus(bookId, isBookmarked);
+  }
+
   Future<void> removeFromLibrary(String bookId) async {
     await _repository.removeFromLibrary(bookId);
   }
-  
+
   Future<void> updateReadingProgress({
     required String bookId,
     required int currentPage,
@@ -50,9 +64,8 @@ class LibraryController {
       progress: progress,
     );
   }
-  
+
   Future<void> updateBookStatus(String bookId, String status) async {
     await _repository.updateBookStatus(bookId, status);
   }
 }
-

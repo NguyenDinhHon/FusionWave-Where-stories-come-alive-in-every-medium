@@ -82,7 +82,11 @@ class LibraryRepository {
   }
 
   // Add book to library
-  Future<void> addToLibrary(String bookId, {String? status}) async {
+  Future<void> addToLibrary(
+    String bookId, {
+    String? status,
+    bool isBookmarked = false,
+  }) async {
     try {
       if (_currentUserId == null) {
         throw Exception('User not authenticated');
@@ -92,8 +96,9 @@ class LibraryRepository {
         id: bookId,
         userId: _currentUserId!,
         bookId: bookId,
-        status: status ?? AppConstants.bookStatusWantToRead,
+        status: status ?? AppConstants.bookStatusReading,
         addedAt: DateTime.now(),
+        isBookmarked: isBookmarked,
       );
 
       await _firestore
@@ -106,6 +111,29 @@ class LibraryRepository {
       AppLogger.info('Book added to library: $bookId');
     } catch (e) {
       AppLogger.error('Add to library error', error: e);
+      rethrow;
+    }
+  }
+
+  // Update bookmark status
+  Future<void> updateBookmarkStatus(String bookId, bool isBookmarked) async {
+    try {
+      if (_currentUserId == null) {
+        throw Exception('User not authenticated');
+      }
+
+      await _firestore
+          .collection(AppConstants.libraryCollection)
+          .doc(_currentUserId)
+          .collection('books')
+          .doc(bookId)
+          .update({'isBookmarked': isBookmarked});
+
+      AppLogger.info(
+        'Bookmark status updated for book: $bookId to $isBookmarked',
+      );
+    } catch (e) {
+      AppLogger.error('Update bookmark status error', error: e);
       rethrow;
     }
   }
@@ -174,7 +202,7 @@ class LibraryRepository {
             'currentChapter': currentChapter,
             'progress': progress,
             'lastReadAt': FieldValue.serverTimestamp(),
-            'status': AppConstants.bookStatusReading,
+            // Don't update status here - preserve existing status (want_to_read, reading, etc.)
           });
 
       AppLogger.info('Reading progress updated for book: $bookId');
@@ -285,7 +313,12 @@ class LibraryRepository {
 
     // If status filter is provided, use where and sort in memory
     // Otherwise, use orderBy directly
-    if (status != null && status.isNotEmpty) {
+    if (status == AppConstants.bookStatusWantToRead) {
+      // Special case for Want to Read: Filter by isBookmarked instead of status
+      query = query.where('isBookmarked', isEqualTo: true);
+      // We still want to sort by lastReadAt, but firestore requires index for that with where
+      // So we'll limit first and sort in memory
+    } else if (status != null && status.isNotEmpty) {
       query = query.where('status', isEqualTo: status);
     } else {
       query = query.orderBy('lastReadAt', descending: true);
