@@ -20,6 +20,8 @@ import '../widgets/reading_settings_panel.dart';
 
 // Firebase data provider
 import '../providers/reading_provider.dart';
+import '../../../library/presentation/providers/library_provider.dart';
+import '../../../../data/repositories/library_repository.dart';
 
 /// Enhanced Reading Page - Simple, Clean, Beautiful
 /// Integrates Phase 1 (Models & Providers) + Phase 2 (UI Widgets)
@@ -38,6 +40,9 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
   final ScrollController _scrollController = ScrollController();
   late AnimationController _controlsAnimationController;
   double _lastScrollOffset = 0;
+  bool _hasInitializedChapter = false; // Track if we've initialized the chapter
+  bool _hasMarkedCurrentChapterComplete =
+      false; // Track if current chapter is marked complete
 
   @override
   void initState() {
@@ -74,6 +79,21 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
     }
 
     _lastScrollOffset = currentOffset;
+
+    // Check if scrolled to 90% for chapter completion
+    if (_scrollController.hasClients) {
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final currentScroll = _scrollController.position.pixels;
+
+      if (maxScroll > 0) {
+        final scrollPercentage = currentScroll / maxScroll;
+
+        // Mark complete when scrolled to 90%
+        if (scrollPercentage >= 0.9 && !_hasMarkedCurrentChapterComplete) {
+          _markCurrentChapterComplete();
+        }
+      }
+    }
   }
 
   void _showControls() {
@@ -92,6 +112,60 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
       _hideControls();
     } else {
       _showControls();
+    }
+  }
+
+  Future<void> _markCurrentChapterComplete() async {
+    final currentChapter = ref.read(currentChapterProvider);
+    if (currentChapter == null) return;
+
+    setState(() {
+      _hasMarkedCurrentChapterComplete = true;
+    });
+
+    try {
+      final repository = ref.read(libraryRepositoryProvider);
+      final chapters = ref.read(chaptersListProvider);
+
+      // Check if book is in library, if not add it
+      var libraryItem = await repository.getLibraryItemByBookId(widget.bookId);
+      if (libraryItem == null) {
+        await repository.addToLibrary(widget.bookId, status: 'reading');
+      }
+
+      // 1. Mark chapter as completed
+      await repository.markChapterCompleted(
+        bookId: widget.bookId,
+        chapterId: currentChapter.id,
+      );
+
+      // 2. Get updated library item
+      libraryItem = await repository.getLibraryItemByBookId(widget.bookId);
+      final completedCount = libraryItem?.completedChapters.length ?? 0;
+
+      // 3. Calculate new progress
+      final progress = chapters.isNotEmpty
+          ? completedCount / chapters.length
+          : 0.0;
+
+      // 4. Update progress
+      await repository.updateReadingProgress(
+        bookId: widget.bookId,
+        currentPage: 0,
+        currentChapter: currentChapter.chapterNumber,
+        progress: progress,
+      );
+
+      // 5. Check if all chapters completed
+      await repository.checkAndUpdateCompletionStatus(
+        bookId: widget.bookId,
+        totalChapters: chapters.length,
+      );
+
+      // Refresh library provider
+      ref.invalidate(libraryItemByBookIdProvider(widget.bookId));
+    } catch (e) {
+      print('Failed to mark chapter complete: $e');
     }
   }
 
@@ -370,14 +444,18 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
             .toList();
 
         // Load chapters into provider if not already loaded
-        if (chapters.isEmpty || chapters.length != loadedChapters.length) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (chapters.isEmpty || chapters.length != loadedChapters.length) {
             ref
                 .read(chapterNavigationProvider.notifier)
                 .loadChapters(loadedChapters);
+          }
 
-            // If specific chapter requested, navigate to it
-            if (widget.chapterId != null && currentChapter == null) {
+          // Only initialize chapter once (not on every rebuild)
+          if (!_hasInitializedChapter) {
+            _hasInitializedChapter = true;
+
+            if (widget.chapterId != null) {
               final index = loadedChapters.indexWhere(
                 (c) => c.id == widget.chapterId,
               );
@@ -390,14 +468,13 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
               // Default to first chapter if no chapter specified
               ref.read(chapterNavigationProvider.notifier).jumpToChapter(0);
             }
-          });
-        }
+          }
+        });
 
         // Now build the reader with book data
         return bookAsync.when(
           data: (book) => _buildReader(
             book: book,
-            currentChapter: currentChapter,
             chapters: chapters.isEmpty ? loadedChapters : chapters,
             controlsVisible: controlsVisible,
             prefs: prefs,
@@ -440,12 +517,14 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
 
   Widget _buildReader({
     required BookModel? book,
-    required Chapter? currentChapter,
     required List<Chapter> chapters,
     required bool controlsVisible,
     required dynamic prefs,
     required dynamic mode,
   }) {
+    // Watch current chapter from provider (updates when navigation changes)
+    final currentChapter = ref.watch(currentChapterProvider);
+
     if (book == null || currentChapter == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -493,6 +572,9 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
                       ref
                           .read(chapterNavigationProvider.notifier)
                           .nextChapter();
+                      setState(() {
+                        _hasMarkedCurrentChapterComplete = false;
+                      });
                       _scrollController.animateTo(
                         0,
                         duration: const Duration(milliseconds: 250),
@@ -725,6 +807,9 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
                     ref
                         .read(chapterNavigationProvider.notifier)
                         .previousChapter();
+                    setState(() {
+                      _hasMarkedCurrentChapterComplete = false;
+                    });
                     _scrollController.animateTo(
                       0,
                       duration: const Duration(milliseconds: 300),
@@ -749,6 +834,9 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
                 child: FilledButton.icon(
                   onPressed: () {
                     ref.read(chapterNavigationProvider.notifier).nextChapter();
+                    setState(() {
+                      _hasMarkedCurrentChapterComplete = false;
+                    });
                     _scrollController.animateTo(
                       0,
                       duration: const Duration(milliseconds: 300),
@@ -807,11 +895,11 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
   Future<void> _shareBook(BuildContext context, WidgetRef ref) async {
     final bookAsync = ref.read(bookByIdProvider(widget.bookId));
     final currentChapter = ref.read(currentChapterProvider);
-    
+
     await bookAsync.when(
       data: (book) async {
         if (book == null) return;
-        
+
         String shareText = 'Check out "${book.title}" on FusionWave!\n\n';
         if (book.authors.isNotEmpty) {
           shareText += 'By: ${book.authors.join(', ')}\n';
@@ -820,7 +908,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
           shareText += 'Currently reading: ${currentChapter.title}\n';
         }
         shareText += '\nDownload FusionWave to read more!';
-        
+
         await SharePlus.instance.share(ShareParams(text: shareText));
       },
       loading: () async {
@@ -829,9 +917,9 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
         );
       },
       error: (error, stack) async {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $error')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $error')));
       },
     );
   }

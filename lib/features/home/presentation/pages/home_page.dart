@@ -8,7 +8,6 @@ import '../../../../core/widgets/shimmer_loading.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/top_navigation_bar.dart';
-import '../../../../core/widgets/footer_widget.dart';
 import '../../../../core/widgets/book_carousel.dart';
 import '../../../../core/widgets/interactive_button.dart';
 import '../../../../core/widgets/image_with_placeholder.dart';
@@ -90,33 +89,6 @@ class _HomePageState extends ConsumerState<HomePage> {
 
                 // Featured Books Section
                 _buildFeaturedBooksSection(context, ref, featuredBooksAsync),
-
-                // Spacing and divider before footer
-                SliverToBoxAdapter(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 40),
-                      // Divider
-                      Container(
-                        height: 1,
-                        margin: const EdgeInsets.symmetric(horizontal: 24),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.transparent,
-                              Colors.grey[300]!,
-                              Colors.transparent,
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-                    ],
-                  ),
-                ),
-
-                // Footer
-                const SliverToBoxAdapter(child: FooterWidget()),
               ],
             ),
           ),
@@ -229,9 +201,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   gradient: AppColors.primaryGradient,
                 ),
                 child: const Center(
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                  ),
+                  child: CircularProgressIndicator(color: Colors.white),
                 ),
               ),
               errorWidget: Container(
@@ -239,11 +209,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   gradient: AppColors.primaryGradient,
                 ),
                 child: const Center(
-                  child: Icon(
-                    Icons.book,
-                    color: Colors.white70,
-                    size: 48,
-                  ),
+                  child: Icon(Icons.book, color: Colors.white70, size: 48),
                 ),
               ),
             ),
@@ -254,7 +220,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black.withValues(alpha: 0.4)],
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.4),
+                  ],
                 ),
               ),
             ),
@@ -505,9 +474,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           return const SizedBox(
             width: 200,
             height: 380,
-            child: Center(
-              child: Icon(Icons.error_outline, color: Colors.grey),
-            ),
+            child: Center(child: Icon(Icons.error_outline, color: Colors.grey)),
           );
         }
 
@@ -529,9 +496,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       error: (_, _) => const SizedBox(
         width: 200,
         height: 380,
-        child: Center(
-          child: Icon(Icons.error_outline, color: Colors.grey),
-        ),
+        child: Center(child: Icon(Icons.error_outline, color: Colors.grey)),
       ),
     );
   }
