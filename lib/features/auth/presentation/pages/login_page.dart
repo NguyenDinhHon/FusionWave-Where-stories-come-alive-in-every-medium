@@ -43,7 +43,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       
       if (!mounted) return;
       
-      // Get user from authController state (already loaded after sign in)
+      // Wait a bit for provider to update, then check user role
+      await Future.delayed(const Duration(milliseconds: 100));
+      
+      if (!mounted) return;
+      
+      // Get user from authController state
       final authState = ref.read(authControllerProvider);
       final user = authState.value;
       
@@ -112,7 +117,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       
       if (!mounted) return;
       
-      // Get user from authController state (already loaded after sign in)
+      // Wait a bit for provider to update, then check user role
+      await Future.delayed(const Duration(milliseconds: 100));
+      
+      if (!mounted) return;
+      
+      // Get user from authController state
       final authState = ref.read(authControllerProvider);
       final user = authState.value;
       
