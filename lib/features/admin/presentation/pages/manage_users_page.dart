@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/top_navigation_bar.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/interactive_button.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
@@ -203,8 +202,7 @@ class _ManageUsersPageState extends ConsumerState<ManageUsersPage> {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildListView(List<Map<String, dynamic>> users) {

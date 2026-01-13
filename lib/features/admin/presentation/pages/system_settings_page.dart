@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/top_navigation_bar.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/interactive_button.dart';
 
