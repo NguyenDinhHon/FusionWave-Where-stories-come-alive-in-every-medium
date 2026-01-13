@@ -75,13 +75,35 @@ class AppRouter {
 
   // Admin guard function
   static String? _adminGuard(BuildContext context, GoRouterState state) {
+    // First check Firebase Auth directly (fastest)
+    final isAuthenticated = FirebaseAuth.instance.currentUser != null;
+    
+    if (!isAuthenticated) {
+      return '/login?redirect=${Uri.encodeComponent(state.uri.toString())}';
+    }
+
     try {
       final container = ProviderScope.containerOf(context);
-      final isAdmin = container.read(isAdminProvider);
-      final isAuthenticated = container.read(isAuthenticatedProvider);
-
-      if (!isAuthenticated) {
-        return '/login?redirect=${Uri.encodeComponent(state.uri.toString())}';
+      
+      // First try to get from authController (faster, already updated after sign in)
+      bool isAdmin = false;
+      try {
+        final authState = container.read(authControllerProvider);
+        final userFromAuth = authState.value;
+        if (userFromAuth != null) {
+          isAdmin = userFromAuth.role == AppConstants.roleAdmin;
+        } else {
+          // Fallback to isAdminProvider
+          isAdmin = container.read(isAdminProvider);
+        }
+      } catch (e) {
+        // If authController not available, try isAdminProvider
+        try {
+          isAdmin = container.read(isAdminProvider);
+        } catch (e2) {
+          // If both providers not available, allow access (will be checked in AdminShellScaffold)
+          return null;
+        }
       }
 
       if (!isAdmin) {
@@ -97,12 +119,7 @@ class AppRouter {
 
       return null; // Allow access
     } catch (e) {
-      // If provider is not available, check Firebase Auth directly
-      final isAuthenticated = FirebaseAuth.instance.currentUser != null;
-      if (!isAuthenticated) {
-        return '/login?redirect=${Uri.encodeComponent(state.uri.toString())}';
-      }
-      // For now, allow access if authenticated (will be checked in page)
+      // If provider is not available, allow access if authenticated (will be checked in AdminShellScaffold)
       return null;
     }
   }

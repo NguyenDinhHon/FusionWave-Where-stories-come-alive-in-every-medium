@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/interactive_button.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
@@ -31,117 +32,186 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-        children: [
-          // Header với filters
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    InteractiveButton(
-                      icon: Icons.arrow_back,
-                      onPressed: () => context.pop(),
-                      isIconButton: true,
-                      iconColor: AppColors.iconLight,
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Text(
-                        'Quản Lý Sách',
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimaryLight,
-                            ),
-                      ),
-                    ),
-                    InteractiveButton(
-                      label: 'Upload Sách',
-                      icon: Icons.add,
-                      onPressed: () => context.push('/admin/upload-book'),
-                      gradient: AppColors.primaryGradient,
-                      height: 40,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                // Search và filters
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: 'Tìm kiếm sách...',
-                          prefixIcon: const Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[100],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = ResponsiveUtils.isMobile(context);
+        final padding = ResponsiveUtils.pagePadding(context);
+
+        return Column(
+          children: [
+            Container(
+              color: Theme.of(context).cardColor,
+              padding: EdgeInsets.all(padding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isMobile)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeaderTitle(context),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: _buildPrimaryButton(context),
                         ),
-                        onChanged: (value) {
-                          setState(() {
-                            _searchQuery = value;
-                          });
-                        },
-                      ),
+                      ],
+                    )
+                  else
+                    Row(
+                      children: [
+                        _buildBackButton(context),
+                        const SizedBox(width: 16),
+                        Expanded(child: _buildTitleText(context)),
+                        const SizedBox(width: 16),
+                        _buildPrimaryButton(context),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    DropdownButton<String>(
-                      value: _selectedCategory,
-                      hint: const Text('Thể loại'),
-                      items:
-                          [
-                            'All',
-                            'Fiction',
-                            'Non-Fiction',
-                            'Science',
-                            'History',
-                            'Romance',
-                            'Mystery',
-                            'Fantasy',
-                          ].map((category) {
-                            return DropdownMenuItem(
-                              value: category == 'All' ? null : category,
-                              child: Text(category),
-                            );
-                          }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedCategory = value;
-                        });
-                      },
-                    ),
-                    const SizedBox(width: 12),
-                    InteractiveButton(
-                      icon: _isGridView ? Icons.view_list : Icons.grid_view,
-                      onPressed: () {
-                        setState(() {
-                          _isGridView = !_isGridView;
-                        });
-                      },
-                      isIconButton: true,
-                      iconColor: AppColors.iconLight,
+                  if (isMobile) ...[
+                    const SizedBox(height: 12),
+                    _buildSearchField(),
+                    const SizedBox(height: 12),
+                    _buildCategoryDropdown(isMobile),
+                    const SizedBox(height: 12),
+                    _buildViewToggle(),
+                  ] else ...[
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(child: _buildSearchField()),
+                        const SizedBox(width: 12),
+                        _buildCategoryDropdown(isMobile),
+                        const SizedBox(width: 12),
+                        _buildViewToggle(),
+                      ],
                     ),
                   ],
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          // Books list
-          Expanded(child: _buildBooksList()),
-        ],
-      );
+            Expanded(
+              child: _buildBooksList(
+                isMobile: isMobile,
+                maxWidth: constraints.maxWidth,
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
-  Widget _buildBooksList() {
+  Widget _buildHeaderTitle(BuildContext context) {
+    return Row(
+      children: [
+        _buildBackButton(context),
+        const SizedBox(width: 12),
+        Expanded(child: _buildTitleText(context)),
+      ],
+    );
+  }
+
+  Widget _buildBackButton(BuildContext context) {
+    return InteractiveButton(
+      icon: Icons.arrow_back,
+      onPressed: () => context.pop(),
+      isIconButton: true,
+      iconColor: AppColors.iconLight,
+    );
+  }
+
+  Widget _buildTitleText(BuildContext context) {
+    return Text(
+      'Quản Lý Sách',
+      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimaryLight,
+          ),
+    );
+  }
+
+  Widget _buildPrimaryButton(BuildContext context) {
+    return InteractiveButton(
+      label: 'Upload Sách',
+      icon: Icons.add,
+      onPressed: () => context.push('/admin/upload-book'),
+      gradient: AppColors.primaryGradient,
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    );
+  }
+
+  Widget _buildSearchField() {
+    return TextField(
+      decoration: InputDecoration(
+        hintText: 'Tìm kiếm sách...',
+        prefixIcon: const Icon(Icons.search),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        filled: true,
+        fillColor: Colors.grey[100],
+      ),
+      onChanged: (value) {
+        setState(() {
+          _searchQuery = value;
+        });
+      },
+    );
+  }
+
+  Widget _buildCategoryDropdown(bool isMobile) {
+    final dropdown = DropdownButton<String>(
+      value: _selectedCategory,
+      hint: const Text('Thể loại'),
+      items: [
+        'All',
+        'Fiction',
+        'Non-Fiction',
+        'Science',
+        'History',
+        'Romance',
+        'Mystery',
+        'Fantasy',
+      ].map((category) {
+        return DropdownMenuItem(
+          value: category == 'All' ? null : category,
+          child: Text(category),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          _selectedCategory = value;
+        });
+      },
+    );
+
+    if (isMobile) {
+      return SizedBox(
+        width: double.infinity,
+        child: dropdown,
+      );
+    }
+    return dropdown;
+  }
+
+  Widget _buildViewToggle() {
+    return InteractiveButton(
+      icon: _isGridView ? Icons.view_list : Icons.grid_view,
+      onPressed: () {
+        setState(() {
+          _isGridView = !_isGridView;
+        });
+      },
+      isIconButton: true,
+      iconColor: AppColors.iconLight,
+    );
+  }
+
+  Widget _buildBooksList({
+    required bool isMobile,
+    required double maxWidth,
+  }) {
     final booksAsync = ref.watch(
       allBooksProvider({
         'searchQuery': _searchQuery.isEmpty ? null : _searchQuery,
@@ -156,17 +226,7 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
       data: (books) {
         if (books.isEmpty) {
           return _isGridView
-              ? GridView.builder(
-                  padding: const EdgeInsets.all(16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 0.7,
-                  ),
-                  itemCount: 6,
-                  itemBuilder: (context, index) => const ShimmerBookCard(),
-                )
+              ? _buildLoadingGrid(maxWidth, isMobile)
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: 5,
@@ -188,20 +248,12 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
           );
         }
 
-        return _isGridView ? _buildGridView(books) : _buildListView(books);
+        return _isGridView
+            ? _buildGridView(books, maxWidth, isMobile)
+            : _buildListView(books);
       },
       loading: () => _isGridView
-          ? GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.7,
-              ),
-              itemCount: 6,
-              itemBuilder: (context, index) => const ShimmerBookCard(),
-            )
+          ? _buildLoadingGrid(maxWidth, isMobile)
           : ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: 5,
@@ -303,6 +355,26 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
     );
   }
 
+  Widget _buildLoadingGrid(double maxWidth, bool isMobile) {
+    final crossAxisCount = ResponsiveUtils.gridCountForWidth(
+      maxWidth,
+      minItemWidth: isMobile ? 160 : 220,
+      maxCount: isMobile ? 2 : 4,
+    );
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        childAspectRatio: 0.7,
+      ),
+      itemCount: 6,
+      itemBuilder: (context, index) => const ShimmerBookCard(),
+    );
+  }
+
   void _showDeleteConfirmation(
     BuildContext context,
     WidgetRef ref,
@@ -353,11 +425,21 @@ class _ManageBooksPageState extends ConsumerState<ManageBooksPage> {
     );
   }
 
-  Widget _buildGridView(List<BookModel> books) {
+  Widget _buildGridView(
+    List<BookModel> books,
+    double maxWidth,
+    bool isMobile,
+  ) {
+    final crossAxisCount = ResponsiveUtils.gridCountForWidth(
+      maxWidth,
+      minItemWidth: isMobile ? 160 : 220,
+      maxCount: isMobile ? 2 : 4,
+    );
+
     return GridView.builder(
       padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
         childAspectRatio: 0.7,

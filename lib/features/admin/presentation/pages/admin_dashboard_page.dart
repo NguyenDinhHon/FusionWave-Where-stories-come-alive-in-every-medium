@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/interactive_button.dart';
-import '../../../../core/constants/app_constants.dart';
 import '../providers/admin_stats_provider.dart';
 import '../providers/recent_data_provider.dart';
 
@@ -14,72 +15,118 @@ class AdminDashboardPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1200),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 900;
+        final padding = ResponsiveUtils.pagePadding(context);
+        return SingleChildScrollView(
+          padding: EdgeInsets.all(padding),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: ResponsiveUtils.maxContentWidth(context),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isMobile)
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Admin Dashboard',
-                          style: Theme.of(context).textTheme.headlineMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimaryLight,
-                              ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Quản lý nội dung và hệ thống',
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(color: AppColors.textSecondaryLight),
-                        ),
+                        _buildHeaderText(context),
+                        const SizedBox(height: 16),
+                        _buildPrimaryActionButton(context, fullWidth: true),
+                      ],
+                    )
+                  else
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: _buildHeaderText(context)),
+                        const SizedBox(width: 16),
+                        _buildPrimaryActionButton(context),
                       ],
                     ),
-                    InteractiveButton(
-                      label: 'Upload Sách',
-                      icon: Icons.add,
-                      onPressed: () => context.push('/admin/upload-book'),
-                      gradient: AppColors.primaryGradient,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-
-                // Stats Cards
-                _buildStatsSection(context, ref),
-                const SizedBox(height: 32),
-
-                // Quick Actions
-                _buildQuickActionsSection(context),
-                const SizedBox(height: 32),
-
-                // Management Sections
-                _buildManagementSection(context, ref),
-              ],
+                  const SizedBox(height: 32),
+                  _buildStatsSection(
+                    context,
+                    ref,
+                    constraints.maxWidth,
+                  ),
+                  const SizedBox(height: 32),
+                  _buildQuickActionsSection(context),
+                  const SizedBox(height: 32),
+                  _buildManagementSection(
+                    context,
+                    ref,
+                    isMobile,
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      );
+        );
+      },
+    );
   }
 
-  Widget _buildStatsSection(BuildContext context, WidgetRef ref) {
+  Widget _buildHeaderText(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Admin Dashboard',
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimaryLight,
+              ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Quản lý nội dung và hệ thống',
+          style: Theme.of(context)
+              .textTheme
+              .bodyLarge
+              ?.copyWith(color: AppColors.textSecondaryLight),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPrimaryActionButton(BuildContext context,
+      {bool fullWidth = false}) {
+    final button = InteractiveButton(
+      label: 'Upload Sách',
+      icon: Icons.add,
+      onPressed: () => context.push('/admin/upload-book'),
+      gradient: AppColors.primaryGradient,
+    );
+
+    if (fullWidth) {
+      return SizedBox(width: double.infinity, child: button);
+    }
+
+    return button;
+  }
+
+  Widget _buildStatsSection(
+    BuildContext context,
+    WidgetRef ref,
+    double maxWidth,
+  ) {
     final statsAsync = ref.watch(adminStatsProvider);
+    final crossAxisCount = ResponsiveUtils.gridCountForWidth(
+      maxWidth,
+      minItemWidth: 220,
+      maxCount: 4,
+    );
 
     return statsAsync.when(
       data: (stats) => GridView.count(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: 4,
+        crossAxisCount: crossAxisCount,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
         childAspectRatio: 2.5,
@@ -117,7 +164,7 @@ class AdminDashboardPage extends ConsumerWidget {
       loading: () => GridView.count(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: 4,
+        crossAxisCount: crossAxisCount,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
         childAspectRatio: 2.5,
@@ -276,201 +323,210 @@ class AdminDashboardPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildManagementSection(BuildContext context, WidgetRef ref) {
+  Widget _buildManagementSection(
+    BuildContext context,
+    WidgetRef ref,
+    bool isMobile,
+  ) {
     final recentBooksAsync = ref.watch(recentBooksProvider);
     final recentUsersAsync = ref.watch(recentUsersProvider);
+
+    Widget booksCard = AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Recent Books',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimaryLight,
+                    ),
+              ),
+              TextButton(
+                onPressed: () => context.push('/admin/manage-books'),
+                child: const Text('View All'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          recentBooksAsync.when(
+            data: (books) {
+              if (books.isEmpty) {
+                return const Center(child: Text('No books yet'));
+              }
+              return Column(
+                children: books.map((book) {
+                  return ListTile(
+                    leading: Container(
+                      width: 50,
+                      height: 70,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: book.coverImageUrl != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: Image.network(
+                                book.coverImageUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) =>
+                                    const Icon(Icons.book),
+                              ),
+                            )
+                          : const Icon(Icons.book),
+                    ),
+                    title: Text(
+                      book.title,
+                      style: const TextStyle(fontSize: 14),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      book.authors.isNotEmpty
+                          ? book.authors.join(', ')
+                          : 'Unknown',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondaryLight,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: book.isPublished
+                        ? const Icon(
+                            Icons.check_circle,
+                            color: Colors.green,
+                            size: 20,
+                          )
+                        : const Icon(
+                            Icons.circle_outlined,
+                            color: Colors.grey,
+                            size: 20,
+                          ),
+                    onTap: () => context.push('/admin/edit-book/${book.id}'),
+                  );
+                }).toList(),
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (_, __) => const Center(child: Text('Error loading books')),
+          ),
+        ],
+      ),
+    );
+
+    Widget usersCard = AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Recent Users',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimaryLight,
+                    ),
+              ),
+              TextButton(
+                onPressed: () => context.push('/admin/manage-users'),
+                child: const Text('View All'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          recentUsersAsync.when(
+            data: (users) {
+              if (users.isEmpty) {
+                return const Center(child: Text('No users yet'));
+              }
+              return Column(
+                children: users.map((user) {
+                  return ListTile(
+                    leading: CircleAvatar(
+                      radius: 20,
+                      backgroundImage: user['photoUrl'] != null
+                          ? NetworkImage(user['photoUrl'])
+                          : null,
+                      child: user['photoUrl'] == null
+                          ? Text(
+                              (user['displayName'] as String).isNotEmpty
+                                  ? (user['displayName'] as String)[0]
+                                      .toUpperCase()
+                                  : 'U',
+                            )
+                          : null,
+                    ),
+                    title: Text(
+                      user['displayName'] ?? 'Unknown',
+                      style: const TextStyle(fontSize: 14),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      user['email'] ?? '',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondaryLight,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: user['role'] == AppConstants.roleAdmin
+                            ? Colors.red.withValues(alpha: 0.1)
+                            : Colors.blue.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        user['role'] ?? AppConstants.roleUser,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: user['role'] == AppConstants.roleAdmin
+                              ? Colors.red
+                              : Colors.blue,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    onTap: () => context.push('/admin/manage-users'),
+                  );
+                }).toList(),
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (_, __) => const Center(child: Text('Error loading users')),
+          ),
+        ],
+      ),
+    );
+
+    if (isMobile) {
+      return Column(
+        children: [
+          booksCard,
+          const SizedBox(height: 16),
+          usersCard,
+        ],
+      );
+    }
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Recent Books',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimaryLight,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => context.push('/admin/manage-books'),
-                      child: const Text('View All'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                recentBooksAsync.when(
-                  data: (books) {
-                    if (books.isEmpty) {
-                      return const Center(child: Text('No books yet'));
-                    }
-                    return Column(
-                      children: books.map((book) {
-                        return ListTile(
-                          leading: Container(
-                            width: 50,
-                            height: 70,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[300],
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: book.coverImageUrl != null
-                                ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(4),
-                                    child: Image.network(
-                                      book.coverImageUrl!,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, _, _) =>
-                                          const Icon(Icons.book),
-                                    ),
-                                  )
-                                : const Icon(Icons.book),
-                          ),
-                          title: Text(
-                            book.title,
-                            style: const TextStyle(fontSize: 14),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          subtitle: Text(
-                            book.authors.isNotEmpty
-                                ? book.authors.join(', ')
-                                : 'Unknown',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondaryLight,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          trailing: book.isPublished
-                              ? const Icon(
-                                  Icons.check_circle,
-                                  color: Colors.green,
-                                  size: 20,
-                                )
-                              : const Icon(
-                                  Icons.circle_outlined,
-                                  color: Colors.grey,
-                                  size: 20,
-                                ),
-                          onTap: () =>
-                              context.push('/admin/edit-book/${book.id}'),
-                        );
-                      }).toList(),
-                    );
-                  },
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (_, _) =>
-                      const Center(child: Text('Error loading books')),
-                ),
-              ],
-            ),
-          ),
-        ),
+        Expanded(child: booksCard),
         const SizedBox(width: 16),
-        Expanded(
-          child: AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Recent Users',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimaryLight,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => context.push('/admin/manage-users'),
-                      child: const Text('View All'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                recentUsersAsync.when(
-                  data: (users) {
-                    if (users.isEmpty) {
-                      return const Center(child: Text('No users yet'));
-                    }
-                    return Column(
-                      children: users.map((user) {
-                        return ListTile(
-                          leading: CircleAvatar(
-                            radius: 20,
-                            backgroundImage: user['photoUrl'] != null
-                                ? NetworkImage(user['photoUrl'])
-                                : null,
-                            child: user['photoUrl'] == null
-                                ? Text(
-                                    (user['displayName'] as String).isNotEmpty
-                                        ? (user['displayName'] as String)[0]
-                                              .toUpperCase()
-                                        : 'U',
-                                  )
-                                : null,
-                          ),
-                          title: Text(
-                            user['displayName'] ?? 'Unknown',
-                            style: const TextStyle(fontSize: 14),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          subtitle: Text(
-                            user['email'] ?? '',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondaryLight,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          trailing: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: user['role'] == AppConstants.roleAdmin
-                                  ? Colors.red.withValues(alpha: 0.1)
-                                  : Colors.blue.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              user['role'] ?? AppConstants.roleUser,
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: user['role'] == AppConstants.roleAdmin
-                                    ? Colors.red
-                                    : Colors.blue,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          onTap: () => context.push('/admin/manage-users'),
-                        );
-                      }).toList(),
-                    );
-                  },
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (_, _) =>
-                      const Center(child: Text('Error loading users')),
-                ),
-              ],
-            ),
-          ),
-        ),
+        Expanded(child: usersCard),
       ],
     );
   }

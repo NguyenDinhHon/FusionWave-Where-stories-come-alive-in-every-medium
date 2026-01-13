@@ -43,22 +43,23 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       
       if (!mounted) return;
       
+      // Wait a tiny bit to ensure state is fully propagated
+      await Future.delayed(const Duration(milliseconds: 100));
+      
+      if (!mounted) return;
+      
       // Get user model directly from authController state (already updated)
       final authState = ref.read(authControllerProvider);
       final user = authState.value;
       
       if (!mounted) return;
       
-      // Use post frame callback to ensure navigation happens after build
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        // Redirect immediately based on role
-        if (user?.role == AppConstants.roleAdmin) {
-          context.go('/admin');
-        } else {
-          context.go('/home');
-        }
-      });
+      // Navigate immediately based on role (no post frame callback needed)
+      if (user?.role == AppConstants.roleAdmin) {
+        context.go('/admin');
+      } else {
+        context.go('/home');
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -116,22 +117,23 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       
       if (!mounted) return;
       
+      // Wait a tiny bit to ensure state is fully propagated
+      await Future.delayed(const Duration(milliseconds: 100));
+      
+      if (!mounted) return;
+      
       // Get user model directly from authController state (already updated)
       final authState = ref.read(authControllerProvider);
       final user = authState.value;
       
       if (!mounted) return;
       
-      // Use post frame callback to ensure navigation happens after build
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        // Redirect immediately based on role
-        if (user?.role == AppConstants.roleAdmin) {
-          context.go('/admin');
-        } else {
-          context.go('/home');
-        }
-      });
+      // Navigate immediately based on role (no post frame callback needed)
+      if (user?.role == AppConstants.roleAdmin) {
+        context.go('/admin');
+      } else {
+        context.go('/home');
+      }
     } catch (e) {
       if (mounted) {
         final errorMessage = e.toString().replaceAll('Exception: ', '');
