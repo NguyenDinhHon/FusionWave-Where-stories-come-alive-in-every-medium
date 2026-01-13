@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_guard_provider.dart';
+import '../../features/auth/presentation/providers/auth_provider.dart';
+import '../constants/app_constants.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
@@ -117,7 +119,15 @@ class AppRouter {
     if (isAuthenticated) {
       try {
         final container = ProviderScope.containerOf(context);
-        isAdmin = container.read(isAdminProvider);
+        // First try to get from authController (faster, already updated after sign in)
+        final authState = container.read(authControllerProvider);
+        final userFromAuth = authState.value;
+        if (userFromAuth != null) {
+          isAdmin = userFromAuth.role == AppConstants.roleAdmin;
+        } else {
+          // Fallback to isAdminProvider
+          isAdmin = container.read(isAdminProvider);
+        }
       } catch (e) {
         // Provider not available yet, will be checked in route
       }
@@ -170,10 +180,19 @@ class AppRouter {
     redirect: (context, state) {
       // Check if user is authenticated and admin, redirect to admin panel
       final isAuthenticated = FirebaseAuth.instance.currentUser != null;
-      if (isAuthenticated && state.uri.path == '/home' || state.uri.path == '/') {
+      if (isAuthenticated && (state.uri.path == '/home' || state.uri.path == '/')) {
         try {
           final container = ProviderScope.containerOf(context);
-          final isAdmin = container.read(isAdminProvider);
+          // First try to get from authController (faster, already updated after sign in)
+          final authState = container.read(authControllerProvider);
+          final userFromAuth = authState.value;
+          bool isAdmin = false;
+          if (userFromAuth != null) {
+            isAdmin = userFromAuth.role == AppConstants.roleAdmin;
+          } else {
+            // Fallback to isAdminProvider
+            isAdmin = container.read(isAdminProvider);
+          }
           if (isAdmin) {
             return '/admin';
           }
