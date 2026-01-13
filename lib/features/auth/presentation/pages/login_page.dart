@@ -35,23 +35,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(authControllerProvider.notifier).signInWithEmailAndPassword(
+      final authController = ref.read(authControllerProvider.notifier);
+      await authController.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
       
       if (!mounted) return;
       
-      // Check if user is admin and redirect accordingly
-      final userAsync = ref.read(currentUserModelProvider);
-      final user = await userAsync.when(
-        data: (user) => Future.value(user),
-        loading: () => Future.value(null),
-        error: (_, __) => Future.value(null),
-      );
+      // Get user from authController state (already loaded after sign in)
+      final authState = ref.read(authControllerProvider);
+      final user = authState.value;
       
       if (!mounted) return;
       
+      // Redirect based on role
       if (user?.role == AppConstants.roleAdmin) {
         context.go('/admin');
       } else {
@@ -109,20 +107,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     setState(() => _isLoading = true);
     
     try {
-      await ref.read(authControllerProvider.notifier).signInWithGoogle();
+      final authController = ref.read(authControllerProvider.notifier);
+      await authController.signInWithGoogle();
       
       if (!mounted) return;
       
-      // Check if user is admin and redirect accordingly
-      final userAsync = ref.read(currentUserModelProvider);
-      final user = await userAsync.when(
-        data: (user) => Future.value(user),
-        loading: () => Future.value(null),
-        error: (_, __) => Future.value(null),
-      );
+      // Get user from authController state (already loaded after sign in)
+      final authState = ref.read(authControllerProvider);
+      final user = authState.value;
       
       if (!mounted) return;
       
+      // Redirect based on role
       if (user?.role == AppConstants.roleAdmin) {
         context.go('/admin');
       } else {

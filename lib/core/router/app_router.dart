@@ -167,7 +167,22 @@ class AppRouter {
 
   static final GoRouter router = GoRouter(
     initialLocation: '/home',
-    redirect: _redirect,
+    redirect: (context, state) {
+      // Check if user is authenticated and admin, redirect to admin panel
+      final isAuthenticated = FirebaseAuth.instance.currentUser != null;
+      if (isAuthenticated && state.uri.path == '/home' || state.uri.path == '/') {
+        try {
+          final container = ProviderScope.containerOf(context);
+          final isAdmin = container.read(isAdminProvider);
+          if (isAdmin) {
+            return '/admin';
+          }
+        } catch (e) {
+          // Provider not ready yet, continue with normal redirect
+        }
+      }
+      return _redirect(context, state);
+    },
     routes: [
       // Auth Routes
       GoRoute(
