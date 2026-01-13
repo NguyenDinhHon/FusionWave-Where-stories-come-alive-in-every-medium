@@ -7,6 +7,7 @@ import '../widgets/auth_text_field.dart';
 import '../widgets/auth_button.dart';
 import '../providers/auth_provider.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../data/repositories/auth_repository.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -36,6 +37,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     try {
       final authController = ref.read(authControllerProvider.notifier);
+      final authRepository = ref.read(authRepositoryProvider);
+      
+      // Sign in and get user model directly
+      final userModel = await authRepository.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+      
+      // Update auth controller state
       await authController.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
@@ -43,19 +53,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       
       if (!mounted) return;
       
-      // Wait a bit for provider to update, then check user role
-      await Future.delayed(const Duration(milliseconds: 100));
-      
-      if (!mounted) return;
-      
-      // Get user from authController state
-      final authState = ref.read(authControllerProvider);
-      final user = authState.value;
-      
-      if (!mounted) return;
-      
-      // Redirect based on role
-      if (user?.role == AppConstants.roleAdmin) {
+      // Redirect based on role using userModel from repository
+      if (userModel.role == AppConstants.roleAdmin) {
         context.go('/admin');
       } else {
         context.go('/home');
@@ -112,24 +111,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     setState(() => _isLoading = true);
     
     try {
-      final authController = ref.read(authControllerProvider.notifier);
-      await authController.signInWithGoogle();
+      final authRepository = ref.read(authRepositoryProvider);
+      
+      // Sign in and get user model directly from repository
+      final userModel = await authRepository.signInWithGoogle();
+      
+      // Update auth controller state
+      ref.read(authControllerProvider.notifier).state = AsyncValue.data(userModel);
       
       if (!mounted) return;
       
-      // Wait a bit for provider to update, then check user role
-      await Future.delayed(const Duration(milliseconds: 100));
-      
-      if (!mounted) return;
-      
-      // Get user from authController state
-      final authState = ref.read(authControllerProvider);
-      final user = authState.value;
-      
-      if (!mounted) return;
-      
-      // Redirect based on role
-      if (user?.role == AppConstants.roleAdmin) {
+      // Redirect based on role using userModel from repository
+      if (userModel.role == AppConstants.roleAdmin) {
         context.go('/admin');
       } else {
         context.go('/home');
