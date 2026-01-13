@@ -10,11 +10,11 @@ part of 'reading_mode_provider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(ReadingModeNotifier)
-const readingModeProvider = ReadingModeNotifierProvider._();
+final readingModeProvider = ReadingModeNotifierProvider._();
 
 final class ReadingModeNotifierProvider
     extends $NotifierProvider<ReadingModeNotifier, ReadingMode> {
-  const ReadingModeNotifierProvider._()
+  ReadingModeNotifierProvider._()
     : super(
         from: null,
         argument: null,
@@ -49,7 +49,6 @@ abstract class _$ReadingModeNotifier extends $Notifier<ReadingMode> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<ReadingMode, ReadingMode>;
     final element =
         ref.element
@@ -59,16 +58,16 @@ abstract class _$ReadingModeNotifier extends $Notifier<ReadingMode> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(ControlsVisibility)
-const controlsVisibilityProvider = ControlsVisibilityProvider._();
+final controlsVisibilityProvider = ControlsVisibilityProvider._();
 
 final class ControlsVisibilityProvider
     extends $NotifierProvider<ControlsVisibility, bool> {
-  const ControlsVisibilityProvider._()
+  ControlsVisibilityProvider._()
     : super(
         from: null,
         argument: null,
@@ -103,7 +102,6 @@ abstract class _$ControlsVisibility extends $Notifier<bool> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<bool, bool>;
     final element =
         ref.element
@@ -113,6 +111,6 @@ abstract class _$ControlsVisibility extends $Notifier<bool> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
