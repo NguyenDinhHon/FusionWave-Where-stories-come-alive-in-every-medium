@@ -40,20 +40,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         password: _passwordController.text,
       );
       
-      if (mounted) {
-        // Check if user is admin and redirect accordingly
-        final userAsync = ref.read(currentUserModelProvider);
-        final user = await userAsync.when(
-          data: (user) => Future.value(user),
-          loading: () => Future.value(null),
-          error: (_, __) => Future.value(null),
-        );
-        
-        if (user?.role == AppConstants.roleAdmin) {
-          context.go('/admin');
-        } else {
-          context.go('/home');
-        }
+      if (!mounted) return;
+      
+      // Check if user is admin and redirect accordingly
+      final userAsync = ref.read(currentUserModelProvider);
+      final user = await userAsync.when(
+        data: (user) => Future.value(user),
+        loading: () => Future.value(null),
+        error: (_, __) => Future.value(null),
+      );
+      
+      if (!mounted) return;
+      
+      if (user?.role == AppConstants.roleAdmin) {
+        context.go('/admin');
+      } else {
+        context.go('/home');
       }
     } catch (e) {
       if (mounted) {
@@ -109,20 +111,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     try {
       await ref.read(authControllerProvider.notifier).signInWithGoogle();
       
-      if (mounted) {
-        // Check if user is admin and redirect accordingly
-        final userAsync = ref.read(currentUserModelProvider);
-        final user = await userAsync.when(
-          data: (user) => Future.value(user),
-          loading: () => Future.value(null),
-          error: (_, __) => Future.value(null),
-        );
-        
-        if (user?.role == AppConstants.roleAdmin) {
-          context.go('/admin');
-        } else {
-          context.go('/home');
-        }
+      if (!mounted) return;
+      
+      // Check if user is admin and redirect accordingly
+      final userAsync = ref.read(currentUserModelProvider);
+      final user = await userAsync.when(
+        data: (user) => Future.value(user),
+        loading: () => Future.value(null),
+        error: (_, __) => Future.value(null),
+      );
+      
+      if (!mounted) return;
+      
+      if (user?.role == AppConstants.roleAdmin) {
+        context.go('/admin');
+      } else {
+        context.go('/home');
       }
     } catch (e) {
       if (mounted) {
