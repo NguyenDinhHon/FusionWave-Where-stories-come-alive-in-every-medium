@@ -192,6 +192,77 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
             );
           },
         ),
+        // Bookmark Button
+        Consumer(
+          builder: (context, ref, child) {
+            final libraryItemAsync = ref.watch(
+              libraryItemByBookIdProvider(book.id),
+            );
+
+            return libraryItemAsync.when(
+              data: (item) {
+                final isBookmarked = item?.isBookmarked ?? false;
+
+                return InteractiveIconButton(
+                  icon: isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                  iconColor: Colors.white,
+                  size: 32,
+                  onPressed: () async {
+                    final repository = ref.read(libraryRepositoryProvider);
+
+                    try {
+                      if (item == null) {
+                        // Not in library -> Add to library with isBookmarked = true
+                        await repository.addToLibrary(
+                          book.id,
+                          isBookmarked: true,
+                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Added to Want to Read'),
+                            ),
+                          );
+                        }
+                      } else {
+                        // In library -> Toggle isBookmarked
+                        await repository.updateBookmarkStatus(
+                          book.id,
+                          !isBookmarked,
+                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                isBookmarked
+                                    ? 'Removed from Want to Read'
+                                    : 'Added to Want to Read',
+                              ),
+                            ),
+                          );
+                        }
+                      }
+
+                      ref.invalidate(libraryItemByBookIdProvider(book.id));
+                      ref.invalidate(libraryItemsProvider);
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Failed to update bookmark'),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  tooltip: isBookmarked ? 'Remove Bookmark' : 'Add Bookmark',
+                );
+              },
+              loading: () => const SizedBox(),
+              error: (_, _) => const SizedBox(),
+            );
+          },
+        ),
         InteractiveIconButton(
           icon: Icons.share,
           iconColor: Colors.white,
@@ -306,9 +377,35 @@ class _BookDetailPageState extends ConsumerState<BookDetailPage> {
                     AppColors.primary.withValues(alpha: 0.8),
                   ],
                 ),
-                onPressed: () {
+                onPressed: () async {
                   if (isInLibrary) {
-                    context.push('/reading/${book.id}');
+                    // Navigate to last read chapter
+                    try {
+                      final chapters = await ref.read(
+                        chaptersByBookIdProvider(book.id).future,
+                      );
+
+                      if (chapters.isNotEmpty && item!.currentChapter != null) {
+                        // Find the chapter matching currentChapter number
+                        final chapter = chapters.firstWhere(
+                          (c) => c.chapterNumber == item.currentChapter,
+                          orElse: () => chapters.first,
+                        );
+                        if (context.mounted) {
+                          context.push(
+                            '/reading/${book.id}?chapterId=${chapter.id}',
+                          );
+                        }
+                      } else if (context.mounted) {
+                        // Fallback to first chapter if no currentChapter
+                        context.push('/reading/${book.id}');
+                      }
+                    } catch (e) {
+                      // Fallback on error
+                      if (context.mounted) {
+                        context.push('/reading/${book.id}');
+                      }
+                    }
                   } else {
                     ref.read(libraryControllerProvider).addToLibrary(book.id);
                     ScaffoldMessenger.of(context).showSnackBar(

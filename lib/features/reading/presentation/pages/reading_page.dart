@@ -127,10 +127,12 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
       final repository = ref.read(libraryRepositoryProvider);
       final chapters = ref.read(chaptersListProvider);
 
-      // Check if book is in library, if not add it
+      // Check if book is in library, if not add it with 'reading' status
+      // If already in library (e.g. 'want_to_read'), keep the existing status
       var libraryItem = await repository.getLibraryItemByBookId(widget.bookId);
       if (libraryItem == null) {
         await repository.addToLibrary(widget.bookId, status: 'reading');
+        libraryItem = await repository.getLibraryItemByBookId(widget.bookId);
       }
 
       // 1. Mark chapter as completed
@@ -377,40 +379,6 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
     );
   }
 
-  void _addBookmark() async {
-    final currentChapter = ref.read(currentChapterProvider);
-    if (currentChapter == null) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    final bookmarkKey = 'bookmarks_${widget.bookId}';
-
-    // Get existing bookmarks
-    final bookmarksJson = prefs.getStringList(bookmarkKey) ?? [];
-
-    // Add new bookmark
-    final newBookmark = {
-      'chapterId': currentChapter.id,
-      'chapterTitle': currentChapter.title,
-      'chapterNumber': currentChapter.chapterNumber,
-      'position': _scrollController.offset.toInt(),
-      'timestamp': DateTime.now().toIso8601String(),
-    };
-
-    bookmarksJson.add(newBookmark.toString());
-    await prefs.setStringList(bookmarkKey, bookmarksJson);
-
-    // Show success message
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Đã lưu bookmark: ${currentChapter.title}'),
-          duration: const Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final currentChapter = ref.watch(currentChapterProvider);
@@ -445,27 +413,45 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
 
         // Load chapters into provider if not already loaded
         WidgetsBinding.instance.addPostFrameCallback((_) {
+          // Load chapters list directly without resetting index
           if (chapters.isEmpty || chapters.length != loadedChapters.length) {
+            debugPrint(
+              '[ReadingPage] Loading ${loadedChapters.length} chapters into provider',
+            );
             ref
-                .read(chapterNavigationProvider.notifier)
+                .read(chaptersListProvider.notifier)
                 .loadChapters(loadedChapters);
           }
 
           // Only initialize chapter once (not on every rebuild)
           if (!_hasInitializedChapter) {
             _hasInitializedChapter = true;
+            debugPrint(
+              '[ReadingPage] Initializing chapter. chapterId: ${widget.chapterId}',
+            );
 
             if (widget.chapterId != null) {
               final index = loadedChapters.indexWhere(
                 (c) => c.id == widget.chapterId,
               );
+              debugPrint('[ReadingPage] Found chapter at index: $index');
               if (index >= 0) {
+                debugPrint('[ReadingPage] Jumping to chapter index $index');
                 ref
                     .read(chapterNavigationProvider.notifier)
                     .jumpToChapter(index);
+                final currentIndex = ref.read(chapterNavigationProvider);
+                debugPrint(
+                  '[ReadingPage] Current index after jump: $currentIndex',
+                );
+              } else {
+                debugPrint(
+                  '[ReadingPage] Chapter ID not found in loaded chapters!',
+                );
               }
             } else if (currentChapter == null && loadedChapters.isNotEmpty) {
               // Default to first chapter if no chapter specified
+              debugPrint('[ReadingPage] No chapterId, defaulting to chapter 0');
               ref.read(chapterNavigationProvider.notifier).jumpToChapter(0);
             }
           }
@@ -524,6 +510,8 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
   }) {
     // Watch current chapter from provider (updates when navigation changes)
     final currentChapter = ref.watch(currentChapterProvider);
+    // Watch chapter index to trigger rebuild when navigation changes
+    ref.watch(chapterNavigationProvider);
 
     if (book == null || currentChapter == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -734,20 +722,6 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Bookmark Button
-            FloatingActionButton.small(
-              heroTag: 'bookmark',
-              onPressed: _addBookmark,
-              backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
-              tooltip: 'Bookmark',
-              child: Icon(
-                Icons.bookmark_add_outlined,
-                color: Theme.of(context).colorScheme.onTertiaryContainer,
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
             // Chapter List Button
             FloatingActionButton.small(
               heroTag: 'chapters',

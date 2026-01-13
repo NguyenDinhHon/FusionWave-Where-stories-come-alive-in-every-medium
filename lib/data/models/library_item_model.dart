@@ -15,6 +15,7 @@ class LibraryItemModel {
   final DateTime? lastReadAt;
   final int totalReadingTimeMinutes;
   final bool isDownloaded;
+  final bool isBookmarked; // Secondary status
 
   LibraryItemModel({
     required this.id,
@@ -29,26 +30,42 @@ class LibraryItemModel {
     this.lastReadAt,
     this.totalReadingTimeMinutes = 0,
     this.isDownloaded = false,
+    this.isBookmarked = false,
   });
 
   // Create from Firestore document
   factory LibraryItemModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return LibraryItemModel(
-      id: doc.id,
-      userId: data['userId'] ?? '',
-      bookId: data['bookId'] ?? '',
-      status: data['status'] ?? AppConstants.bookStatusReading,
-      currentPage: data['currentPage'] ?? 0,
-      currentChapter: data['currentChapter'] ?? 1,
-      completedChapters: List<String>.from(data['completedChapters'] ?? []),
-      progress: (data['progress'] as num?)?.toDouble() ?? 0.0,
-      addedAt: (data['addedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      lastReadAt: (data['lastReadAt'] as Timestamp?)?.toDate(),
-      totalReadingTimeMinutes: data['totalReadingTimeMinutes'] ?? 0,
-      isDownloaded: data['isDownloaded'] ?? false,
-    );
+    try {
+      final data = doc.data() as Map<String, dynamic>;
+      return LibraryItemModel(
+        id: doc.id,
+        userId: data['userId'] ?? '',
+        bookId: data['bookId'] ?? '',
+        status: data['status'] ?? AppConstants.bookStatusReading,
+        currentPage: data['currentPage'] ?? 0,
+        currentChapter: data['currentChapter'] ?? 1,
+        completedChapters:
+            (data['completedChapters'] as List?)
+                ?.map((e) => e?.toString() ?? '')
+                .toList() ??
+            [],
+        progress: (data['progress'] as num?)?.toDouble() ?? 0.0,
+        addedAt: (data['addedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+        lastReadAt: (data['lastReadAt'] as Timestamp?)?.toDate(),
+        totalReadingTimeMinutes: data['totalReadingTimeMinutes'] ?? 0,
+        isDownloaded: data['isDownloaded'] ?? false,
+        isBookmarked: data['isBookmarked'] ?? false,
+      );
+    } catch (e) {
+      print('Error parsing LibraryItemModel: $e');
+      // Return a default model or rethrow depending on needs
+      // For now, rethrow to see the error
+      rethrow;
+    }
   }
+
+  // Check if book is completed
+  bool get isCompleted => status == AppConstants.bookStatusCompleted;
 
   // Convert to Firestore document
   Map<String, dynamic> toFirestore() {
@@ -64,6 +81,7 @@ class LibraryItemModel {
       'lastReadAt': lastReadAt != null ? Timestamp.fromDate(lastReadAt!) : null,
       'totalReadingTimeMinutes': totalReadingTimeMinutes,
       'isDownloaded': isDownloaded,
+      'isBookmarked': isBookmarked,
     };
   }
 
