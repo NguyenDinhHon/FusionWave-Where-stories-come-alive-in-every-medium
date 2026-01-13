@@ -126,7 +126,11 @@ class AppRouter {
           isAdmin = userFromAuth.role == AppConstants.roleAdmin;
         } else {
           // Fallback to isAdminProvider
-          isAdmin = container.read(isAdminProvider);
+          try {
+            isAdmin = container.read(isAdminProvider);
+          } catch (e) {
+            // Provider not available yet, will be checked in route
+          }
         }
       } catch (e) {
         // Provider not available yet, will be checked in route
