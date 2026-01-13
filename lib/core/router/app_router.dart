@@ -156,8 +156,8 @@ class AppRouter {
       return '/login';
     }
 
-    // If admin tries to access regular routes, redirect to admin panel
-    if (isAuthenticated && isAdmin && !isAuthRoute && !isProtectedRoute && state.uri.path == '/') {
+    // If admin tries to access regular routes (home, library, etc), redirect to admin panel
+    if (isAuthenticated && isAdmin && (isProtectedRoute || state.uri.path == '/home' || state.uri.path == '/')) {
       return '/admin';
     }
 

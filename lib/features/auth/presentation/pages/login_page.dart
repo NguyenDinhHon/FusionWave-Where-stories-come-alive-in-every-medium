@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../widgets/auth_text_field.dart';
 import '../widgets/auth_button.dart';
 import '../providers/auth_provider.dart';
+import '../../../../core/constants/app_constants.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -40,7 +41,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       );
       
       if (mounted) {
-        context.go('/home');
+        // Check if user is admin and redirect accordingly
+        final userAsync = ref.read(currentUserModelProvider);
+        final user = await userAsync.when(
+          data: (user) => Future.value(user),
+          loading: () => Future.value(null),
+          error: (_, __) => Future.value(null),
+        );
+        
+        if (user?.role == AppConstants.roleAdmin) {
+          context.go('/admin');
+        } else {
+          context.go('/home');
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -97,7 +110,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       await ref.read(authControllerProvider.notifier).signInWithGoogle();
       
       if (mounted) {
-        context.go('/home');
+        // Check if user is admin and redirect accordingly
+        final userAsync = ref.read(currentUserModelProvider);
+        final user = await userAsync.when(
+          data: (user) => Future.value(user),
+          loading: () => Future.value(null),
+          error: (_, __) => Future.value(null),
+        );
+        
+        if (user?.role == AppConstants.roleAdmin) {
+          context.go('/admin');
+        } else {
+          context.go('/home');
+        }
       }
     } catch (e) {
       if (mounted) {

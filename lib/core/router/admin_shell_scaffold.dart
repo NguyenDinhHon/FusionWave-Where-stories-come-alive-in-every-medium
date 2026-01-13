@@ -225,17 +225,6 @@ class AdminShellScaffold extends ConsumerWidget {
                     context.push('/admin/upload-book');
                   },
                 ),
-                const SizedBox(height: 8),
-                _buildNavItem(
-                  context,
-                  icon: Icons.storage,
-                  label: 'Seed Data',
-                  route: '/admin/seed-data',
-                  currentIndex: navigationShell.currentIndex,
-                  onTap: () {
-                    context.push('/admin/seed-data');
-                  },
-                ),
               ],
             ),
           ),
