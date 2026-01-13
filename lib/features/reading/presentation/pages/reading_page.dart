@@ -445,27 +445,45 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
 
         // Load chapters into provider if not already loaded
         WidgetsBinding.instance.addPostFrameCallback((_) {
+          // Load chapters list directly without resetting index
           if (chapters.isEmpty || chapters.length != loadedChapters.length) {
+            debugPrint(
+              '[ReadingPage] Loading ${loadedChapters.length} chapters into provider',
+            );
             ref
-                .read(chapterNavigationProvider.notifier)
+                .read(chaptersListProvider.notifier)
                 .loadChapters(loadedChapters);
           }
 
           // Only initialize chapter once (not on every rebuild)
           if (!_hasInitializedChapter) {
             _hasInitializedChapter = true;
+            debugPrint(
+              '[ReadingPage] Initializing chapter. chapterId: ${widget.chapterId}',
+            );
 
             if (widget.chapterId != null) {
               final index = loadedChapters.indexWhere(
                 (c) => c.id == widget.chapterId,
               );
+              debugPrint('[ReadingPage] Found chapter at index: $index');
               if (index >= 0) {
+                debugPrint('[ReadingPage] Jumping to chapter index $index');
                 ref
                     .read(chapterNavigationProvider.notifier)
                     .jumpToChapter(index);
+                final currentIndex = ref.read(chapterNavigationProvider);
+                debugPrint(
+                  '[ReadingPage] Current index after jump: $currentIndex',
+                );
+              } else {
+                debugPrint(
+                  '[ReadingPage] Chapter ID not found in loaded chapters!',
+                );
               }
             } else if (currentChapter == null && loadedChapters.isNotEmpty) {
               // Default to first chapter if no chapter specified
+              debugPrint('[ReadingPage] No chapterId, defaulting to chapter 0');
               ref.read(chapterNavigationProvider.notifier).jumpToChapter(0);
             }
           }
@@ -524,6 +542,8 @@ class _ReadingPageState extends ConsumerState<ReadingPage>
   }) {
     // Watch current chapter from provider (updates when navigation changes)
     final currentChapter = ref.watch(currentChapterProvider);
+    // Watch chapter index to trigger rebuild when navigation changes
+    ref.watch(chapterNavigationProvider);
 
     if (book == null || currentChapter == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
