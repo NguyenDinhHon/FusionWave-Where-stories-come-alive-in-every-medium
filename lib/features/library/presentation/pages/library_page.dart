@@ -544,8 +544,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
                             child: Image.network(
                               book.coverImageUrl!,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, _, _) =>
-                                  const Icon(Icons.book),
+                              errorBuilder: (_, _, _) => const Icon(Icons.book),
                             ),
                           )
                         : const Icon(Icons.book),
@@ -615,7 +614,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage>
               InteractiveIconButton(
                 icon: Icons.more_vert,
                 onPressed: () {
-                  _showLibraryItemMenu(context, ref, item, book);
+                  // TODO: Implement menu
                 },
                 tooltip: 'More options',
                 size: 40,
